@@ -1,0 +1,826 @@
+{
+  "id": "int2c",
+  "label": "Int 2C",
+  "units": [
+    {
+      "id": "unit01",
+      "title": "I Love Summer",
+      "items": [
+        {
+          "id": "int2c__unit01__01",
+          "n": 1,
+          "alts": [],
+          "audio": "audio/int2c__unit01__01__i_love_summer_in_tongyeong_city.mp3",
+          "audio_source": "fish-coach-ray",
+          "korean": "나는 통영시의 여름이 좋습니다",
+          "english": "I love summer in Tongyeong City"
+        },
+        {
+          "id": "int2c__unit01__02",
+          "n": 2,
+          "alts": [],
+          "audio": "audio/int2c__unit01__02__we_can_swim_and_visit_many_islands.mp3",
+          "audio_source": "fish-coach-ray",
+          "korean": "우리는 수영하고 많은 섬들을 방문할 수 있습니다",
+          "english": "We can swim and visit many islands"
+        },
+        {
+          "id": "int2c__unit01__03",
+          "n": 3,
+          "alts": [],
+          "audio": "audio/int2c__unit01__03__how_about_you.mp3",
+          "audio_source": "fish-coach-ray",
+          "korean": "너는 어떻습니까?",
+          "english": "How about you?"
+        },
+        {
+          "id": "int2c__unit01__04",
+          "n": 4,
+          "alts": [],
+          "audio": "audio/int2c__unit01__04__i_love_all_four_seasons.mp3",
+          "audio_source": "fish-coach-ray",
+          "korean": "나는 사계절이 다 좋습니다",
+          "english": "I love all four seasons"
+        },
+        {
+          "id": "int2c__unit01__05",
+          "n": 5,
+          "alts": [],
+          "audio": "audio/int2c__unit01__05__i_love_fall_in_naejangsan_national_park.mp3",
+          "audio_source": "fish-coach-ray",
+          "korean": "나는 내장산 국립공원의 가을이 좋습니다",
+          "english": "I love fall in Naejangsan National Park"
+        },
+        {
+          "id": "int2c__unit01__06",
+          "n": 6,
+          "alts": [],
+          "audio": "audio/int2c__unit01__06__we_can_see_beautiful_fall_leaves.mp3",
+          "audio_source": "fish-coach-ray",
+          "korean": "우리는 아름다운 낙엽들을 볼 수 있습니다",
+          "english": "We can see beautiful fall leaves"
+        },
+        {
+          "id": "int2c__unit01__07",
+          "n": 7,
+          "alts": [],
+          "audio": "audio/int2c__unit01__07__i_love_winter_in_gangwon_province.mp3",
+          "audio_source": "fish-coach-ray",
+          "korean": "나는 강원도의 겨울이 좋습니다",
+          "english": "I love winter in Gangwon Province"
+        },
+        {
+          "id": "int2c__unit01__08",
+          "n": 8,
+          "alts": [],
+          "audio": "audio/int2c__unit01__08__we_can_ski_and_skate.mp3",
+          "audio_source": "fish-coach-ray",
+          "korean": "우리는 스키와 스케이트를 탈 수 있습니다",
+          "english": "We can ski and skate"
+        },
+        {
+          "id": "int2c__unit01__09",
+          "n": 9,
+          "alts": [],
+          "audio": "audio/int2c__unit01__09__i_love_spring_in_jinhae.mp3",
+          "audio_source": "fish-coach-ray",
+          "korean": "나는 진해의 봄이 좋습니다",
+          "english": "I love spring in Jinhae"
+        },
+        {
+          "id": "int2c__unit01__10",
+          "n": 10,
+          "alts": [],
+          "audio": "audio/int2c__unit01__10__we_can_see_cherry_blossoms_everywhere.mp3",
+          "audio_source": "fish-coach-ray",
+          "korean": "우리는 모든 곳에서 벚꽃을 볼 수 있습니다",
+          "english": "We can see cherry blossoms everywhere"
+        }
+      ]
+    },
+    {
+      "id": "unit02",
+      "title": "What Are You Doing?",
+      "items": [
+        {
+          "id": "int2c__unit02__01",
+          "n": 1,
+          "alts": [
+            "He is taking a picture"
+          ],
+          "audio": "audio/int2c__unit02__01__i_am_taking_a_picture.mp3",
+          "audio_source": "fish-coach-ray",
+          "korean": "사진을 찍고 있습니다",
+          "english": "I am taking a picture"
+        },
+        {
+          "id": "int2c__unit02__02",
+          "n": 2,
+          "alts": [
+            "She is selling fruit"
+          ],
+          "audio": "audio/int2c__unit02__02__i_am_selling_fruit.mp3",
+          "audio_source": "fish-coach-ray",
+          "korean": "과일을 팔고 있습니다",
+          "english": "I am selling fruit"
+        },
+        {
+          "id": "int2c__unit02__03",
+          "n": 3,
+          "alts": [
+            "He is bowing"
+          ],
+          "audio": "audio/int2c__unit02__03__i_am_bowing.mp3",
+          "audio_source": "fish-coach-ray",
+          "korean": "절하고 있습니다",
+          "english": "I am bowing"
+        },
+        {
+          "id": "int2c__unit02__04",
+          "n": 4,
+          "alts": [
+            "He is fishing"
+          ],
+          "audio": "audio/int2c__unit02__04__i_am_fishing.mp3",
+          "audio_source": "fish-coach-ray",
+          "korean": "낚시하고 있습니다",
+          "english": "I am fishing"
+        },
+        {
+          "id": "int2c__unit02__05",
+          "n": 5,
+          "alts": [
+            "She is selling vegetables"
+          ],
+          "audio": "audio/int2c__unit02__05__i_am_selling_vegetables.mp3",
+          "audio_source": "fish-coach-ray",
+          "korean": "채소를 팔고 있습니다",
+          "english": "I am selling vegetables"
+        },
+        {
+          "id": "int2c__unit02__06",
+          "n": 6,
+          "alts": [
+            "They are playing Go"
+          ],
+          "audio": "audio/int2c__unit02__06__i_am_playing_go.mp3",
+          "audio_source": "fish-coach-ray",
+          "korean": "바둑을 두고 있습니다",
+          "english": "I am playing Go"
+        },
+        {
+          "id": "int2c__unit02__07",
+          "n": 7,
+          "alts": [],
+          "audio": "audio/int2c__unit02__07__i_am_playing_computer_games.mp3",
+          "audio_source": "fish-coach-ray",
+          "korean": "컴퓨터 게임을 하고 있습니다",
+          "english": "I am playing computer games"
+        },
+        {
+          "id": "int2c__unit02__08",
+          "n": 8,
+          "alts": [
+            "I am making kimchi"
+          ],
+          "audio": "audio/int2c__unit02__08__we_are_making_kimchi.mp3",
+          "audio_source": "fish-coach-ray",
+          "korean": "김치를 만들고 있습니다",
+          "english": "We are making kimchi"
+        },
+        {
+          "id": "int2c__unit02__09",
+          "n": 9,
+          "alts": [],
+          "audio": "audio/int2c__unit02__09__i_am_brushing_my_teeth.mp3",
+          "audio_source": "fish-coach-ray",
+          "korean": "양치하고 있습니다",
+          "english": "I am brushing my teeth"
+        },
+        {
+          "id": "int2c__unit02__10",
+          "n": 10,
+          "alts": [
+            "He is sleeping"
+          ],
+          "audio": "audio/int2c__unit02__10__i_am_sleeping.mp3",
+          "audio_source": "fish-coach-ray",
+          "korean": "자고 있습니다",
+          "english": "I am sleeping"
+        }
+      ]
+    },
+    {
+      "id": "unit03",
+      "title": "Is This Yours?",
+      "items": [
+        {
+          "id": "int2c__unit03__01",
+          "n": 1,
+          "alts": [],
+          "audio": "audio/int2c__unit03__01__is_this_yours.mp3",
+          "audio_source": "fish-coach-ray",
+          "korean": "이것은 너의 것입니까?",
+          "english": "Is this yours?"
+        },
+        {
+          "id": "int2c__unit03__02",
+          "n": 2,
+          "alts": [],
+          "audio": "audio/int2c__unit03__02__are_those_yours.mp3",
+          "audio_source": "fish-coach-ray",
+          "korean": "저것들은 너의 것입니까?",
+          "english": "Are those yours?"
+        },
+        {
+          "id": "int2c__unit03__03",
+          "n": 3,
+          "alts": [],
+          "audio": "audio/int2c__unit03__03__whose_candy_is_this.mp3",
+          "audio_source": "fish-coach-ray",
+          "korean": "이 사탕은 누구의 것입니까?",
+          "english": "Whose candy is this?"
+        },
+        {
+          "id": "int2c__unit03__04",
+          "n": 4,
+          "alts": [
+            "I do not know"
+          ],
+          "audio": "audio/int2c__unit03__04__i_don_t_know.mp3",
+          "audio_source": "fish-coach-ray",
+          "korean": "나는 모르겠습니다",
+          "english": "I don't know"
+        },
+        {
+          "id": "int2c__unit03__05",
+          "n": 5,
+          "alts": [],
+          "audio": "audio/int2c__unit03__05__whose_phone_is_this.mp3",
+          "audio_source": "fish-coach-ray",
+          "korean": "이 휴대폰은 누구의 것입니까?",
+          "english": "Whose phone is this?"
+        },
+        {
+          "id": "int2c__unit03__06",
+          "n": 6,
+          "alts": [],
+          "audio": "audio/int2c__unit03__06__is_this_chair_yours.mp3",
+          "audio_source": "fish-coach-ray",
+          "korean": "이 의자는 너의 것입니까?",
+          "english": "Is this chair yours?"
+        },
+        {
+          "id": "int2c__unit03__07",
+          "n": 7,
+          "alts": [],
+          "audio": "audio/int2c__unit03__07__whose_garbage_is_this.mp3",
+          "audio_source": "fish-coach-ray",
+          "korean": "이것은 누구의 쓰레기입니까?",
+          "english": "Whose garbage is this?"
+        },
+        {
+          "id": "int2c__unit03__08",
+          "n": 8,
+          "alts": [],
+          "audio": "audio/int2c__unit03__08__is_this_book_yours.mp3",
+          "audio_source": "fish-coach-ray",
+          "korean": "이 책은 너의 것입니까?",
+          "english": "Is this book yours?"
+        },
+        {
+          "id": "int2c__unit03__09",
+          "n": 9,
+          "alts": [],
+          "audio": "audio/int2c__unit03__09__whose_book_is_that.mp3",
+          "audio_source": "fish-coach-ray",
+          "korean": "저 책은 누구의 것입니까?",
+          "english": "Whose book is that?"
+        },
+        {
+          "id": "int2c__unit03__10",
+          "n": 10,
+          "alts": [],
+          "audio": "audio/int2c__unit03__10__is_this_money_yours.mp3",
+          "audio_source": "fish-coach-ray",
+          "korean": "이 돈은 너의 것입니까?",
+          "english": "Is this money yours?"
+        }
+      ]
+    },
+    {
+      "id": "unit04",
+      "title": "What's Your Favorite?",
+      "items": [
+        {
+          "id": "int2c__unit04__01",
+          "n": 1,
+          "alts": [],
+          "audio": "audio/int2c__unit04__01__what_is_your_favorite_animal.mp3",
+          "audio_source": "fish-coach-ray",
+          "korean": "가장 좋아하는 동물은 무엇입니까?",
+          "english": "What is your favorite animal?"
+        },
+        {
+          "id": "int2c__unit04__02",
+          "n": 2,
+          "alts": [],
+          "audio": "audio/int2c__unit04__02__what_is_your_favorite_season.mp3",
+          "audio_source": "fish-coach-ray",
+          "korean": "가장 좋아하는 계절은 무엇입니까?",
+          "english": "What is your favorite season?"
+        },
+        {
+          "id": "int2c__unit04__03",
+          "n": 3,
+          "alts": [],
+          "audio": "audio/int2c__unit04__03__what_is_your_favorite_fruit.mp3",
+          "audio_source": "fish-coach-ray",
+          "korean": "가장 좋아하는 과일은 무엇입니까?",
+          "english": "What is your favorite fruit?"
+        },
+        {
+          "id": "int2c__unit04__04",
+          "n": 4,
+          "alts": [],
+          "audio": "audio/int2c__unit04__04__what_is_your_favorite_game.mp3",
+          "audio_source": "fish-coach-ray",
+          "korean": "가장 좋아하는 게임은 무엇입니까?",
+          "english": "What is your favorite game?"
+        },
+        {
+          "id": "int2c__unit04__05",
+          "n": 5,
+          "alts": [],
+          "audio": "audio/int2c__unit04__05__what_is_your_favorite_color.mp3",
+          "audio_source": "fish-coach-ray",
+          "korean": "가장 좋아하는 색깔은 무엇입니까?",
+          "english": "What is your favorite color?"
+        },
+        {
+          "id": "int2c__unit04__06",
+          "n": 6,
+          "alts": [],
+          "audio": "audio/int2c__unit04__06__what_is_your_favorite_hobby.mp3",
+          "audio_source": "fish-coach-ray",
+          "korean": "가장 좋아하는 취미는 무엇입니까?",
+          "english": "What is your favorite hobby?"
+        },
+        {
+          "id": "int2c__unit04__07",
+          "n": 7,
+          "alts": [],
+          "audio": "audio/int2c__unit04__07__what_is_your_favorite_music.mp3",
+          "audio_source": "fish-coach-ray",
+          "korean": "가장 좋아하는 음악은 무엇입니까?",
+          "english": "What is your favorite music?"
+        },
+        {
+          "id": "int2c__unit04__08",
+          "n": 8,
+          "alts": [],
+          "audio": "audio/int2c__unit04__08__what_is_your_favorite_snack.mp3",
+          "audio_source": "fish-coach-ray",
+          "korean": "가장 좋아하는 간식은 무엇입니까?",
+          "english": "What is your favorite snack?"
+        },
+        {
+          "id": "int2c__unit04__09",
+          "n": 9,
+          "alts": [],
+          "audio": "audio/int2c__unit04__09__what_is_your_favorite_sport.mp3",
+          "audio_source": "fish-coach-ray",
+          "korean": "가장 좋아하는 스포츠는 무엇입니까?",
+          "english": "What is your favorite sport?"
+        },
+        {
+          "id": "int2c__unit04__10",
+          "n": 10,
+          "alts": [],
+          "audio": "audio/int2c__unit04__10__what_is_your_favorite_character.mp3",
+          "audio_source": "fish-coach-ray",
+          "korean": "가장 좋아하는 캐릭터는 무엇입니까?",
+          "english": "What is your favorite character?"
+        }
+      ]
+    },
+    {
+      "id": "unit05",
+      "title": "How Are You Feeling?",
+      "items": [
+        {
+          "id": "int2c__unit05__01",
+          "n": 1,
+          "alts": [
+            "I feel confused"
+          ],
+          "audio": "audio/int2c__unit05__01__i_am_feeling_confused.mp3",
+          "audio_source": "fish-coach-ray",
+          "korean": "혼란스러운",
+          "english": "I am feeling confused"
+        },
+        {
+          "id": "int2c__unit05__02",
+          "n": 2,
+          "alts": [
+            "I feel embarrassed"
+          ],
+          "audio": "audio/int2c__unit05__02__i_am_feeling_embarrassed.mp3",
+          "audio_source": "fish-coach-ray",
+          "korean": "쑥스러운",
+          "english": "I am feeling embarrassed"
+        },
+        {
+          "id": "int2c__unit05__03",
+          "n": 3,
+          "alts": [
+            "I feel jealous"
+          ],
+          "audio": "audio/int2c__unit05__03__i_am_feeling_jealous.mp3",
+          "audio_source": "fish-coach-ray",
+          "korean": "질투가 나는",
+          "english": "I am feeling jealous"
+        },
+        {
+          "id": "int2c__unit05__04",
+          "n": 4,
+          "alts": [
+            "I feel surprised"
+          ],
+          "audio": "audio/int2c__unit05__04__i_am_feeling_surprised.mp3",
+          "audio_source": "fish-coach-ray",
+          "korean": "놀란",
+          "english": "I am feeling surprised"
+        },
+        {
+          "id": "int2c__unit05__05",
+          "n": 5,
+          "alts": [
+            "I feel proud"
+          ],
+          "audio": "audio/int2c__unit05__05__i_am_feeling_proud.mp3",
+          "audio_source": "fish-coach-ray",
+          "korean": "자랑스러운",
+          "english": "I am feeling proud"
+        },
+        {
+          "id": "int2c__unit05__06",
+          "n": 6,
+          "alts": [
+            "I feel ignored"
+          ],
+          "audio": "audio/int2c__unit05__06__i_am_feeling_ignored.mp3",
+          "audio_source": "fish-coach-ray",
+          "korean": "무시당한",
+          "english": "I am feeling ignored"
+        },
+        {
+          "id": "int2c__unit05__07",
+          "n": 7,
+          "alts": [
+            "I feel fantastic"
+          ],
+          "audio": "audio/int2c__unit05__07__i_am_feeling_fantastic.mp3",
+          "audio_source": "fish-coach-ray",
+          "korean": "환상적인",
+          "english": "I am feeling fantastic"
+        },
+        {
+          "id": "int2c__unit05__08",
+          "n": 8,
+          "alts": [
+            "I feel guilty"
+          ],
+          "audio": "audio/int2c__unit05__08__i_am_feeling_guilty.mp3",
+          "audio_source": "fish-coach-ray",
+          "korean": "죄책감이 드는",
+          "english": "I am feeling guilty"
+        },
+        {
+          "id": "int2c__unit05__09",
+          "n": 9,
+          "alts": [
+            "I feel nervous"
+          ],
+          "audio": "audio/int2c__unit05__09__i_am_feeling_nervous.mp3",
+          "audio_source": "fish-coach-ray",
+          "korean": "긴장한",
+          "english": "I am feeling nervous"
+        },
+        {
+          "id": "int2c__unit05__10",
+          "n": 10,
+          "alts": [
+            "I feel worried"
+          ],
+          "audio": "audio/int2c__unit05__10__i_am_feeling_worried.mp3",
+          "audio_source": "fish-coach-ray",
+          "korean": "걱정하는",
+          "english": "I am feeling worried"
+        }
+      ]
+    },
+    {
+      "id": "unit06",
+      "title": "What's Wrong?",
+      "items": [
+        {
+          "id": "int2c__unit06__01",
+          "n": 1,
+          "alts": [],
+          "audio": "audio/int2c__unit06__01__i_have_a_cold.mp3",
+          "audio_source": "fish-coach-ray",
+          "korean": "감기에 걸리다",
+          "english": "I have a cold"
+        },
+        {
+          "id": "int2c__unit06__02",
+          "n": 2,
+          "alts": [],
+          "audio": "audio/int2c__unit06__02__my_knee_hurts.mp3",
+          "audio_source": "fish-coach-ray",
+          "korean": "무릎이 아프다",
+          "english": "My knee hurts"
+        },
+        {
+          "id": "int2c__unit06__03",
+          "n": 3,
+          "alts": [],
+          "audio": "audio/int2c__unit06__03__i_have_a_headache.mp3",
+          "audio_source": "fish-coach-ray",
+          "korean": "두통이 있다",
+          "english": "I have a headache"
+        },
+        {
+          "id": "int2c__unit06__04",
+          "n": 4,
+          "alts": [],
+          "audio": "audio/int2c__unit06__04__my_back_hurts.mp3",
+          "audio_source": "fish-coach-ray",
+          "korean": "등이 아프다",
+          "english": "My back hurts"
+        },
+        {
+          "id": "int2c__unit06__05",
+          "n": 5,
+          "alts": [
+            "My throat hurts"
+          ],
+          "audio": "audio/int2c__unit06__05__i_have_a_sore_throat.mp3",
+          "audio_source": "fish-coach-ray",
+          "korean": "목이 아프다",
+          "english": "I have a sore throat"
+        },
+        {
+          "id": "int2c__unit06__06",
+          "n": 6,
+          "alts": [],
+          "audio": "audio/int2c__unit06__06__i_have_a_fever.mp3",
+          "audio_source": "fish-coach-ray",
+          "korean": "열이 나다",
+          "english": "I have a fever"
+        },
+        {
+          "id": "int2c__unit06__07",
+          "n": 7,
+          "alts": [],
+          "audio": "audio/int2c__unit06__07__i_have_a_stomachache.mp3",
+          "audio_source": "fish-coach-ray",
+          "korean": "복통이 있다",
+          "english": "I have a stomachache"
+        },
+        {
+          "id": "int2c__unit06__08",
+          "n": 8,
+          "alts": [],
+          "audio": "audio/int2c__unit06__08__my_tooth_hurts.mp3",
+          "audio_source": "fish-coach-ray",
+          "korean": "치아가 아프다",
+          "english": "My tooth hurts"
+        },
+        {
+          "id": "int2c__unit06__09",
+          "n": 9,
+          "alts": [
+            "I have a nosebleed"
+          ],
+          "audio": "audio/int2c__unit06__09__i_have_a_bloody_nose.mp3",
+          "audio_source": "fish-coach-ray",
+          "korean": "코피가 나다",
+          "english": "I have a bloody nose"
+        },
+        {
+          "id": "int2c__unit06__10",
+          "n": 10,
+          "alts": [
+            "My ankle hurts"
+          ],
+          "audio": "audio/int2c__unit06__10__i_sprained_my_ankle.mp3",
+          "audio_source": "fish-coach-ray",
+          "korean": "발목을 삐다",
+          "english": "I sprained my ankle"
+        }
+      ]
+    },
+    {
+      "id": "unit07",
+      "title": "Phone English 1",
+      "items": [
+        {
+          "id": "int2c__unit07__01",
+          "n": 1,
+          "alts": [],
+          "audio": "audio/int2c__unit07__01__hello.mp3",
+          "audio_source": "fish-coach-ray",
+          "korean": "여보세요",
+          "english": "Hello"
+        },
+        {
+          "id": "int2c__unit07__02",
+          "n": 2,
+          "alts": [],
+          "audio": "audio/int2c__unit07__02__is_beomjun_there.mp3",
+          "audio_source": "fish-coach-ray",
+          "korean": "거기 범준 있습니까?",
+          "english": "Is Beomjun there?"
+        },
+        {
+          "id": "int2c__unit07__03",
+          "n": 3,
+          "alts": [
+            "Who is calling?"
+          ],
+          "audio": "audio/int2c__unit07__03__who_is_this.mp3",
+          "audio_source": "fish-coach-ray",
+          "korean": "누구십니까?",
+          "english": "Who is this?"
+        },
+        {
+          "id": "int2c__unit07__04",
+          "n": 4,
+          "alts": [
+            "I am Mr. Jay"
+          ],
+          "audio": "audio/int2c__unit07__04__this_is_mr_jay.mp3",
+          "audio_source": "fish-coach-ray",
+          "korean": "저는 Mr. Jay입니다",
+          "english": "This is Mr. Jay"
+        },
+        {
+          "id": "int2c__unit07__05",
+          "n": 5,
+          "alts": [],
+          "audio": "audio/int2c__unit07__05__hello_mr_jay.mp3",
+          "audio_source": "fish-coach-ray",
+          "korean": "안녕하세요, Mr. Jay",
+          "english": "Hello, Mr. Jay"
+        },
+        {
+          "id": "int2c__unit07__06",
+          "n": 6,
+          "alts": [],
+          "audio": "audio/int2c__unit07__06__sorry_he_is_out.mp3",
+          "audio_source": "fish-coach-ray",
+          "korean": "죄송하지만 그는 외출 중입니다",
+          "english": "Sorry, he is out"
+        },
+        {
+          "id": "int2c__unit07__07",
+          "n": 7,
+          "alts": [],
+          "audio": "audio/int2c__unit07__07__please_call_his_friend_taehwan.mp3",
+          "audio_source": "fish-coach-ray",
+          "korean": "그의 친구 태환에게 전화하세요",
+          "english": "Please call his friend Taehwan"
+        },
+        {
+          "id": "int2c__unit07__08",
+          "n": 8,
+          "alts": [],
+          "audio": "audio/int2c__unit07__08__what_is_his_phone_number.mp3",
+          "audio_source": "fish-coach-ray",
+          "korean": "그의 전화번호는 무엇입니까?",
+          "english": "What is his phone number?"
+        },
+        {
+          "id": "int2c__unit07__09",
+          "n": 9,
+          "alts": [],
+          "audio": "audio/int2c__unit07__09__his_phone_number_is_010_3457_7543.mp3",
+          "audio_source": "fish-coach-ray",
+          "korean": "그의 전화번호는 010 3457 7543입니다",
+          "english": "His phone number is 010 3457 7543"
+        },
+        {
+          "id": "int2c__unit07__10",
+          "n": 10,
+          "alts": [],
+          "audio": "audio/int2c__unit07__10__okay_thank_you.mp3",
+          "audio_source": "fish-coach-ray",
+          "korean": "알겠어요, 감사합니다",
+          "english": "Okay, thank you"
+        }
+      ]
+    },
+    {
+      "id": "unit08",
+      "title": "I'll Miss You",
+      "items": [
+        {
+          "id": "int2c__unit08__01",
+          "n": 1,
+          "alts": [
+            "I will miss you"
+          ],
+          "audio": "audio/int2c__unit08__01__i_ll_miss_you.mp3",
+          "audio_source": "fish-coach-ray",
+          "korean": "Girlfriend Leaving",
+          "english": "I'll miss you"
+        },
+        {
+          "id": "int2c__unit08__02",
+          "n": 2,
+          "alts": [],
+          "audio": "audio/int2c__unit08__02__take_care.mp3",
+          "audio_source": "fish-coach-ray",
+          "korean": "Going overseas for a long time",
+          "english": "Take care"
+        },
+        {
+          "id": "int2c__unit08__03",
+          "n": 3,
+          "alts": [],
+          "audio": "audio/int2c__unit08__03__so_long.mp3",
+          "audio_source": "fish-coach-ray",
+          "korean": "Starting military duty",
+          "english": "So long"
+        },
+        {
+          "id": "int2c__unit08__04",
+          "n": 4,
+          "alts": [],
+          "audio": "audio/int2c__unit08__04__i_am_off.mp3",
+          "audio_source": "fish-coach-ray",
+          "korean": "Leaving a group first",
+          "english": "I am off"
+        },
+        {
+          "id": "int2c__unit08__05",
+          "n": 5,
+          "alts": [
+            "Time to say good-bye"
+          ],
+          "audio": "audio/int2c__unit08__05__time_to_say_goodbye.mp3",
+          "audio_source": "fish-coach-ray",
+          "korean": "A teacher ending class",
+          "english": "Time to say goodbye"
+        },
+        {
+          "id": "int2c__unit08__06",
+          "n": 6,
+          "alts": [],
+          "audio": "audio/int2c__unit08__06__see_you.mp3",
+          "audio_source": "fish-coach-ray",
+          "korean": "A friend who you see often leaving",
+          "english": "See you"
+        },
+        {
+          "id": "int2c__unit08__07",
+          "n": 7,
+          "alts": [],
+          "audio": "audio/int2c__unit08__07__good_luck.mp3",
+          "audio_source": "fish-coach-ray",
+          "korean": "Before a test",
+          "english": "Good luck"
+        },
+        {
+          "id": "int2c__unit08__08",
+          "n": 8,
+          "alts": [],
+          "audio": "audio/int2c__unit08__08__take_it_easy.mp3",
+          "audio_source": "fish-coach-ray",
+          "korean": "Leaving a friend working hard",
+          "english": "Take it easy"
+        },
+        {
+          "id": "int2c__unit08__09",
+          "n": 9,
+          "alts": [],
+          "audio": "audio/int2c__unit08__09__have_a_nice_day.mp3",
+          "audio_source": "fish-coach-ray",
+          "korean": "A nice thing to say to anybody",
+          "english": "Have a nice day"
+        },
+        {
+          "id": "int2c__unit08__10",
+          "n": 10,
+          "alts": [],
+          "audio": "audio/int2c__unit08__10__i_must_be_going.mp3",
+          "audio_source": "fish-coach-ray",
+          "korean": "Need to go",
+          "english": "I must be going"
+        }
+      ]
+    }
+  ]
+}

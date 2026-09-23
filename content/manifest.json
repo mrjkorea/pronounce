@@ -1,0 +1,76 @@
+{
+  "title": "Day 4 Speak",
+  "voice": "Coach Ray",
+  "voice_id": "76bb6ae7b26c41fbbd484514fdb014c2",
+  "pass_threshold": 0.8,
+  "books": [
+    {
+      "id": "basic_a",
+      "label": "Basic A",
+      "units": 8,
+      "items": 76,
+      "path": "content/basic_a.json"
+    },
+    {
+      "id": "basic_b",
+      "label": "Basic B",
+      "units": 8,
+      "items": 80,
+      "path": "content/basic_b.json"
+    },
+    {
+      "id": "basic_c",
+      "label": "Basic C",
+      "units": 8,
+      "items": 80,
+      "path": "content/basic_c.json"
+    },
+    {
+      "id": "int2a",
+      "label": "Int 2A",
+      "units": 8,
+      "items": 80,
+      "path": "content/int2a.json"
+    },
+    {
+      "id": "int2b",
+      "label": "Int 2B",
+      "units": 8,
+      "items": 80,
+      "path": "content/int2b.json"
+    },
+    {
+      "id": "int2c",
+      "label": "Int 2C",
+      "units": 8,
+      "items": 80,
+      "path": "content/int2c.json"
+    },
+    {
+      "id": "int3a",
+      "label": "Int 3A",
+      "units": 8,
+      "items": 80,
+      "path": "content/int3a.json"
+    },
+    {
+      "id": "int3b",
+      "label": "Int 3B",
+      "units": 8,
+      "items": 80,
+      "path": "content/int3b.json"
+    },
+    {
+      "id": "int3c",
+      "label": "Int 3C",
+      "units": 8,
+      "items": 80,
+      "path": "content/int3c.json"
+    }
+  ],
+  "totals": {
+    "books": 9,
+    "units": 72,
+    "items": 716
+  }
+}

@@ -1,0 +1,37 @@
+{
+  "total": 317712780,
+  "parts": [
+    {
+      "name": "part-00.bin",
+      "bytes": 41943040
+    },
+    {
+      "name": "part-01.bin",
+      "bytes": 41943040
+    },
+    {
+      "name": "part-02.bin",
+      "bytes": 41943040
+    },
+    {
+      "name": "part-03.bin",
+      "bytes": 41943040
+    },
+    {
+      "name": "part-04.bin",
+      "bytes": 41943040
+    },
+    {
+      "name": "part-05.bin",
+      "bytes": 41943040
+    },
+    {
+      "name": "part-06.bin",
+      "bytes": 41943040
+    },
+    {
+      "name": "part-07.bin",
+      "bytes": 24111500
+    }
+  ]
+}

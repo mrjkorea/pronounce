@@ -1,0 +1,815 @@
+{
+  "id": "basic_c",
+  "label": "Basic C",
+  "units": [
+    {
+      "id": "unit01",
+      "title": "I Love My Dog Zoey",
+      "items": [
+        {
+          "id": "basic_c__unit01__01",
+          "n": 1,
+          "alts": [],
+          "audio": "audio/basic_c__unit01__01__i_love_my_dog_zoey.mp3",
+          "audio_source": "fish-coach-ray",
+          "korean": "나는 내 개 'Zoey'를 사랑해",
+          "english": "I love my dog Zoey"
+        },
+        {
+          "id": "basic_c__unit01__02",
+          "n": 2,
+          "alts": [],
+          "audio": "audio/basic_c__unit01__02__i_love_my_cat_leo.mp3",
+          "audio_source": "fish-coach-ray",
+          "korean": "나는 내 고양이 'Leo'를 사랑해",
+          "english": "I love my cat Leo"
+        },
+        {
+          "id": "basic_c__unit01__03",
+          "n": 3,
+          "alts": [],
+          "audio": "audio/basic_c__unit01__03__i_love_my_bird_sarah.mp3",
+          "audio_source": "fish-coach-ray",
+          "korean": "나는 내 새 'Sarah'를 사랑해",
+          "english": "I love my bird Sarah"
+        },
+        {
+          "id": "basic_c__unit01__04",
+          "n": 4,
+          "alts": [],
+          "audio": "audio/basic_c__unit01__04__i_love_my_rabbit_sam.mp3",
+          "audio_source": "fish-coach-ray",
+          "korean": "나는 내 토끼 'Sam'을 사랑해",
+          "english": "I love my rabbit Sam"
+        },
+        {
+          "id": "basic_c__unit01__05",
+          "n": 5,
+          "alts": [],
+          "audio": "audio/basic_c__unit01__05__i_love_my_hamster_fluffy.mp3",
+          "audio_source": "fish-coach-ray",
+          "korean": "나는 내 햄스터 'Fluffy'를 사랑해",
+          "english": "I love my hamster Fluffy"
+        },
+        {
+          "id": "basic_c__unit01__06",
+          "n": 6,
+          "alts": [],
+          "audio": "audio/basic_c__unit01__06__i_love_my_fish_nimo.mp3",
+          "audio_source": "fish-coach-ray",
+          "korean": "나는 내 물고기 'Nimo'를 사랑해",
+          "english": "I love my fish Nimo"
+        },
+        {
+          "id": "basic_c__unit01__07",
+          "n": 7,
+          "alts": [],
+          "audio": "audio/basic_c__unit01__07__i_love_my_beetle_bob.mp3",
+          "audio_source": "fish-coach-ray",
+          "korean": "나는 내 풍뎅이 'Bob'을 사랑해",
+          "english": "I love my beetle Bob"
+        },
+        {
+          "id": "basic_c__unit01__08",
+          "n": 8,
+          "alts": [],
+          "audio": "audio/basic_c__unit01__08__i_love_my_turtle_tom.mp3",
+          "audio_source": "fish-coach-ray",
+          "korean": "나는 내 거북이 'Tom'을 사랑해",
+          "english": "I love my turtle Tom"
+        },
+        {
+          "id": "basic_c__unit01__09",
+          "n": 9,
+          "alts": [],
+          "audio": "audio/basic_c__unit01__09__i_love_my_snake_jessica.mp3",
+          "audio_source": "fish-coach-ray",
+          "korean": "나는 내 뱀 'Jessica'를 사랑해",
+          "english": "I love my snake Jessica"
+        },
+        {
+          "id": "basic_c__unit01__10",
+          "n": 10,
+          "alts": [],
+          "audio": "audio/basic_c__unit01__10__i_love_my_squirrel_sandy.mp3",
+          "audio_source": "fish-coach-ray",
+          "korean": "나는 내 다람쥐 'Sandy'를 사랑해",
+          "english": "I love my squirrel Sandy"
+        }
+      ]
+    },
+    {
+      "id": "unit02",
+      "title": "Look at My New Hat",
+      "items": [
+        {
+          "id": "basic_c__unit02__01",
+          "n": 1,
+          "alts": [],
+          "audio": "audio/basic_c__unit02__01__look_at_my_new_hat.mp3",
+          "audio_source": "fish-coach-ray",
+          "korean": "나의 새 모자를 봐",
+          "english": "Look at my new hat"
+        },
+        {
+          "id": "basic_c__unit02__02",
+          "n": 2,
+          "alts": [],
+          "audio": "audio/basic_c__unit02__02__look_at_my_new_earphones.mp3",
+          "audio_source": "fish-coach-ray",
+          "korean": "나의 새 이어폰을 봐",
+          "english": "Look at my new earphones"
+        },
+        {
+          "id": "basic_c__unit02__03",
+          "n": 3,
+          "alts": [],
+          "audio": "audio/basic_c__unit02__03__look_at_my_new_shoes.mp3",
+          "audio_source": "fish-coach-ray",
+          "korean": "나의 새 신발을 봐",
+          "english": "Look at my new shoes"
+        },
+        {
+          "id": "basic_c__unit02__04",
+          "n": 4,
+          "alts": [],
+          "audio": "audio/basic_c__unit02__04__look_at_my_new_phone.mp3",
+          "audio_source": "fish-coach-ray",
+          "korean": "나의 새 휴대폰을 봐",
+          "english": "Look at my new phone"
+        },
+        {
+          "id": "basic_c__unit02__05",
+          "n": 5,
+          "alts": [],
+          "audio": "audio/basic_c__unit02__05__look_at_my_new_coat.mp3",
+          "audio_source": "fish-coach-ray",
+          "korean": "나의 새 외투를 봐",
+          "english": "Look at my new coat"
+        },
+        {
+          "id": "basic_c__unit02__06",
+          "n": 6,
+          "alts": [
+            "Look at my watch"
+          ],
+          "audio": "audio/basic_c__unit02__06__look_at_my_new_watch.mp3",
+          "audio_source": "fish-coach-ray",
+          "korean": "나의 새 시계를 봐",
+          "english": "Look at my new watch"
+        },
+        {
+          "id": "basic_c__unit02__07",
+          "n": 7,
+          "alts": [],
+          "audio": "audio/basic_c__unit02__07__look_at_my_new_bag.mp3",
+          "audio_source": "fish-coach-ray",
+          "korean": "나의 새 가방을 봐",
+          "english": "Look at my new bag"
+        },
+        {
+          "id": "basic_c__unit02__08",
+          "n": 8,
+          "alts": [],
+          "audio": "audio/basic_c__unit02__08__look_at_my_new_computer.mp3",
+          "audio_source": "fish-coach-ray",
+          "korean": "나의 새 컴퓨터를 봐",
+          "english": "Look at my new computer"
+        },
+        {
+          "id": "basic_c__unit02__09",
+          "n": 9,
+          "alts": [],
+          "audio": "audio/basic_c__unit02__09__look_at_my_new_gloves.mp3",
+          "audio_source": "fish-coach-ray",
+          "korean": "나의 새 장갑을 봐",
+          "english": "Look at my new gloves"
+        },
+        {
+          "id": "basic_c__unit02__10",
+          "n": 10,
+          "alts": [],
+          "audio": "audio/basic_c__unit02__10__look_at_my_new_house.mp3",
+          "audio_source": "fish-coach-ray",
+          "korean": "나의 새 집을 봐",
+          "english": "Look at my new house"
+        }
+      ]
+    },
+    {
+      "id": "unit03",
+      "title": "Classroom English Three",
+      "items": [
+        {
+          "id": "basic_c__unit03__01",
+          "n": 1,
+          "alts": [],
+          "audio": "audio/basic_c__unit03__01__see_you_monday.mp3",
+          "audio_source": "fish-coach-ray",
+          "korean": "월요일에 봐요",
+          "english": "See you Monday"
+        },
+        {
+          "id": "basic_c__unit03__02",
+          "n": 2,
+          "alts": [],
+          "audio": "audio/basic_c__unit03__02__may_i_start.mp3",
+          "audio_source": "fish-coach-ray",
+          "korean": "시작해도 되나요?",
+          "english": "May I start?"
+        },
+        {
+          "id": "basic_c__unit03__03",
+          "n": 3,
+          "alts": [],
+          "audio": "audio/basic_c__unit03__03__report.mp3",
+          "audio_source": "fish-coach-ray",
+          "korean": "보고해라!",
+          "english": "Report!"
+        },
+        {
+          "id": "basic_c__unit03__04",
+          "n": 4,
+          "alts": [],
+          "audio": "audio/basic_c__unit03__04__spell_cat.mp3",
+          "audio_source": "fish-coach-ray",
+          "korean": "cat의 철자를 말해라!",
+          "english": "Spell cat!"
+        },
+        {
+          "id": "basic_c__unit03__05",
+          "n": 5,
+          "alts": [],
+          "audio": "audio/basic_c__unit03__05__what_does_cat_mean.mp3",
+          "audio_source": "fish-coach-ray",
+          "korean": "cat이 무슨 뜻인가요?",
+          "english": "What does cat mean?"
+        },
+        {
+          "id": "basic_c__unit03__06",
+          "n": 6,
+          "alts": [],
+          "audio": "audio/basic_c__unit03__06__you_are_welcome.mp3",
+          "audio_source": "fish-coach-ray",
+          "korean": "천만에요",
+          "english": "You are welcome"
+        },
+        {
+          "id": "basic_c__unit03__07",
+          "n": 7,
+          "alts": [],
+          "audio": "audio/basic_c__unit03__07__please_test_me.mp3",
+          "audio_source": "fish-coach-ray",
+          "korean": "절 시험 해 주세요",
+          "english": "Please test me"
+        },
+        {
+          "id": "basic_c__unit03__08",
+          "n": 8,
+          "alts": [],
+          "audio": "audio/basic_c__unit03__08__see_you_tomorrow.mp3",
+          "audio_source": "fish-coach-ray",
+          "korean": "내일 봐요",
+          "english": "See you tomorrow"
+        },
+        {
+          "id": "basic_c__unit03__09",
+          "n": 9,
+          "alts": [],
+          "audio": "audio/basic_c__unit03__09__i_do_not_understand.mp3",
+          "audio_source": "fish-coach-ray",
+          "korean": "저는 이해가 안됩니다",
+          "english": "I do not understand"
+        },
+        {
+          "id": "basic_c__unit03__10",
+          "n": 10,
+          "alts": [],
+          "audio": "audio/basic_c__unit03__10__i_do_not_know.mp3",
+          "audio_source": "fish-coach-ray",
+          "korean": "저는 모르겠습니다",
+          "english": "I do not know"
+        }
+      ]
+    },
+    {
+      "id": "unit04",
+      "title": "What Can We See near Tongyeong?",
+      "items": [
+        {
+          "id": "basic_c__unit04__01",
+          "n": 1,
+          "alts": [],
+          "audio": "audio/basic_c__unit04__01__what_can_we_see_near_seoul.mp3",
+          "audio_source": "fish-coach-ray",
+          "korean": "서울",
+          "english": "What can we see near Seoul?"
+        },
+        {
+          "id": "basic_c__unit04__02",
+          "n": 2,
+          "alts": [],
+          "audio": "audio/basic_c__unit04__02__what_can_we_see_near_busan.mp3",
+          "audio_source": "fish-coach-ray",
+          "korean": "부산",
+          "english": "What can we see near Busan?"
+        },
+        {
+          "id": "basic_c__unit04__03",
+          "n": 3,
+          "alts": [
+            "What can we see near Jeh joo?"
+          ],
+          "audio": "audio/basic_c__unit04__03__what_can_we_see_near_jeju.mp3",
+          "audio_source": "fish-coach-ray",
+          "korean": "제주",
+          "english": "What can we see near Jeju?"
+        },
+        {
+          "id": "basic_c__unit04__04",
+          "n": 4,
+          "alts": [
+            "What can we see near Tong young?"
+          ],
+          "audio": "audio/basic_c__unit04__04__what_can_we_see_near_tongyeong.mp3",
+          "audio_source": "fish-coach-ray",
+          "korean": "통영",
+          "english": "What can we see near Tongyeong?"
+        },
+        {
+          "id": "basic_c__unit04__05",
+          "n": 5,
+          "alts": [],
+          "audio": "audio/basic_c__unit04__05__what_can_we_see_near_gongju.mp3",
+          "audio_source": "fish-coach-ray",
+          "korean": "공주",
+          "english": "What can we see near Gongju?"
+        },
+        {
+          "id": "basic_c__unit04__06",
+          "n": 6,
+          "alts": [
+            "What can we see near Ahndong?"
+          ],
+          "audio": "audio/basic_c__unit04__06__what_can_we_see_near_andong.mp3",
+          "audio_source": "fish-coach-ray",
+          "korean": "안동",
+          "english": "What can we see near Andong?"
+        },
+        {
+          "id": "basic_c__unit04__07",
+          "n": 7,
+          "alts": [],
+          "audio": "audio/basic_c__unit04__07__what_can_we_see_near_suncheon.mp3",
+          "audio_source": "fish-coach-ray",
+          "korean": "순천",
+          "english": "What can we see near Suncheon?"
+        },
+        {
+          "id": "basic_c__unit04__08",
+          "n": 8,
+          "alts": [],
+          "audio": "audio/basic_c__unit04__08__what_can_we_see_near_goseong.mp3",
+          "audio_source": "fish-coach-ray",
+          "korean": "고성",
+          "english": "What can we see near Goseong?"
+        },
+        {
+          "id": "basic_c__unit04__09",
+          "n": 9,
+          "alts": [],
+          "audio": "audio/basic_c__unit04__09__what_can_we_see_near_pyeongchang.mp3",
+          "audio_source": "fish-coach-ray",
+          "korean": "평창",
+          "english": "What can we see near Pyeongchang?"
+        },
+        {
+          "id": "basic_c__unit04__10",
+          "n": 10,
+          "alts": [],
+          "audio": "audio/basic_c__unit04__10__what_can_we_see_near_jindo.mp3",
+          "audio_source": "fish-coach-ray",
+          "korean": "진도",
+          "english": "What can we see near Jindo?"
+        }
+      ]
+    },
+    {
+      "id": "unit05",
+      "title": "Spelling Bee",
+      "items": [
+        {
+          "id": "basic_c__unit05__01",
+          "n": 1,
+          "alts": [
+            "Spell pig",
+            "P I G"
+          ],
+          "audio": "audio/basic_c__unit05__01__pig.mp3",
+          "audio_source": "fish-coach-ray",
+          "korean": "돼지",
+          "english": "pig"
+        },
+        {
+          "id": "basic_c__unit05__02",
+          "n": 2,
+          "alts": [
+            "Spell dog",
+            "D O G"
+          ],
+          "audio": "audio/basic_c__unit05__02__dog.mp3",
+          "audio_source": "fish-coach-ray",
+          "korean": "개",
+          "english": "dog"
+        },
+        {
+          "id": "basic_c__unit05__03",
+          "n": 3,
+          "alts": [
+            "Spell cat",
+            "C A T"
+          ],
+          "audio": "audio/basic_c__unit05__03__cat.mp3",
+          "audio_source": "fish-coach-ray",
+          "korean": "고양이",
+          "english": "cat"
+        },
+        {
+          "id": "basic_c__unit05__04",
+          "n": 4,
+          "alts": [
+            "Spell Seoul",
+            "S E O U L"
+          ],
+          "audio": "audio/basic_c__unit05__04__seoul.mp3",
+          "audio_source": "fish-coach-ray",
+          "korean": "서울",
+          "english": "Seoul"
+        },
+        {
+          "id": "basic_c__unit05__05",
+          "n": 5,
+          "alts": [
+            "Spell Tongyeong",
+            "T O N G Y E O N G"
+          ],
+          "audio": "audio/basic_c__unit05__05__tongyeong.mp3",
+          "audio_source": "fish-coach-ray",
+          "korean": "통영",
+          "english": "Tongyeong"
+        },
+        {
+          "id": "basic_c__unit05__06",
+          "n": 6,
+          "alts": [
+            "Spell Canada"
+          ],
+          "audio": "audio/basic_c__unit05__06__canada.mp3",
+          "audio_source": "fish-coach-ray",
+          "korean": "캐나다",
+          "english": "Canada"
+        },
+        {
+          "id": "basic_c__unit05__07",
+          "n": 7,
+          "alts": [
+            "Spell school"
+          ],
+          "audio": "audio/basic_c__unit05__07__school.mp3",
+          "audio_source": "fish-coach-ray",
+          "korean": "학교",
+          "english": "school"
+        },
+        {
+          "id": "basic_c__unit05__08",
+          "n": 8,
+          "alts": [
+            "Spell swing"
+          ],
+          "audio": "audio/basic_c__unit05__08__swing.mp3",
+          "audio_source": "fish-coach-ray",
+          "korean": "그네",
+          "english": "swing"
+        },
+        {
+          "id": "basic_c__unit05__09",
+          "n": 9,
+          "alts": [
+            "Spell knee"
+          ],
+          "audio": "audio/basic_c__unit05__09__knee.mp3",
+          "audio_source": "fish-coach-ray",
+          "korean": "무릎",
+          "english": "knee"
+        },
+        {
+          "id": "basic_c__unit05__10",
+          "n": 10,
+          "alts": [
+            "Spell face"
+          ],
+          "audio": "audio/basic_c__unit05__10__face.mp3",
+          "audio_source": "fish-coach-ray",
+          "korean": "얼굴",
+          "english": "face"
+        }
+      ]
+    },
+    {
+      "id": "unit06",
+      "title": "Don't Touch Your Arm",
+      "items": [
+        {
+          "id": "basic_c__unit06__01",
+          "n": 1,
+          "alts": [],
+          "audio": "audio/basic_c__unit06__01__don_t_touch_your_arm.mp3",
+          "audio_source": "fish-coach-ray",
+          "korean": "당신의 팔을 만지지 마세요",
+          "english": "Don't touch your arm"
+        },
+        {
+          "id": "basic_c__unit06__02",
+          "n": 2,
+          "alts": [],
+          "audio": "audio/basic_c__unit06__02__don_t_touch_your_leg.mp3",
+          "audio_source": "fish-coach-ray",
+          "korean": "당신의 다리를 만지지 마세요",
+          "english": "Don't touch your leg"
+        },
+        {
+          "id": "basic_c__unit06__03",
+          "n": 3,
+          "alts": [],
+          "audio": "audio/basic_c__unit06__03__don_t_touch_your_knee.mp3",
+          "audio_source": "fish-coach-ray",
+          "korean": "당신의 무릎을 만지지 마세요",
+          "english": "Don't touch your knee"
+        },
+        {
+          "id": "basic_c__unit06__04",
+          "n": 4,
+          "alts": [],
+          "audio": "audio/basic_c__unit06__04__don_t_touch_your_back.mp3",
+          "audio_source": "fish-coach-ray",
+          "korean": "당신의 등을 만지지 마세요",
+          "english": "Don't touch your back"
+        },
+        {
+          "id": "basic_c__unit06__05",
+          "n": 5,
+          "alts": [],
+          "audio": "audio/basic_c__unit06__05__don_t_touch_your_face.mp3",
+          "audio_source": "fish-coach-ray",
+          "korean": "당신의 얼굴을 만지지 마세요",
+          "english": "Don't touch your face"
+        },
+        {
+          "id": "basic_c__unit06__06",
+          "n": 6,
+          "alts": [],
+          "audio": "audio/basic_c__unit06__06__don_t_touch_your_stomach.mp3",
+          "audio_source": "fish-coach-ray",
+          "korean": "당신의 배를 만지지 마세요",
+          "english": "Don't touch your stomach"
+        },
+        {
+          "id": "basic_c__unit06__07",
+          "n": 7,
+          "alts": [],
+          "audio": "audio/basic_c__unit06__07__don_t_touch_your_wrist.mp3",
+          "audio_source": "fish-coach-ray",
+          "korean": "당신의 손목을 만지지 마세요",
+          "english": "Don't touch your wrist"
+        },
+        {
+          "id": "basic_c__unit06__08",
+          "n": 8,
+          "alts": [
+            "Don't touch your toes"
+          ],
+          "audio": "audio/basic_c__unit06__08__don_t_touch_your_toe.mp3",
+          "audio_source": "fish-coach-ray",
+          "korean": "당신의 발가락을 만지지 마세요",
+          "english": "Don't touch your toe"
+        },
+        {
+          "id": "basic_c__unit06__09",
+          "n": 9,
+          "alts": [],
+          "audio": "audio/basic_c__unit06__09__don_t_touch_your_neck.mp3",
+          "audio_source": "fish-coach-ray",
+          "korean": "당신의 목을 만지지 마세요",
+          "english": "Don't touch your neck"
+        },
+        {
+          "id": "basic_c__unit06__10",
+          "n": 10,
+          "alts": [
+            "Don't touch your ears"
+          ],
+          "audio": "audio/basic_c__unit06__10__don_t_touch_your_ear.mp3",
+          "audio_source": "fish-coach-ray",
+          "korean": "당신의 귀를 만지지 마세요",
+          "english": "Don't touch your ear"
+        }
+      ]
+    },
+    {
+      "id": "unit07",
+      "title": "Come Play With Us",
+      "items": [
+        {
+          "id": "basic_c__unit07__01",
+          "n": 1,
+          "alts": [],
+          "audio": "audio/basic_c__unit07__01__where_is_the_slide.mp3",
+          "audio_source": "fish-coach-ray",
+          "korean": "미끄럼틀은 어디에 있어?",
+          "english": "Where is the slide?"
+        },
+        {
+          "id": "basic_c__unit07__02",
+          "n": 2,
+          "alts": [],
+          "audio": "audio/basic_c__unit07__02__where_is_the_seesaw.mp3",
+          "audio_source": "fish-coach-ray",
+          "korean": "시소는 어디에 있어?",
+          "english": "Where is the seesaw?"
+        },
+        {
+          "id": "basic_c__unit07__03",
+          "n": 3,
+          "alts": [],
+          "audio": "audio/basic_c__unit07__03__where_is_the_merry_go_round.mp3",
+          "audio_source": "fish-coach-ray",
+          "korean": "회전목마는 어디에 있어?",
+          "english": "Where is the merry-go-round?"
+        },
+        {
+          "id": "basic_c__unit07__04",
+          "n": 4,
+          "alts": [],
+          "audio": "audio/basic_c__unit07__04__where_is_the_swing.mp3",
+          "audio_source": "fish-coach-ray",
+          "korean": "그네는 어디에 있어?",
+          "english": "Where is the swing?"
+        },
+        {
+          "id": "basic_c__unit07__05",
+          "n": 5,
+          "alts": [],
+          "audio": "audio/basic_c__unit07__05__where_is_the_jungle_gym.mp3",
+          "audio_source": "fish-coach-ray",
+          "korean": "정글짐은 어디에 있어?",
+          "english": "Where is the jungle gym?"
+        },
+        {
+          "id": "basic_c__unit07__06",
+          "n": 6,
+          "alts": [],
+          "audio": "audio/basic_c__unit07__06__where_is_the_sandbox.mp3",
+          "audio_source": "fish-coach-ray",
+          "korean": "모래사장은 어디에 있어?",
+          "english": "Where is the sandbox?"
+        },
+        {
+          "id": "basic_c__unit07__07",
+          "n": 7,
+          "alts": [
+            "Where is the playground?"
+          ],
+          "audio": "audio/basic_c__unit07__07__where_is_the_playhouse.mp3",
+          "audio_source": "fish-coach-ray",
+          "korean": "놀이터는 어디에 있어?",
+          "english": "Where is the playhouse?"
+        },
+        {
+          "id": "basic_c__unit07__08",
+          "n": 8,
+          "alts": [],
+          "audio": "audio/basic_c__unit07__08__where_is_the_bumper_car.mp3",
+          "audio_source": "fish-coach-ray",
+          "korean": "범퍼카는 어디에 있어?",
+          "english": "Where is the bumper car?"
+        },
+        {
+          "id": "basic_c__unit07__09",
+          "n": 9,
+          "alts": [],
+          "audio": "audio/basic_c__unit07__09__where_is_the_maze.mp3",
+          "audio_source": "fish-coach-ray",
+          "korean": "미로는 어디에 있어?",
+          "english": "Where is the maze?"
+        },
+        {
+          "id": "basic_c__unit07__10",
+          "n": 10,
+          "alts": [],
+          "audio": "audio/basic_c__unit07__10__where_is_the_roller_coaster.mp3",
+          "audio_source": "fish-coach-ray",
+          "korean": "롤러코스터는 어디에 있어?",
+          "english": "Where is the roller coaster?"
+        }
+      ]
+    },
+    {
+      "id": "unit08",
+      "title": "I Want a New Computer",
+      "items": [
+        {
+          "id": "basic_c__unit08__01",
+          "n": 1,
+          "alts": [],
+          "audio": "audio/basic_c__unit08__01__i_want_a_new_doll.mp3",
+          "audio_source": "fish-coach-ray",
+          "korean": "나는 새 인형을 원해",
+          "english": "I want a new doll"
+        },
+        {
+          "id": "basic_c__unit08__02",
+          "n": 2,
+          "alts": [],
+          "audio": "audio/basic_c__unit08__02__i_want_a_new_pencil_case.mp3",
+          "audio_source": "fish-coach-ray",
+          "korean": "나는 새 필통을 원해",
+          "english": "I want a new pencil case"
+        },
+        {
+          "id": "basic_c__unit08__03",
+          "n": 3,
+          "alts": [],
+          "audio": "audio/basic_c__unit08__03__i_want_a_new_school_bag.mp3",
+          "audio_source": "fish-coach-ray",
+          "korean": "나는 새 책가방을 원해",
+          "english": "I want a new school bag"
+        },
+        {
+          "id": "basic_c__unit08__04",
+          "n": 4,
+          "alts": [
+            "I want a new earphones"
+          ],
+          "audio": "audio/basic_c__unit08__04__i_want_new_earphones.mp3",
+          "audio_source": "fish-coach-ray",
+          "korean": "나는 새 이어폰을 원해",
+          "english": "I want new earphones"
+        },
+        {
+          "id": "basic_c__unit08__05",
+          "n": 5,
+          "alts": [],
+          "audio": "audio/basic_c__unit08__05__i_want_a_new_phone.mp3",
+          "audio_source": "fish-coach-ray",
+          "korean": "나는 새 휴대폰을 원해",
+          "english": "I want a new phone"
+        },
+        {
+          "id": "basic_c__unit08__06",
+          "n": 6,
+          "alts": [],
+          "audio": "audio/basic_c__unit08__06__i_want_new_clothes.mp3",
+          "audio_source": "fish-coach-ray",
+          "korean": "나는 새 옷을 원해",
+          "english": "I want new clothes"
+        },
+        {
+          "id": "basic_c__unit08__07",
+          "n": 7,
+          "alts": [],
+          "audio": "audio/basic_c__unit08__07__i_want_a_new_bike.mp3",
+          "audio_source": "fish-coach-ray",
+          "korean": "나는 새 자전거를 원해",
+          "english": "I want a new bike"
+        },
+        {
+          "id": "basic_c__unit08__08",
+          "n": 8,
+          "alts": [],
+          "audio": "audio/basic_c__unit08__08__i_want_a_new_computer.mp3",
+          "audio_source": "fish-coach-ray",
+          "korean": "나는 새 컴퓨터를 원해",
+          "english": "I want a new computer"
+        },
+        {
+          "id": "basic_c__unit08__09",
+          "n": 9,
+          "alts": [],
+          "audio": "audio/basic_c__unit08__09__i_want_a_new_brother.mp3",
+          "audio_source": "fish-coach-ray",
+          "korean": "나는 새 남동생을 원해",
+          "english": "I want a new brother"
+        },
+        {
+          "id": "basic_c__unit08__10",
+          "n": 10,
+          "alts": [],
+          "audio": "audio/basic_c__unit08__10__i_want_a_new_house.mp3",
+          "audio_source": "fish-coach-ray",
+          "korean": "나는 새 집을 원해",
+          "english": "I want a new house"
+        }
+      ]
+    }
+  ]
+}

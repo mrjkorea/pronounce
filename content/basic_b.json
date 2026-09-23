@@ -1,0 +1,845 @@
+{
+  "id": "basic_b",
+  "label": "Basic B",
+  "units": [
+    {
+      "id": "unit01",
+      "title": "How are you?",
+      "items": [
+        {
+          "id": "basic_b__unit01__01",
+          "n": 1,
+          "alts": [],
+          "audio": "audio/basic_b__unit01__01__i_am_happy.mp3",
+          "audio_source": "fish-coach-ray",
+          "korean": "나는 행복해",
+          "english": "I am happy"
+        },
+        {
+          "id": "basic_b__unit01__02",
+          "n": 2,
+          "alts": [],
+          "audio": "audio/basic_b__unit01__02__i_am_sad.mp3",
+          "audio_source": "fish-coach-ray",
+          "korean": "나는 슬퍼",
+          "english": "I am sad"
+        },
+        {
+          "id": "basic_b__unit01__03",
+          "n": 3,
+          "alts": [],
+          "audio": "audio/basic_b__unit01__03__i_am_angry.mp3",
+          "audio_source": "fish-coach-ray",
+          "korean": "나는 화나",
+          "english": "I am angry"
+        },
+        {
+          "id": "basic_b__unit01__04",
+          "n": 4,
+          "alts": [],
+          "audio": "audio/basic_b__unit01__04__i_am_hungry.mp3",
+          "audio_source": "fish-coach-ray",
+          "korean": "나는 배고파",
+          "english": "I am hungry"
+        },
+        {
+          "id": "basic_b__unit01__05",
+          "n": 5,
+          "alts": [],
+          "audio": "audio/basic_b__unit01__05__i_am_tired.mp3",
+          "audio_source": "fish-coach-ray",
+          "korean": "나는 힘들어",
+          "english": "I am tired"
+        },
+        {
+          "id": "basic_b__unit01__06",
+          "n": 6,
+          "alts": [],
+          "audio": "audio/basic_b__unit01__06__i_am_bored.mp3",
+          "audio_source": "fish-coach-ray",
+          "korean": "나는 지루해",
+          "english": "I am bored"
+        },
+        {
+          "id": "basic_b__unit01__07",
+          "n": 7,
+          "alts": [],
+          "audio": "audio/basic_b__unit01__07__i_am_scared.mp3",
+          "audio_source": "fish-coach-ray",
+          "korean": "나는 무서워",
+          "english": "I am scared"
+        },
+        {
+          "id": "basic_b__unit01__08",
+          "n": 8,
+          "alts": [],
+          "audio": "audio/basic_b__unit01__08__i_am_sick.mp3",
+          "audio_source": "fish-coach-ray",
+          "korean": "나는 아파",
+          "english": "I am sick"
+        },
+        {
+          "id": "basic_b__unit01__09",
+          "n": 9,
+          "alts": [],
+          "audio": "audio/basic_b__unit01__09__i_am_worried.mp3",
+          "audio_source": "fish-coach-ray",
+          "korean": "나는 걱정돼",
+          "english": "I am worried"
+        },
+        {
+          "id": "basic_b__unit01__10",
+          "n": 10,
+          "alts": [],
+          "audio": "audio/basic_b__unit01__10__i_am_sleepy.mp3",
+          "audio_source": "fish-coach-ray",
+          "korean": "나는 졸려",
+          "english": "I am sleepy"
+        }
+      ]
+    },
+    {
+      "id": "unit02",
+      "title": "I like Mr. Jay",
+      "items": [
+        {
+          "id": "basic_b__unit02__01",
+          "n": 1,
+          "alts": [],
+          "audio": "audio/basic_b__unit02__01__i_like_noodles.mp3",
+          "audio_source": "fish-coach-ray",
+          "korean": "나는 면을 좋아해",
+          "english": "I like noodles"
+        },
+        {
+          "id": "basic_b__unit02__02",
+          "n": 2,
+          "alts": [],
+          "audio": "audio/basic_b__unit02__02__i_like_meat.mp3",
+          "audio_source": "fish-coach-ray",
+          "korean": "나는 고기를 좋아해",
+          "english": "I like meat"
+        },
+        {
+          "id": "basic_b__unit02__03",
+          "n": 3,
+          "alts": [],
+          "audio": "audio/basic_b__unit02__03__i_like_fruit.mp3",
+          "audio_source": "fish-coach-ray",
+          "korean": "나는 과일을 좋아해",
+          "english": "I like fruit"
+        },
+        {
+          "id": "basic_b__unit02__04",
+          "n": 4,
+          "alts": [],
+          "audio": "audio/basic_b__unit02__04__i_like_games.mp3",
+          "audio_source": "fish-coach-ray",
+          "korean": "나는 게임을 좋아해",
+          "english": "I like games"
+        },
+        {
+          "id": "basic_b__unit02__05",
+          "n": 5,
+          "alts": [],
+          "audio": "audio/basic_b__unit02__05__i_like_school.mp3",
+          "audio_source": "fish-coach-ray",
+          "korean": "나는 학교를 좋아해",
+          "english": "I like school"
+        },
+        {
+          "id": "basic_b__unit02__06",
+          "n": 6,
+          "alts": [],
+          "audio": "audio/basic_b__unit02__06__i_like_exercise.mp3",
+          "audio_source": "fish-coach-ray",
+          "korean": "나는 운동을 좋아해",
+          "english": "I like exercise"
+        },
+        {
+          "id": "basic_b__unit02__07",
+          "n": 7,
+          "alts": [],
+          "audio": "audio/basic_b__unit02__07__i_like_movies.mp3",
+          "audio_source": "fish-coach-ray",
+          "korean": "나는 영화를 좋아해",
+          "english": "I like movies"
+        },
+        {
+          "id": "basic_b__unit02__08",
+          "n": 8,
+          "alts": [],
+          "audio": "audio/basic_b__unit02__08__i_like_music.mp3",
+          "audio_source": "fish-coach-ray",
+          "korean": "나는 음악을 좋아해",
+          "english": "I like music"
+        },
+        {
+          "id": "basic_b__unit02__09",
+          "n": 9,
+          "alts": [],
+          "audio": "audio/basic_b__unit02__09__i_like_you.mp3",
+          "audio_source": "fish-coach-ray",
+          "korean": "나는 너를 좋아해",
+          "english": "I like you"
+        },
+        {
+          "id": "basic_b__unit02__10",
+          "n": 10,
+          "alts": [],
+          "audio": "audio/basic_b__unit02__10__i_like_apples.mp3",
+          "audio_source": "fish-coach-ray",
+          "korean": "나는 사과를 좋아해",
+          "english": "I like apples"
+        }
+      ]
+    },
+    {
+      "id": "unit03",
+      "title": "Classroom English Two",
+      "items": [
+        {
+          "id": "basic_b__unit03__01",
+          "n": 1,
+          "alts": [],
+          "audio": "audio/basic_b__unit03__01__again.mp3",
+          "audio_source": "fish-coach-ray",
+          "korean": "다시!",
+          "english": "Again!"
+        },
+        {
+          "id": "basic_b__unit03__02",
+          "n": 2,
+          "alts": [],
+          "audio": "audio/basic_b__unit03__02__recycle_this.mp3",
+          "audio_source": "fish-coach-ray",
+          "korean": "이걸 재활용해!",
+          "english": "Recycle this!"
+        },
+        {
+          "id": "basic_b__unit03__03",
+          "n": 3,
+          "alts": [],
+          "audio": "audio/basic_b__unit03__03__trash_this.mp3",
+          "audio_source": "fish-coach-ray",
+          "korean": "이걸 버려!",
+          "english": "Trash this!"
+        },
+        {
+          "id": "basic_b__unit03__04",
+          "n": 4,
+          "alts": [],
+          "audio": "audio/basic_b__unit03__04__don_t_do_that.mp3",
+          "audio_source": "fish-coach-ray",
+          "korean": "그거 하지마!",
+          "english": "Don't do that!"
+        },
+        {
+          "id": "basic_b__unit03__05",
+          "n": 5,
+          "alts": [],
+          "audio": "audio/basic_b__unit03__05__thank_you.mp3",
+          "audio_source": "fish-coach-ray",
+          "korean": "고마워",
+          "english": "Thank you"
+        },
+        {
+          "id": "basic_b__unit03__06",
+          "n": 6,
+          "alts": [],
+          "audio": "audio/basic_b__unit03__06__excuse_me.mp3",
+          "audio_source": "fish-coach-ray",
+          "korean": "실례합니다",
+          "english": "Excuse me"
+        },
+        {
+          "id": "basic_b__unit03__07",
+          "n": 7,
+          "alts": [],
+          "audio": "audio/basic_b__unit03__07__i_do_not_understand.mp3",
+          "audio_source": "fish-coach-ray",
+          "korean": "저는 이해가 안됩니다",
+          "english": "I do not understand"
+        },
+        {
+          "id": "basic_b__unit03__08",
+          "n": 8,
+          "alts": [],
+          "audio": "audio/basic_b__unit03__08__i_do_not_know.mp3",
+          "audio_source": "fish-coach-ray",
+          "korean": "저는 모르겠습니다",
+          "english": "I do not know"
+        },
+        {
+          "id": "basic_b__unit03__09",
+          "n": 9,
+          "alts": [],
+          "audio": "audio/basic_b__unit03__09__help_me_please.mp3",
+          "audio_source": "fish-coach-ray",
+          "korean": "도와주세요",
+          "english": "Help me please"
+        },
+        {
+          "id": "basic_b__unit03__10",
+          "n": 10,
+          "alts": [],
+          "audio": "audio/basic_b__unit03__10__quiet.mp3",
+          "audio_source": "fish-coach-ray",
+          "korean": "조용히해!",
+          "english": "Quiet!"
+        }
+      ]
+    },
+    {
+      "id": "unit04",
+      "title": "Rock Paper Scissors",
+      "items": [
+        {
+          "id": "basic_b__unit04__01",
+          "n": 1,
+          "alts": [
+            "rock",
+            "I win"
+          ],
+          "audio": "audio/basic_b__unit04__01__rock_wins.mp3",
+          "audio_source": "fish-coach-ray",
+          "korean": "바위가 이겼다",
+          "english": "Rock wins"
+        },
+        {
+          "id": "basic_b__unit04__02",
+          "n": 2,
+          "alts": [
+            "paper",
+            "I win"
+          ],
+          "audio": "audio/basic_b__unit04__02__paper_wins.mp3",
+          "audio_source": "fish-coach-ray",
+          "korean": "보가 이겼다",
+          "english": "Paper wins"
+        },
+        {
+          "id": "basic_b__unit04__03",
+          "n": 3,
+          "alts": [
+            "scissors",
+            "I win"
+          ],
+          "audio": "audio/basic_b__unit04__03__scissors_wins.mp3",
+          "audio_source": "fish-coach-ray",
+          "korean": "가위가 이겼다",
+          "english": "Scissors wins"
+        },
+        {
+          "id": "basic_b__unit04__04",
+          "n": 4,
+          "alts": [
+            "rock",
+            "I win"
+          ],
+          "audio": "audio/basic_b__unit04__04__rock_wins.mp3",
+          "audio_source": "fish-coach-ray",
+          "korean": "바위가 이겼다",
+          "english": "Rock wins"
+        },
+        {
+          "id": "basic_b__unit04__05",
+          "n": 5,
+          "alts": [
+            "paper",
+            "I win"
+          ],
+          "audio": "audio/basic_b__unit04__05__paper_wins.mp3",
+          "audio_source": "fish-coach-ray",
+          "korean": "보가 이겼다",
+          "english": "Paper wins"
+        },
+        {
+          "id": "basic_b__unit04__06",
+          "n": 6,
+          "alts": [
+            "scissors",
+            "I win"
+          ],
+          "audio": "audio/basic_b__unit04__06__scissors_wins.mp3",
+          "audio_source": "fish-coach-ray",
+          "korean": "가위가 이겼다",
+          "english": "Scissors wins"
+        },
+        {
+          "id": "basic_b__unit04__07",
+          "n": 7,
+          "alts": [
+            "rock",
+            "I win"
+          ],
+          "audio": "audio/basic_b__unit04__07__rock_wins.mp3",
+          "audio_source": "fish-coach-ray",
+          "korean": "바위가 이겼다",
+          "english": "Rock wins"
+        },
+        {
+          "id": "basic_b__unit04__08",
+          "n": 8,
+          "alts": [
+            "paper",
+            "I win"
+          ],
+          "audio": "audio/basic_b__unit04__08__paper_wins.mp3",
+          "audio_source": "fish-coach-ray",
+          "korean": "보가 이겼다",
+          "english": "Paper wins"
+        },
+        {
+          "id": "basic_b__unit04__09",
+          "n": 9,
+          "alts": [
+            "scissors",
+            "I win"
+          ],
+          "audio": "audio/basic_b__unit04__09__scissors_wins.mp3",
+          "audio_source": "fish-coach-ray",
+          "korean": "가위가 이겼다",
+          "english": "Scissors wins"
+        },
+        {
+          "id": "basic_b__unit04__10",
+          "n": 10,
+          "alts": [
+            "rock",
+            "I win"
+          ],
+          "audio": "audio/basic_b__unit04__10__rock_wins.mp3",
+          "audio_source": "fish-coach-ray",
+          "korean": "바위가 이겼다",
+          "english": "Rock wins"
+        }
+      ]
+    },
+    {
+      "id": "unit05",
+      "title": "What is it?",
+      "items": [
+        {
+          "id": "basic_b__unit05__01",
+          "n": 1,
+          "alts": [],
+          "audio": "audio/basic_b__unit05__01__it_is_a_book.mp3",
+          "audio_source": "fish-coach-ray",
+          "korean": "책이야",
+          "english": "It is a book"
+        },
+        {
+          "id": "basic_b__unit05__02",
+          "n": 2,
+          "alts": [
+            "It is a phone charger"
+          ],
+          "audio": "audio/basic_b__unit05__02__it_was_a_phone_charger.mp3",
+          "audio_source": "fish-coach-ray",
+          "korean": "휴대폰 충전기였다",
+          "english": "It was a phone charger"
+        },
+        {
+          "id": "basic_b__unit05__03",
+          "n": 3,
+          "alts": [
+            "It is a sock"
+          ],
+          "audio": "audio/basic_b__unit05__03__it_was_a_sock.mp3",
+          "audio_source": "fish-coach-ray",
+          "korean": "양말이었다",
+          "english": "It was a sock"
+        },
+        {
+          "id": "basic_b__unit05__04",
+          "n": 4,
+          "alts": [],
+          "audio": "audio/basic_b__unit05__04__it_is_a_toy.mp3",
+          "audio_source": "fish-coach-ray",
+          "korean": "장난감이야",
+          "english": "It is a toy"
+        },
+        {
+          "id": "basic_b__unit05__05",
+          "n": 5,
+          "alts": [],
+          "audio": "audio/basic_b__unit05__05__it_is_underwear.mp3",
+          "audio_source": "fish-coach-ray",
+          "korean": "속옷이야",
+          "english": "It is underwear"
+        },
+        {
+          "id": "basic_b__unit05__06",
+          "n": 6,
+          "alts": [
+            "It is a toothbrush"
+          ],
+          "audio": "audio/basic_b__unit05__06__it_was_a_toothbrush.mp3",
+          "audio_source": "fish-coach-ray",
+          "korean": "칫솔이었다",
+          "english": "It was a toothbrush"
+        },
+        {
+          "id": "basic_b__unit05__07",
+          "n": 7,
+          "alts": [],
+          "audio": "audio/basic_b__unit05__07__it_is_a_night_light.mp3",
+          "audio_source": "fish-coach-ray",
+          "korean": "야간등이야",
+          "english": "It is a night light"
+        },
+        {
+          "id": "basic_b__unit05__08",
+          "n": 8,
+          "alts": [
+            "It is a teddy bear"
+          ],
+          "audio": "audio/basic_b__unit05__08__it_was_a_teddy_bear.mp3",
+          "audio_source": "fish-coach-ray",
+          "korean": "곰인형이었다",
+          "english": "It was a teddy bear"
+        },
+        {
+          "id": "basic_b__unit05__09",
+          "n": 9,
+          "alts": [],
+          "audio": "audio/basic_b__unit05__09__it_was_an_apple.mp3",
+          "audio_source": "fish-coach-ray",
+          "korean": "사과였다",
+          "english": "It was an apple"
+        },
+        {
+          "id": "basic_b__unit05__10",
+          "n": 10,
+          "alts": [],
+          "audio": "audio/basic_b__unit05__10__it_is_a_bag.mp3",
+          "audio_source": "fish-coach-ray",
+          "korean": "가방이야",
+          "english": "It is a bag"
+        }
+      ]
+    },
+    {
+      "id": "unit06",
+      "title": "I like my body",
+      "items": [
+        {
+          "id": "basic_b__unit06__01",
+          "n": 1,
+          "alts": [],
+          "audio": "audio/basic_b__unit06__01__this_is_my_head.mp3",
+          "audio_source": "fish-coach-ray",
+          "korean": "이것은 내 머리입니다",
+          "english": "This is my head"
+        },
+        {
+          "id": "basic_b__unit06__02",
+          "n": 2,
+          "alts": [],
+          "audio": "audio/basic_b__unit06__02__this_is_my_nose.mp3",
+          "audio_source": "fish-coach-ray",
+          "korean": "이것은 내 코입니다",
+          "english": "This is my nose"
+        },
+        {
+          "id": "basic_b__unit06__03",
+          "n": 3,
+          "alts": [],
+          "audio": "audio/basic_b__unit06__03__this_is_my_mouth.mp3",
+          "audio_source": "fish-coach-ray",
+          "korean": "이것은 내 입입니다",
+          "english": "This is my mouth"
+        },
+        {
+          "id": "basic_b__unit06__04",
+          "n": 4,
+          "alts": [],
+          "audio": "audio/basic_b__unit06__04__this_is_my_ear.mp3",
+          "audio_source": "fish-coach-ray",
+          "korean": "이것은 내 귀입니다",
+          "english": "This is my ear"
+        },
+        {
+          "id": "basic_b__unit06__05",
+          "n": 5,
+          "alts": [],
+          "audio": "audio/basic_b__unit06__05__this_is_my_eye.mp3",
+          "audio_source": "fish-coach-ray",
+          "korean": "이것은 내 눈입니다",
+          "english": "This is my eye"
+        },
+        {
+          "id": "basic_b__unit06__06",
+          "n": 6,
+          "alts": [],
+          "audio": "audio/basic_b__unit06__06__this_is_my_neck.mp3",
+          "audio_source": "fish-coach-ray",
+          "korean": "이것은 내 목입니다",
+          "english": "This is my neck"
+        },
+        {
+          "id": "basic_b__unit06__07",
+          "n": 7,
+          "alts": [],
+          "audio": "audio/basic_b__unit06__07__this_is_my_body.mp3",
+          "audio_source": "fish-coach-ray",
+          "korean": "이것은 내 몸입니다",
+          "english": "This is my body"
+        },
+        {
+          "id": "basic_b__unit06__08",
+          "n": 8,
+          "alts": [],
+          "audio": "audio/basic_b__unit06__08__this_is_my_chin.mp3",
+          "audio_source": "fish-coach-ray",
+          "korean": "이것은 내 턱입니다",
+          "english": "This is my chin"
+        },
+        {
+          "id": "basic_b__unit06__09",
+          "n": 9,
+          "alts": [],
+          "audio": "audio/basic_b__unit06__09__this_is_my_hand.mp3",
+          "audio_source": "fish-coach-ray",
+          "korean": "이것은 내 손입니다",
+          "english": "This is my hand"
+        },
+        {
+          "id": "basic_b__unit06__10",
+          "n": 10,
+          "alts": [],
+          "audio": "audio/basic_b__unit06__10__this_is_my_shoulder.mp3",
+          "audio_source": "fish-coach-ray",
+          "korean": "이것은 내 어깨입니다",
+          "english": "This is my shoulder"
+        }
+      ]
+    },
+    {
+      "id": "unit07",
+      "title": "What Color is That?",
+      "items": [
+        {
+          "id": "basic_b__unit07__01",
+          "n": 1,
+          "alts": [],
+          "audio": "audio/basic_b__unit07__01__it_is_white.mp3",
+          "audio_source": "fish-coach-ray",
+          "korean": "하얀색이야",
+          "english": "It is white"
+        },
+        {
+          "id": "basic_b__unit07__02",
+          "n": 2,
+          "alts": [],
+          "audio": "audio/basic_b__unit07__02__it_is_black.mp3",
+          "audio_source": "fish-coach-ray",
+          "korean": "검은색이야",
+          "english": "It is black"
+        },
+        {
+          "id": "basic_b__unit07__03",
+          "n": 3,
+          "alts": [],
+          "audio": "audio/basic_b__unit07__03__it_is_brown.mp3",
+          "audio_source": "fish-coach-ray",
+          "korean": "갈색이야",
+          "english": "It is brown"
+        },
+        {
+          "id": "basic_b__unit07__04",
+          "n": 4,
+          "alts": [],
+          "audio": "audio/basic_b__unit07__04__it_is_red.mp3",
+          "audio_source": "fish-coach-ray",
+          "korean": "빨간색이야",
+          "english": "It is red"
+        },
+        {
+          "id": "basic_b__unit07__05",
+          "n": 5,
+          "alts": [],
+          "audio": "audio/basic_b__unit07__05__it_is_orange.mp3",
+          "audio_source": "fish-coach-ray",
+          "korean": "주황색이야",
+          "english": "It is orange"
+        },
+        {
+          "id": "basic_b__unit07__06",
+          "n": 6,
+          "alts": [],
+          "audio": "audio/basic_b__unit07__06__it_is_yellow.mp3",
+          "audio_source": "fish-coach-ray",
+          "korean": "노랑색이야",
+          "english": "It is yellow"
+        },
+        {
+          "id": "basic_b__unit07__07",
+          "n": 7,
+          "alts": [],
+          "audio": "audio/basic_b__unit07__07__it_is_green.mp3",
+          "audio_source": "fish-coach-ray",
+          "korean": "초록색이야",
+          "english": "It is green"
+        },
+        {
+          "id": "basic_b__unit07__08",
+          "n": 8,
+          "alts": [],
+          "audio": "audio/basic_b__unit07__08__it_is_blue.mp3",
+          "audio_source": "fish-coach-ray",
+          "korean": "파란색이야",
+          "english": "It is blue"
+        },
+        {
+          "id": "basic_b__unit07__09",
+          "n": 9,
+          "alts": [],
+          "audio": "audio/basic_b__unit07__09__it_is_purple.mp3",
+          "audio_source": "fish-coach-ray",
+          "korean": "보라색이야",
+          "english": "It is purple"
+        },
+        {
+          "id": "basic_b__unit07__10",
+          "n": 10,
+          "alts": [
+            "It is rainbow",
+            "rainbow"
+          ],
+          "audio": "audio/basic_b__unit07__10__it_is_a_rainbow.mp3",
+          "audio_source": "fish-coach-ray",
+          "korean": "다색이야",
+          "english": "It is a rainbow"
+        }
+      ]
+    },
+    {
+      "id": "unit08",
+      "title": "How old are you?",
+      "items": [
+        {
+          "id": "basic_b__unit08__01",
+          "n": 1,
+          "alts": [
+            "I am 7",
+            "I am seven"
+          ],
+          "audio": "audio/basic_b__unit08__01__i_am_seven_years_old.mp3",
+          "audio_source": "fish-coach-ray",
+          "korean": "나는 7살입니다",
+          "english": "I am seven years old"
+        },
+        {
+          "id": "basic_b__unit08__02",
+          "n": 2,
+          "alts": [
+            "I am 10",
+            "I am ten"
+          ],
+          "audio": "audio/basic_b__unit08__02__i_am_ten_years_old.mp3",
+          "audio_source": "fish-coach-ray",
+          "korean": "나는 10살입니다",
+          "english": "I am ten years old"
+        },
+        {
+          "id": "basic_b__unit08__03",
+          "n": 3,
+          "alts": [
+            "I am 14",
+            "I am fourteen"
+          ],
+          "audio": "audio/basic_b__unit08__03__i_am_fourteen_years_old.mp3",
+          "audio_source": "fish-coach-ray",
+          "korean": "나는 14살입니다",
+          "english": "I am fourteen years old"
+        },
+        {
+          "id": "basic_b__unit08__04",
+          "n": 4,
+          "alts": [
+            "I am 17",
+            "I am seventeen"
+          ],
+          "audio": "audio/basic_b__unit08__04__i_am_seventeen_years_old.mp3",
+          "audio_source": "fish-coach-ray",
+          "korean": "나는 17살입니다",
+          "english": "I am seventeen years old"
+        },
+        {
+          "id": "basic_b__unit08__05",
+          "n": 5,
+          "alts": [
+            "I am 22",
+            "I am twenty two"
+          ],
+          "audio": "audio/basic_b__unit08__05__i_am_twenty_two_years_old.mp3",
+          "audio_source": "fish-coach-ray",
+          "korean": "나는 22살입니다",
+          "english": "I am twenty-two years old"
+        },
+        {
+          "id": "basic_b__unit08__06",
+          "n": 6,
+          "alts": [
+            "I am 25",
+            "I am twenty five"
+          ],
+          "audio": "audio/basic_b__unit08__06__i_am_twenty_five_years_old.mp3",
+          "audio_source": "fish-coach-ray",
+          "korean": "나는 25살입니다",
+          "english": "I am twenty-five years old"
+        },
+        {
+          "id": "basic_b__unit08__07",
+          "n": 7,
+          "alts": [
+            "I am 33",
+            "I am thirty three"
+          ],
+          "audio": "audio/basic_b__unit08__07__i_am_thirty_three_years_old.mp3",
+          "audio_source": "fish-coach-ray",
+          "korean": "나는 33살입니다",
+          "english": "I am thirty-three years old"
+        },
+        {
+          "id": "basic_b__unit08__08",
+          "n": 8,
+          "alts": [
+            "I am 66",
+            "I am sixty six"
+          ],
+          "audio": "audio/basic_b__unit08__08__i_am_sixty_six_years_old.mp3",
+          "audio_source": "fish-coach-ray",
+          "korean": "나는 66살입니다",
+          "english": "I am sixty-six years old"
+        },
+        {
+          "id": "basic_b__unit08__09",
+          "n": 9,
+          "alts": [
+            "I am 1",
+            "I am one"
+          ],
+          "audio": "audio/basic_b__unit08__09__i_am_one_year_old.mp3",
+          "audio_source": "fish-coach-ray",
+          "korean": "나는 1살입니다",
+          "english": "I am one year old"
+        },
+        {
+          "id": "basic_b__unit08__10",
+          "n": 10,
+          "alts": [
+            "I am 100",
+            "I am a hundred"
+          ],
+          "audio": "audio/basic_b__unit08__10__i_am_one_hundred_years_old.mp3",
+          "audio_source": "fish-coach-ray",
+          "korean": "나는 100살입니다",
+          "english": "I am one hundred years old"
+        }
+      ]
+    }
+  ]
+}
