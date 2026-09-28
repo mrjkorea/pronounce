@@ -32,6 +32,49 @@ let session = null;
 let modelError = '';
 let capture = null;
 
+
+// Jay 28SEP2026: ONE score book — pronounce grades log here too.
+const MRJ_WHO_KEY = 'day4-pronounce-student-v1';
+
+function mrjStudent() {
+  try {
+    return (localStorage.getItem(MRJ_WHO_KEY) || '').trim();
+  } catch (_) {
+    return '';
+  }
+}
+
+function mrjAskStudent() {
+  let who = mrjStudent();
+  if (!who) {
+    const typed = window.prompt('Your name (so the score goes to your page):', '');
+    who = (typed || '').trim();
+    if (who) {
+      try { localStorage.setItem(MRJ_WHO_KEY, who); } catch (_) {}
+    }
+  }
+  return who;
+}
+
+function logToOneBook(item, graded) {
+  if (!window.MRJ_SCORES || !graded) return;
+  const who = mrjStudent() || 'unknown';
+  window.MRJ_SCORES.post({
+    student: who,
+    program: 'pronounce',
+    appName: 'MRJ Pronounce Day 4',
+    source: 'pronounce',
+    bookTitle: item.bookId || '',
+    unitTitle: item.unitId || '',
+    itemId: 'pronounce:' + item.id,
+    itemType: 'pronunciation',
+    scoreValue: Number(graded.score || 0),
+    scoreMax: 1,
+    correctness: graded.pass ? 'correct' : 'incorrect',
+    metadata: { english: item.english, weak: graded.weak || [] },
+  });
+}
+
 function loadScores() {
   try {
     const raw = JSON.parse(localStorage.getItem(SCORE_KEY) || '{}');
@@ -374,6 +417,7 @@ async function gradeBlob(blob, english) {
 }
 
 async function stopAndGrade() {
+  mrjAskStudent();
   const itemId = capture && capture.itemId;
   const blob = await stopCapture();
   if (!itemId || !blob) return;
@@ -393,6 +437,7 @@ async function stopAndGrade() {
       at: Date.now(),
     };
     saveScores(scores);
+    logToOneBook(item, graded);
   } catch (err) {
     const scores = loadScores();
     const reason = (err && err.code === 'too_short')
