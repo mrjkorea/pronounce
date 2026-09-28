@@ -1,7 +1,7 @@
 /* MRJ score sheet — ONE book for every program (Jay 28SEP2026)
    Sheet: MRJ Classroom Metrics
    https://docs.google.com/spreadsheets/d/1bpgekxlektvwpsef1PmIkxPiDuHrkVXFaAy-OmwqL5c
-   Nothing else. No trycloudflare. No per-app side sheet.
+   Nothing else. No tunnels. No per-app side sheet.
    Safe on file:// (posts use text/plain so Apps Script needs no CORS preflight).
 */
 (function (root) {
