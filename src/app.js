@@ -42,15 +42,17 @@ const SILENCE_CHECK_MS = 80;
 const SILENCE_RMS = 0.008;
 const MAX_RECORD_MS = 60000;
 
-const ort = window.ort;
-ort.env.wasm.wasmPaths = new URL('vendor/ort/', window.location.href).href;
-ort.env.wasm.numThreads = 1;
-ort.env.wasm.proxy = false;
+let ort = typeof window !== 'undefined' ? window.ort : null;
+if (ort) {
+  ort.env.wasm.wasmPaths = new URL('vendor/ort/', window.location.href).href;
+  ort.env.wasm.numThreads = 1;
+  ort.env.wasm.proxy = false;
+}
 
-const appEl = document.getElementById('app');
-const modelLabel = document.getElementById('modelLabel');
-const modelFill = document.getElementById('modelFill');
-const modelTrack = document.getElementById('modelTrack');
+const appEl = typeof document !== 'undefined' ? document.getElementById('app') : null;
+const modelLabel = typeof document !== 'undefined' ? document.getElementById('modelLabel') : null;
+const modelFill = typeof document !== 'undefined' ? document.getElementById('modelFill') : null;
+const modelTrack = typeof document !== 'undefined' ? document.getElementById('modelTrack') : null;
 
 let books = [];
 let byId = new Map();
@@ -373,13 +375,22 @@ function wordChipsHtml(words) {
   return `<div class="chips">${chips}</div>`;
 }
 
+function englishRevealed(saved) {
+  return !!(saved && saved.pass === false);
+}
+
+function englishCueHtml(english, className) {
+  const triple = needsTripleHint(english) ? '<p class="triple-hint">Say it 3 times.</p>' : '';
+  return `<p class="${className}">${escapeHtml(english)}</p>${triple}`;
+}
+
 function partResultHtml(saved) {
   if (!saved) return '';
   const verdict = saved.pass ? 'Pass' : 'Not yet';
   const cls = saved.pass ? 'pass' : 'fail';
   const pct = saved.scorePct != null ? saved.scorePct : Math.round((saved.score || 0) * 100);
   const reason = saved.reason ? `<p class="meta">${escapeHtml(saved.reason)}</p>` : '';
-  const chips = wordChipsHtml(saved.words);
+  const chips = englishRevealed(saved) ? wordChipsHtml(saved.words) : '';
   return `<div class="after show">
     <p class="verdict ${cls}">${verdict} · ${pct}</p>
     ${chips}
@@ -397,9 +408,10 @@ function renderSharedQuestion(bookId, unit, scores, ready) {
   const result = partResultHtml(saved);
   const gradingShared = gradingScoreKey === sk;
   const gradeBar = gradingShared ? '<div class="grade-bar shared-grade show"><div class="grade-fill"></div></div>' : '';
+  const prompt = englishRevealed(saved) ? englishCueHtml(plan.question, 'en-prompt') : '';
   return `<section class="shared-q ${doneCls}" data-shared="${escapeHtml(sk)}">
-    <p class="shared-note">Say this question once for the whole unit.</p>
-    <p class="en-prompt">${escapeHtml(plan.question)}</p>
+    <p class="shared-note">이 질문을 한 번만 말하세요.</p>
+    ${prompt}
     <button type="button" class="mic shared-mic" data-score-key="${escapeHtml(sk)}" data-grade-text="${escapeHtml(plan.question)}" data-audio-rel="${escapeHtml(questionAudioRel(plan.question))}" ${ready ? '' : 'disabled'}>${micLabel}</button>
     ${result}
     ${gradeBar}
@@ -418,6 +430,75 @@ function koHtml(korean, imageRel, local, extraHtml) {
   return `<div class="ko-wrap">${pic}<div class="ko-text"><div class="ko">${escapeHtml(korean)}</div>${extraHtml || ''}</div></div>`;
 }
 
+function lineParts(line, unit) {
+  if (line.kind === 'extra') {
+    return [{ key: 'line', label: 'Answer', english: line.english, audio: line.audio }];
+  }
+  const item = line.item || {
+    id: line.id,
+    korean: line.korean,
+    english: line.english,
+    audio: line.audio,
+    image: line.image,
+  };
+  return rowParts(item, unit);
+}
+
+function lineArticleHtml(line, unit, index, scores, ready) {
+  const item = line.item || {
+    id: line.id,
+    korean: line.korean,
+    english: line.english,
+    audio: line.audio,
+    image: line.image,
+  };
+  const parts = lineParts(line, unit);
+  const multi = parts.length > 1;
+  const grading = gradingScoreKey && parts.some((p) => scoreStorageKey(item.id, p.key) === gradingScoreKey);
+  const imageRel = line.image || item.image || '';
+  const partBlocks = parts.map((p) => {
+    const skey = scoreStorageKey(item.id, p.key);
+    const saved = scores[skey];
+    const micLabel = ready ? 'Mic' : 'Wait';
+    const revealed = englishRevealed(saved);
+    const cue = revealed ? englishCueHtml(p.english, 'part-text') : '';
+    const audioRel = p.audio || questionAudioRel(p.english);
+    const micBtn = `<button type="button" class="mic" data-score-key="${escapeHtml(skey)}" data-item-id="${escapeHtml(item.id)}" data-part-key="${escapeHtml(p.key)}" data-grade-text="${escapeHtml(p.english)}" data-audio-rel="${escapeHtml(audioRel)}" ${ready ? '' : 'disabled'}>${micLabel}</button>`;
+    if (!multi) {
+      return {
+        main: koHtml(item.korean, imageRel, line.local, cue),
+        micBtn,
+        saved,
+      };
+    }
+    const label = revealed ? `<div class="part-label">${escapeHtml(p.label)}</div>` : '';
+    return `<div class="part" data-part="${escapeHtml(p.key)}">
+      <div>
+        ${label}
+        ${cue}
+        ${partResultHtml(saved)}
+      </div>
+      ${micBtn}
+    </div>`;
+  });
+  let body;
+  let tail = '';
+  if (multi) {
+    body = `<div class="row-parts">${koHtml(item.korean, imageRel, line.local)}${partBlocks.join('')}</div>`;
+  } else {
+    const single = partBlocks[0];
+    body = `<div class="row-main">${single.main}</div>${single.micBtn}`;
+    tail = partResultHtml(single.saved);
+  }
+  const gradeBar = grading ? '<div class="grade-bar show"><div class="grade-fill"></div></div>' : '';
+  return `<article class="row" data-id="${escapeHtml(item.id)}">
+    <div class="num">${index + 1}</div>
+    ${body}
+    ${tail}
+    ${gradeBar}
+  </article>`;
+}
+
 function renderSheet(bookId, unitId) {
   const book = byId.get(bookId);
   const unit = book && book.units.find((u) => u.id === unitId);
@@ -426,64 +507,7 @@ function renderSheet(bookId, unitId) {
   const ready = !!session;
   const shared = renderSharedQuestion(bookId, unit, scores, ready);
   const lines = sheetLines(bookId, unit);
-  const rows = lines.map((line, index) => {
-    const item = line.item || {
-      id: line.id,
-      korean: line.korean,
-      english: line.english,
-      audio: line.audio,
-      image: line.image,
-    };
-    const parts = line.kind === 'extra'
-      ? [{ key: 'line', label: 'Answer', english: line.english, audio: line.audio }]
-      : rowParts(item, unit);
-    const multi = parts.length > 1;
-    const grading = gradingScoreKey && parts.some((p) => scoreStorageKey(item.id, p.key) === gradingScoreKey);
-    const plan = analyzeUnit(unit);
-    const showAnswer = plan.mode === 'shared' || parts[0].key === 'line';
-    const imageRel = line.image || item.image || '';
-    const partBlocks = parts.map((p) => {
-      const skey = scoreStorageKey(item.id, p.key);
-      const saved = scores[skey];
-      const micLabel = ready ? 'Mic' : 'Wait';
-      const triple = needsTripleHint(p.english) ? '<p class="triple-hint">Say it 3 times.</p>' : '';
-      const audioRel = p.audio || questionAudioRel(p.english);
-      const micBtn = `<button type="button" class="mic" data-score-key="${escapeHtml(skey)}" data-item-id="${escapeHtml(item.id)}" data-part-key="${escapeHtml(p.key)}" data-grade-text="${escapeHtml(p.english)}" data-audio-rel="${escapeHtml(audioRel)}" ${ready ? '' : 'disabled'}>${micLabel}</button>`;
-      if (!multi) {
-        const enLine = showAnswer ? `<p class="part-text">${escapeHtml(p.english)}</p>` : '';
-        return {
-          main: koHtml(item.korean, imageRel, line.local, `${enLine}${triple}`),
-          micBtn,
-          saved,
-        };
-      }
-      return `<div class="part" data-part="${escapeHtml(p.key)}">
-        <div>
-          <div class="part-label">${escapeHtml(p.label)}</div>
-          <p class="part-text">${escapeHtml(p.english)}</p>
-          ${triple}
-          ${partResultHtml(saved)}
-        </div>
-        ${micBtn}
-      </div>`;
-    });
-    let body;
-    let tail = '';
-    if (multi) {
-      body = `<div class="row-parts">${koHtml(item.korean, imageRel, line.local)}${partBlocks.join('')}</div>`;
-    } else {
-      const single = partBlocks[0];
-      body = `<div class="row-main">${single.main}</div>${single.micBtn}`;
-      tail = partResultHtml(single.saved);
-    }
-    const gradeBar = grading ? '<div class="grade-bar show"><div class="grade-fill"></div></div>' : '';
-    return `<article class="row" data-id="${escapeHtml(item.id)}">
-      <div class="num">${index + 1}</div>
-      ${body}
-      ${tail}
-      ${gradeBar}
-    </article>`;
-  }).join('');
+  const rows = lines.map((line, index) => lineArticleHtml(line, unit, index, scores, ready)).join('');
   const wait = modelError
     ? `<p class="note">${escapeHtml(modelError)}</p>`
     : (ready ? '' : '<p class="note">The sound checker is still loading. Mic turns on when the bar finishes.</p>');
@@ -827,24 +851,26 @@ function onHear(btn) {
   audio.play().catch((err) => console.error(err));
 }
 
-appEl.addEventListener('click', (ev) => {
-  const hear = ev.target.closest('.hear');
-  if (hear) { onHear(hear); return; }
-  const mic = ev.target.closest('.mic');
-  if (mic) onMic(mic);
-});
+if (appEl) {
+  appEl.addEventListener('click', (ev) => {
+    const hear = ev.target.closest('.hear');
+    if (hear) { onHear(hear); return; }
+    const mic = ev.target.closest('.mic');
+    if (mic) onMic(mic);
+  });
 
-window.addEventListener('hashchange', () => {
-  if (capture) stopCapture();
-  gradingScoreKey = null;
-  render();
-});
+  window.addEventListener('hashchange', () => {
+    if (capture) stopCapture();
+    gradingScoreKey = null;
+    render();
+  });
 
-loadContent().then(render).catch((err) => {
-  appEl.innerHTML = '<p class="lead">Could not load the sheets.</p>';
-  console.error(err);
-});
-bootModel();
+  loadContent().then(render).catch((err) => {
+    appEl.innerHTML = '<p class="lead">Could not load the sheets.</p>';
+    console.error(err);
+  });
+  bootModel();
+}
 
 export {
   PASS_SCORE,
@@ -852,6 +878,10 @@ export {
   analyzeUnit,
   scoringTarget,
   rowParts,
+  lineParts,
+  lineArticleHtml,
+  renderSharedQuestion,
+  scoreStorageKey,
   sharedScoreKey,
   itaQuestion,
   cipoAnswer,
