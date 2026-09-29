@@ -9,14 +9,35 @@ import {
 import { decodeAudioToMono, audioStats, normalizeForModel, trimSilence, capSpeechWindow } from './audio.js';
 
 const HEAR_BASE = 'https://mrjkorea.github.io/day4-speak/';
-const PASS_SCORE = 0.8;
+const PASS_SCORE = 0.6;
 const MS_PER_WORD = 200;
-const SCORE_KEY = 'day4-pronounce-scores-v1';
+const SCORE_KEY = 'day4-pronounce-scores-v2';
 const CACHE_NAME = 'day4-wav2vec2-int8-v1';
 const BOOK_ORDER = ['basic_a', 'basic_b', 'basic_c', 'int3a', 'int3b', 'int3c', 'int2a', 'int2b', 'int2c'];
 
+const QUESTION_CODES = {
+  HITW: 'How is the weather?',
+  WCYD: 'What can you draw?',
+  WDYW: 'What do you want?',
+  WIMP: 'Where is my phone?',
+  WDIIT: 'What day is it today?',
+  'WTII(N)': 'What time is it?',
+  WTII: 'What time is it?',
+  WFDYL: 'What flavor do you like?',
+  WITB: 'What is this bug?',
+  HWIYN: 'How will I yell your name?',
+  WGAYI: 'What grade are you in?',
+  WFAT: 'What fruit are these?',
+  WDYH: 'What do you have?',
+};
+
+const SILENCE_MS = 1200;
+const SILENCE_GRACE_MS = 1600;
+const SILENCE_CHECK_MS = 80;
+const SILENCE_RMS = 0.008;
+const MAX_RECORD_MS = 60000;
+
 const ort = window.ort;
-// Absolute folder URL. A bare "vendor/ort/" string is not a valid import() specifier.
 ort.env.wasm.wasmPaths = new URL('vendor/ort/', window.location.href).href;
 ort.env.wasm.numThreads = 1;
 ort.env.wasm.proxy = false;
@@ -31,47 +52,132 @@ let byId = new Map();
 let session = null;
 let modelError = '';
 let capture = null;
+let silenceTimer = null;
+let silenceNodes = null;
+let gradingScoreKey = null;
+
+function koreanCode(korean) {
+  const m = String(korean || '').match(/^([A-Z0-9()]+)\?\s*/);
+  return m ? m[1] : null;
+}
+
+function analyzeUnit(unit) {
+  const items = unit.items;
+  const codes = items.map((it) => koreanCode(it.korean));
+  const coded = codes.filter(Boolean);
+  const allSameCode = coded.length === items.length && coded.every((c) => c === coded[0]);
+  const code = allSameCode ? coded[0] : null;
+  if (code === 'ITA') return { mode: 'ita-rows' };
+  if (code === 'CIPO') return { mode: 'cipo-rows' };
+  if (code && code !== 'ITA' && QUESTION_CODES[code]) {
+    return { mode: 'shared', question: QUESTION_CODES[code], code };
+  }
+  const titleQ = unit.title.trim().endsWith('?');
+  const allAnswers = items.every((it) => !it.english.trim().endsWith('?'));
+  if (titleQ && allAnswers) return { mode: 'shared', question: unit.title.trim(), code: null };
+  return { mode: 'plain' };
+}
+
+function sharedScoreKey(bookId, unitId) {
+  return `${bookId}__${unitId}__shared_question`;
+}
+
+function itaQuestion(item) {
+  const alt = (item.alts || []).find((a) => String(a).trim().endsWith('?'));
+  if (alt) return String(alt).trim();
+  const en = item.english.trim();
+  const m = en.match(/^It is (an?|a) (.+)$/i);
+  if (m) return `Is this ${m[1]} ${m[2]}?`;
+  return en;
+}
+
+function cipoAnswer(item) {
+  const alt = (item.alts || []).find((a) => String(a).trim());
+  return alt ? String(alt).trim() : '';
+}
+
+function hearAnswerRel(text) {
+  const slug = String(text).toLowerCase().replace(/[^a-z0-9]+/g, '-').replace(/^-|-$/g, '');
+  return `audio/hear/${slug}.mp3`;
+}
+
+function rowParts(item, unit) {
+  const plan = analyzeUnit(unit);
+  if (plan.mode === 'ita-rows') {
+    return [
+      { key: 'question', label: 'Question', english: itaQuestion(item), audio: null },
+      { key: 'answer', label: 'Answer', english: item.english, audio: item.audio },
+    ];
+  }
+  if (plan.mode === 'cipo-rows') {
+    const ans = cipoAnswer(item);
+    return [
+      { key: 'question', label: 'Question', english: item.english.trim(), audio: item.audio },
+      { key: 'answer', label: 'Answer', english: ans, audio: ans ? hearAnswerRel(ans) : item.audio },
+    ];
+  }
+  if (plan.mode === 'shared') {
+    return [{ key: 'answer', label: 'Answer', english: item.english, audio: item.audio }];
+  }
+  const en = item.english.trim();
+  if (en.endsWith('?')) {
+    return [{ key: 'line', label: 'Question', english: en, audio: item.audio }];
+  }
+  return [{ key: 'line', label: 'Answer', english: en, audio: item.audio }];
+}
+
+function scoreStorageKey(itemId, partKey) {
+  return partKey === 'line' ? itemId : `${itemId}::${partKey}`;
+}
+
+function scoringTarget(english) {
+  const toks = tokenizeWords(english);
+  if (toks.length === 1) {
+    const w = toks[0].display;
+    return `${w} ${w} ${w}`;
+  }
+  return english;
+}
+
+function needsTripleHint(english) {
+  return tokenizeWords(english).length === 1;
+}
+
+function questionAudioRel(text) {
+  const slug = String(text).toLowerCase().replace(/[^a-z0-9]+/g, '-').replace(/^-|-$/g, '');
+  return `audio/hear/questions/${slug}.mp3`;
+}
+
+function itemRowPassed(item, unit, scores) {
+  const plan = analyzeUnit(unit);
+  if (plan.mode === 'shared') {
+    const sk = sharedScoreKey(unit._bookId, unit.id);
+    if (!scores[sk] || !scores[sk].pass) return false;
+  }
+  return rowParts(item, unit).every((p) => {
+    const key = scoreStorageKey(item.id, p.key);
+    return scores[key] && scores[key].pass;
+  });
+}
 
 
 // Jay 28SEP2026: ONE score book — pronounce grades log here too.
-const MRJ_WHO_KEY = 'day4-pronounce-student-v1';
-
-function mrjStudent() {
-  try {
-    return (localStorage.getItem(MRJ_WHO_KEY) || '').trim();
-  } catch (_) {
-    return '';
-  }
-}
-
-function mrjAskStudent() {
-  let who = mrjStudent();
-  if (!who) {
-    const typed = window.prompt('Your name (so the score goes to your page):', '');
-    who = (typed || '').trim();
-    if (who) {
-      try { localStorage.setItem(MRJ_WHO_KEY, who); } catch (_) {}
-    }
-  }
-  return who;
-}
-
-function logToOneBook(item, graded) {
-  if (!window.MRJ_SCORES || !graded) return;
-  const who = mrjStudent() || 'unknown';
+function logToOneBook(itemId, graded) {
+  const auth = window.MRJ_AUTH;
+  const who = auth && typeof auth.student === 'function' ? String(auth.student() || '').trim() : '';
+  if (!window.MRJ_SCORES || !graded || !who || !itemId) return;
   window.MRJ_SCORES.post({
     student: who,
     program: 'pronounce',
     appName: 'MRJ Pronounce Day 4',
     source: 'pronounce',
-    bookTitle: item.bookId || '',
-    unitTitle: item.unitId || '',
-    itemId: 'pronounce:' + item.id,
+    itemId: 'pronounce:' + itemId,
     itemType: 'pronunciation',
-    scoreValue: Number(graded.score || 0),
-    scoreMax: 1,
+    scoreValue: Number(graded.scorePct || 0),
+    scoreMax: 100,
+    scorePct: Number(graded.scorePct || 0),
     correctness: graded.pass ? 'correct' : 'incorrect',
-    metadata: { english: item.english, weak: graded.weak || [] },
+    metadata: { english: graded.english || '', weak: graded.weak || [] },
   });
 }
 
@@ -190,7 +296,8 @@ async function loadContent() {
   const files = await Promise.all(BOOK_ORDER.map(async (id) => {
     const meta = manifest.books.find((b) => b.id === id);
     const data = await fetch('content/' + id + '.json').then((r) => r.json());
-    return { id, label: (meta && meta.label) || data.label, units: data.units };
+    const units = data.units.map((u) => ({ ...u, _bookId: id }));
+    return { id, label: (meta && meta.label) || data.label, units };
   }));
   books = files;
   byId = new Map(files.map((b) => [b.id, b]));
@@ -212,7 +319,7 @@ function bookProgress(book) {
   for (const unit of book.units) {
     for (const item of unit.items) {
       n += 1;
-      if (scores[item.id] && scores[item.id].pass) pass += 1;
+      if (itemRowPassed(item, unit, scores)) pass += 1;
     }
   }
   return { n, pass };
@@ -231,7 +338,7 @@ function renderUnits(bookId) {
   if (!book) { appEl.innerHTML = '<p class="lead">That book is not here.</p>'; return; }
   const scores = loadScores();
   const rows = book.units.map((unit) => {
-    const passed = unit.items.filter((item) => scores[item.id] && scores[item.id].pass).length;
+    const passed = unit.items.filter((item) => itemRowPassed(item, unit, scores)).length;
     return `<a class="unit" href="#/book/${book.id}/unit/${unit.id}">${unit.title}<small>${passed} / ${unit.items.length}</small></a>`;
   }).join('');
   appEl.innerHTML = `<a class="back" href="#/">← Books</a><h1>${book.label}</h1><p class="lead">Tap the unit you are studying.</p><div class="units">${rows}</div>`;
@@ -241,19 +348,47 @@ function escapeHtml(s) {
   return String(s).replace(/[&<>"']/g, (c) => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c]));
 }
 
-function resultHtml(saved) {
+function wordChipsHtml(words) {
+  if (!words || !words.length) return '';
+  const chips = words.map((w) => {
+    const pct = Math.round((w.score || 0) * 100);
+    const cls = (w.score || 0) >= PASS_SCORE ? 'good' : 'bad';
+    return `<span class="word-chip ${cls}" title="${pct}%">${escapeHtml(w.word)}</span>`;
+  }).join('');
+  return `<div class="chips">${chips}</div>`;
+}
+
+function partResultHtml(saved) {
   if (!saved) return '';
   const verdict = saved.pass ? 'Pass' : 'Not yet';
   const cls = saved.pass ? 'pass' : 'fail';
-  const weak = (saved.weak && saved.weak.length) ? saved.weak.join(', ') : 'none';
+  const pct = saved.scorePct != null ? saved.scorePct : Math.round((saved.score || 0) * 100);
   const reason = saved.reason ? `<p class="meta">${escapeHtml(saved.reason)}</p>` : '';
+  const chips = wordChipsHtml(saved.words);
   return `<div class="after show">
-    <p class="verdict ${cls}">${verdict} · ${Number(saved.score).toFixed(2)}</p>
-    <p class="meta">Weak words: ${escapeHtml(weak)}</p>
+    <p class="verdict ${cls}">${verdict} · ${pct}</p>
+    ${chips}
     ${reason}
-    <p class="english">English: <b>${escapeHtml(saved.english)}</b></p>
-    <button type="button" class="hear" data-audio="${escapeHtml(saved.audio)}">Hear</button>
   </div>`;
+}
+
+function renderSharedQuestion(bookId, unit, scores, ready) {
+  const plan = analyzeUnit(unit);
+  if (plan.mode !== 'shared') return '';
+  const sk = sharedScoreKey(bookId, unit.id);
+  const saved = scores[sk];
+  const micLabel = ready ? 'Mic' : 'Wait';
+  const doneCls = saved && saved.pass ? 'done' : '';
+  const result = partResultHtml(saved);
+  const gradingShared = gradingScoreKey === sk;
+  const gradeBar = gradingShared ? '<div class="grade-bar shared-grade show"><div class="grade-fill"></div></div>' : '';
+  return `<section class="shared-q ${doneCls}" data-shared="${escapeHtml(sk)}">
+    <p class="shared-note">Say this question once for the whole unit.</p>
+    <p class="en-prompt">${escapeHtml(plan.question)}</p>
+    <button type="button" class="mic shared-mic" data-score-key="${escapeHtml(sk)}" data-grade-text="${escapeHtml(plan.question)}" data-audio-rel="${escapeHtml(questionAudioRel(plan.question))}" ${ready ? '' : 'disabled'}>${micLabel}</button>
+    ${result}
+    ${gradeBar}
+  </section>`;
 }
 
 function renderSheet(bookId, unitId) {
@@ -262,20 +397,59 @@ function renderSheet(bookId, unitId) {
   if (!unit) { appEl.innerHTML = '<p class="lead">That unit is not here.</p>'; return; }
   const scores = loadScores();
   const ready = !!session;
+  const shared = renderSharedQuestion(bookId, unit, scores, ready);
   const rows = unit.items.map((item) => {
-    const saved = scores[item.id];
-    const micLabel = ready ? 'Mic' : 'Wait';
+    const parts = rowParts(item, unit);
+    const multi = parts.length > 1;
+    const grading = gradingScoreKey && parts.some((p) => scoreStorageKey(item.id, p.key) === gradingScoreKey);
+    const plan = analyzeUnit(unit);
+    const showAnswer = plan.mode === 'shared' || parts[0].key === 'line';
+    const partBlocks = parts.map((p) => {
+      const skey = scoreStorageKey(item.id, p.key);
+      const saved = scores[skey];
+      const micLabel = ready ? 'Mic' : 'Wait';
+      const triple = needsTripleHint(p.english) ? '<p class="triple-hint">Say it 3 times.</p>' : '';
+      const audioRel = p.audio || questionAudioRel(p.english);
+      const micBtn = `<button type="button" class="mic" data-score-key="${escapeHtml(skey)}" data-item-id="${escapeHtml(item.id)}" data-part-key="${escapeHtml(p.key)}" data-grade-text="${escapeHtml(p.english)}" data-audio-rel="${escapeHtml(audioRel)}" ${ready ? '' : 'disabled'}>${micLabel}</button>`;
+      if (!multi) {
+        const enLine = showAnswer ? `<p class="part-text">${escapeHtml(p.english)}</p>` : '';
+        return {
+          main: `<div class="ko">${escapeHtml(item.korean)}</div>${enLine}${triple}`,
+          micBtn,
+          saved,
+        };
+      }
+      return `<div class="part" data-part="${escapeHtml(p.key)}">
+        <div>
+          <div class="part-label">${escapeHtml(p.label)}</div>
+          <p class="part-text">${escapeHtml(p.english)}</p>
+          ${triple}
+          ${partResultHtml(saved)}
+        </div>
+        ${micBtn}
+      </div>`;
+    });
+    let body;
+    let tail = '';
+    if (multi) {
+      body = `<div class="row-parts"><div class="ko">${escapeHtml(item.korean)}</div>${partBlocks.join('')}</div>`;
+    } else {
+      const single = partBlocks[0];
+      body = `${single.main}${single.micBtn}`;
+      tail = partResultHtml(single.saved);
+    }
+    const gradeBar = grading ? '<div class="grade-bar show"><div class="grade-fill"></div></div>' : '';
     return `<article class="row" data-id="${escapeHtml(item.id)}">
       <div class="num">${item.n}</div>
-      <div class="ko">${escapeHtml(item.korean)}</div>
-      <button type="button" class="mic" data-id="${escapeHtml(item.id)}" ${ready ? '' : 'disabled'}>${micLabel}</button>
-      ${resultHtml(saved)}
+      ${body}
+      ${tail}
+      ${gradeBar}
     </article>`;
   }).join('');
   const wait = modelError
     ? `<p class="note">${escapeHtml(modelError)}</p>`
     : (ready ? '' : '<p class="note">The sound checker is still loading. Mic turns on when the bar finishes.</p>');
-  appEl.innerHTML = `<a class="back" href="#/book/${book.id}">← ${escapeHtml(book.label)}</a><h1>${escapeHtml(unit.title)}</h1>${wait}<div class="sheet">${rows}</div>`;
+  appEl.innerHTML = `<a class="back" href="#/book/${book.id}">← ${escapeHtml(book.label)}</a><h1>${escapeHtml(unit.title)}</h1>${wait}<div class="sheet">${shared}${rows}</div>`;
 }
 
 function render() {
@@ -293,7 +467,7 @@ function findItem(id) {
   for (const book of books) {
     for (const unit of book.units) {
       const item = unit.items.find((it) => it.id === id);
-      if (item) return item;
+      if (item) return { item, unit, book };
     }
   }
   return null;
@@ -323,6 +497,74 @@ function encodeWav(floatChunks, sampleRate) {
   return new Blob([buf], { type: 'audio/wav' });
 }
 
+function disconnectSilenceNodes() {
+  if (!silenceNodes) return;
+  try { silenceNodes.src.disconnect(); } catch (_) {}
+  try { silenceNodes.analyser.disconnect(); } catch (_) {}
+  try { if (silenceNodes.sink) silenceNodes.sink.disconnect(); } catch (_) {}
+  silenceNodes = null;
+}
+
+function stopSilenceWatch() {
+  if (silenceTimer) { clearTimeout(silenceTimer); silenceTimer = null; }
+  disconnectSilenceNodes();
+}
+
+function startSilenceWatch(stream, ctx, onDone) {
+  stopSilenceWatch();
+  let finished = false;
+  const finish = () => {
+    if (finished) return;
+    finished = true;
+    stopSilenceWatch();
+    try { onDone(); } catch (e) { console.warn('silence onDone', e); }
+  };
+  try {
+    if (ctx.state === 'suspended') ctx.resume().catch(() => {});
+    const src = ctx.createMediaStreamSource(stream);
+    const analyser = ctx.createAnalyser();
+    analyser.fftSize = 1024;
+    analyser.smoothingTimeConstant = 0.4;
+    src.connect(analyser);
+    const sink = ctx.createGain();
+    sink.gain.value = 0;
+    analyser.connect(sink);
+    sink.connect(ctx.destination);
+    silenceNodes = { src, analyser, sink };
+    const buf = new Uint8Array(analyser.fftSize);
+    let quietMs = 0;
+    let totalMs = 0;
+    let spoke = false;
+    const tick = () => {
+      if (finished) return;
+      if (ctx.state === 'suspended') ctx.resume().catch(() => {});
+      analyser.getByteTimeDomainData(buf);
+      let sum = 0;
+      for (let i = 0; i < buf.length; i++) {
+        const v = (buf[i] - 128) / 128;
+        sum += v * v;
+      }
+      const rms = Math.sqrt(sum / buf.length);
+      totalMs += SILENCE_CHECK_MS;
+      if (rms >= SILENCE_RMS) {
+        spoke = true;
+        quietMs = 0;
+      } else if (totalMs > SILENCE_GRACE_MS && spoke) {
+        quietMs += SILENCE_CHECK_MS;
+      }
+      if (quietMs >= SILENCE_MS || totalMs >= MAX_RECORD_MS || (!spoke && totalMs >= 12000)) {
+        finish();
+        return;
+      }
+      silenceTimer = setTimeout(tick, SILENCE_CHECK_MS);
+    };
+    silenceTimer = setTimeout(tick, SILENCE_CHECK_MS);
+  } catch (e) {
+    console.warn('startSilenceWatch failed', e);
+    silenceTimer = setTimeout(finish, 5000);
+  }
+}
+
 function startCapture(stream) {
   const Ctx = window.AudioContext || window.webkitAudioContext;
   const ctx = new Ctx();
@@ -338,15 +580,14 @@ function startCapture(stream) {
   src.connect(proc);
   proc.connect(gain);
   gain.connect(ctx.destination);
-  const timer = setTimeout(() => { if (capture) stopAndGrade(); }, 8000);
-  return { ctx, src, proc, gain, chunks, stream, timer };
+  return { ctx, src, proc, gain, chunks, stream };
 }
 
 async function stopCapture() {
   const rec = capture;
   capture = null;
+  stopSilenceWatch();
   if (!rec) return null;
-  clearTimeout(rec.timer);
   try { rec.proc.disconnect(); rec.src.disconnect(); rec.gain.disconnect(); } catch (_) {}
   rec.stream.getTracks().forEach((t) => t.stop());
   const rate = rec.ctx.sampleRate || 48000;
@@ -360,6 +601,7 @@ function weakWords(result) {
 }
 
 async function gradeBlob(blob, english) {
+  const target = scoringTarget(english);
   const t0 = performance.now();
   const samples = await decodeAudioToMono(blob, 16000);
   const stats = audioStats(samples, 16000);
@@ -378,11 +620,11 @@ async function gradeBlob(blob, english) {
   const V = results.logits.dims[2];
   const logits = new Array(T);
   for (let t = 0; t < T; t++) logits[t] = logitsArr.subarray(t * V, (t + 1) * V);
-  const { phones, words } = expectedPhoneSequence(english);
+  const { phones, words } = expectedPhoneSequence(target);
   const phoneScores = forcedAlignGop(logits, phones, 0);
   const latencyMs = performance.now() - t0;
   const result = aggregate(
-    english,
+    target,
     words,
     phoneScores,
     trimmedStats.durationMs,
@@ -396,8 +638,8 @@ async function gradeBlob(blob, english) {
       warnings: trimmedStats.tooQuiet ? ['audio_too_quiet'] : [],
     },
   );
-  const missing = unknownWords(english);
-  const wordCount = tokenizeWords(english).length;
+  const missing = unknownWords(target);
+  const wordCount = tokenizeWords(target).length;
   const longEnough = trimmedStats.durationMs >= wordCount * MS_PER_WORD;
   const realSpeech = !trimmedStats.tooQuiet && longEnough && missing.length === 0;
   const score = result.overall.score || 0;
@@ -407,64 +649,114 @@ async function gradeBlob(blob, english) {
   else if (!longEnough) reason = 'Too short. Say the whole English line.';
   else if (score < PASS_SCORE) reason = 'The sounds did not match. Loud noise does not pass.';
   const pass = score >= PASS_SCORE && realSpeech;
+  const scorePct = Math.round(score * 100);
   return {
     score,
+    scorePct,
     pass,
     weak: weakWords(result),
     reason: pass ? '' : reason,
-    english,
+    english: target,
+    words: result.words || [],
   };
 }
 
+function noteScoreToAuth(itemId, scorePct) {
+  const auth = window.MRJ_AUTH;
+  if (!auth || typeof auth.noteScore !== 'function' || typeof auth.student !== 'function') return;
+  const student = auth.student();
+  if (!student || !student.id) return;
+  auth.noteScore({
+    program: 'pronounce',
+    itemId,
+    scoreValue: Math.round(scorePct),
+    scoreMax: 100,
+    scorePct: Math.round(scorePct),
+  });
+}
+
+function playAudioUrl(url, times = 1) {
+  return new Promise((resolve) => {
+    let left = times;
+    const playOnce = () => {
+      if (left <= 0) { resolve(); return; }
+      left -= 1;
+      const audio = new Audio(url);
+      audio.addEventListener('ended', () => playOnce());
+      audio.addEventListener('error', () => playOnce());
+      audio.play().catch(() => playOnce());
+    };
+    playOnce();
+  });
+}
+
+async function playExpectedOnFail(gradeText, audioRel, pass) {
+  if (pass || !audioRel) return;
+  const url = HEAR_BASE + audioRel;
+  const plays = needsTripleHint(gradeText) ? 3 : 1;
+  await playAudioUrl(url, plays);
+}
+
 async function stopAndGrade() {
-  mrjAskStudent();
-  const itemId = capture && capture.itemId;
+  const meta = capture;
   const blob = await stopCapture();
-  if (!itemId || !blob) return;
-  const item = findItem(itemId);
-  const btn = appEl.querySelector(`.mic[data-id="${CSS.escape(itemId)}"]`);
-  if (btn) { btn.disabled = true; btn.textContent = '…'; }
+  const scoreKey = meta && meta.scoreKey;
+  const gradeText = meta && meta.gradeText;
+  const audioRel = meta && meta.audioRel;
+  const itemId = meta && meta.itemId;
+  if (!scoreKey || !blob || !gradeText) return;
+  gradingScoreKey = scoreKey;
+  render();
+  appEl.querySelectorAll('.mic').forEach((el) => { el.disabled = true; });
   try {
-    const graded = await gradeBlob(blob, item.english);
+    const graded = await gradeBlob(blob, gradeText);
     const scores = loadScores();
-    scores[item.id] = {
+    scores[scoreKey] = {
       score: graded.score,
+      scorePct: graded.scorePct,
       pass: graded.pass,
       weak: graded.weak,
       reason: graded.reason,
-      english: item.english,
-      audio: item.audio,
+      english: graded.english,
+      words: graded.words,
       at: Date.now(),
     };
     saveScores(scores);
-    logToOneBook(item, graded);
+    if (itemId) {
+      noteScoreToAuth(itemId, graded.scorePct);
+      logToOneBook(itemId, graded);
+    }
+    await playExpectedOnFail(gradeText, audioRel, graded.pass);
   } catch (err) {
     const scores = loadScores();
     const reason = (err && err.code === 'too_short')
       ? 'Too short. Say the whole English line.'
       : 'Could not check that try. Say it again.';
-    scores[item.id] = {
+    scores[scoreKey] = {
       score: 0,
+      scorePct: 0,
       pass: false,
       weak: [],
       reason,
-      english: item.english,
-      audio: item.audio,
+      english: scoringTarget(gradeText),
+      words: [],
       at: Date.now(),
     };
     saveScores(scores);
     console.error(err);
+    await playExpectedOnFail(gradeText, audioRel, false);
   }
+  gradingScoreKey = null;
   render();
 }
 
 async function onMic(btn) {
-  if (!session) return;
-  const itemId = btn.getAttribute('data-id');
-  if (capture) {
-    if (capture.itemId === itemId) await stopAndGrade();
-    return;
-  }
+  if (!session || capture) return;
+  const scoreKey = btn.getAttribute('data-score-key');
+  const gradeText = btn.getAttribute('data-grade-text');
+  const audioRel = btn.getAttribute('data-audio-rel');
+  const itemId = btn.getAttribute('data-item-id');
+  if (!scoreKey || !gradeText) return;
   let stream;
   try {
     stream = await navigator.mediaDevices.getUserMedia({
@@ -477,10 +769,16 @@ async function onMic(btn) {
     return;
   }
   capture = startCapture(stream);
-  capture.itemId = itemId;
+  capture.scoreKey = scoreKey;
+  capture.gradeText = gradeText;
+  capture.audioRel = audioRel;
+  capture.itemId = itemId || scoreKey;
+  startSilenceWatch(stream, capture.ctx, () => {
+    if (capture) stopAndGrade();
+  });
   appEl.querySelectorAll('.mic').forEach((el) => {
     el.disabled = el !== btn;
-    if (el === btn) { el.textContent = 'Stop'; el.classList.add('live'); }
+    if (el === btn) { el.textContent = 'Listening…'; el.classList.add('live'); }
   });
 }
 
@@ -500,6 +798,7 @@ appEl.addEventListener('click', (ev) => {
 
 window.addEventListener('hashchange', () => {
   if (capture) stopCapture();
+  gradingScoreKey = null;
   render();
 });
 
@@ -508,3 +807,15 @@ loadContent().then(render).catch((err) => {
   console.error(err);
 });
 bootModel();
+
+export {
+  PASS_SCORE,
+  QUESTION_CODES,
+  analyzeUnit,
+  scoringTarget,
+  rowParts,
+  sharedScoreKey,
+  itaQuestion,
+  cipoAnswer,
+  itemRowPassed,
+};

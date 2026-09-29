@@ -4,9 +4,12 @@
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width, initial-scale=1">
   <title>Pronounce · Day 4</title>
-  <link rel="stylesheet" href="styles.css">
+  <link rel="stylesheet" href="https://mrjkorea.github.io/mrj-signin/mrj-auth.css">
+  <link rel="stylesheet" href="src/styles.css">
+  <script src="https://mrjkorea.github.io/mrj-signin/mrj-auth.js"></script>
+  <script src="https://mrjkorea.github.io/mrj-signin/mrj-auth-boot.js" data-mrj-app="pronounce"></script>
 </head>
-<body>
+<body class="auth-wait">
   <header class="top">
     <a class="brand" href="#/">Pronounce · Day 4</a>
     <p id="modelLabel" class="model-label">Loading the sound checker…</p>
@@ -16,5 +19,10 @@
   <script src="vendor/ort/ort.wasm.min.js"></script>
   <script src="mrj-scores.js?v=20260928-onebook"></script>
   <script type="module" src="src/app.js"></script>
+  <script>
+    window.addEventListener('mrj-auth-ready', function () {
+      document.body.classList.remove('auth-wait');
+    });
+  </script>
 </body>
 </html>
