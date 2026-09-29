@@ -13,7 +13,8 @@
           "audio": "audio/int3a__unit01__01__i_can_draw_a_circle.mp3",
           "audio_source": "fish-coach-ray",
           "korean": "WCYD? 원",
-          "english": "I can draw a circle"
+          "english": "I can draw a circle",
+          "image": "images/int3a_draw-monster_circle.webp"
         },
         {
           "id": "int3a__unit01__02",
@@ -22,7 +23,8 @@
           "audio": "audio/int3a__unit01__02__i_can_draw_a_star.mp3",
           "audio_source": "fish-coach-ray",
           "korean": "WCYD? 별",
-          "english": "I can draw a star"
+          "english": "I can draw a star",
+          "image": "images/int3a_draw-monster_star.webp"
         },
         {
           "id": "int3a__unit01__03",
@@ -31,7 +33,8 @@
           "audio": "audio/int3a__unit01__03__i_can_draw_a_tree.mp3",
           "audio_source": "fish-coach-ray",
           "korean": "WCYD? 나무",
-          "english": "I can draw a tree"
+          "english": "I can draw a tree",
+          "image": "images/int3a_draw-monster_tree.webp"
         },
         {
           "id": "int3a__unit01__04",
@@ -42,7 +45,8 @@
           "audio": "audio/int3a__unit01__04__i_can_draw_poo.mp3",
           "audio_source": "fish-coach-ray",
           "korean": "WCYD? 똥",
-          "english": "I can draw poo"
+          "english": "I can draw poo",
+          "image": "images/int3a_draw-monster_poo.webp"
         },
         {
           "id": "int3a__unit01__05",
@@ -51,7 +55,8 @@
           "audio": "audio/int3a__unit01__05__i_can_draw_a_flag.mp3",
           "audio_source": "fish-coach-ray",
           "korean": "WCYD? 깃발",
-          "english": "I can draw a flag"
+          "english": "I can draw a flag",
+          "image": "images/int3a_draw-monster_flag.webp"
         },
         {
           "id": "int3a__unit01__06",
@@ -60,7 +65,8 @@
           "audio": "audio/int3a__unit01__06__i_can_draw_korea.mp3",
           "audio_source": "fish-coach-ray",
           "korean": "WCYD? 한국",
-          "english": "I can draw Korea"
+          "english": "I can draw Korea",
+          "image": "images/int3a_draw-monster_korea.webp"
         },
         {
           "id": "int3a__unit01__07",
@@ -69,7 +75,8 @@
           "audio": "audio/int3a__unit01__07__i_can_draw_a_monster.mp3",
           "audio_source": "fish-coach-ray",
           "korean": "WCYD? 괴물",
-          "english": "I can draw a monster"
+          "english": "I can draw a monster",
+          "image": "images/int3a_draw-monster_monster.webp"
         },
         {
           "id": "int3a__unit01__08",
@@ -78,7 +85,8 @@
           "audio": "audio/int3a__unit01__08__i_can_draw_an_apple.mp3",
           "audio_source": "fish-coach-ray",
           "korean": "WCYD? 사과",
-          "english": "I can draw an apple"
+          "english": "I can draw an apple",
+          "image": "images/int3a_draw-monster_apple.webp"
         },
         {
           "id": "int3a__unit01__09",
@@ -87,7 +95,8 @@
           "audio": "audio/int3a__unit01__09__i_can_draw_a_hat.mp3",
           "audio_source": "fish-coach-ray",
           "korean": "WCYD? 모자",
-          "english": "I can draw a hat"
+          "english": "I can draw a hat",
+          "image": "images/int3a_draw-monster_hat.webp"
         },
         {
           "id": "int3a__unit01__10",
@@ -96,7 +105,8 @@
           "audio": "audio/int3a__unit01__10__i_can_draw_a_toy.mp3",
           "audio_source": "fish-coach-ray",
           "korean": "WCYD? 장난감",
-          "english": "I can draw a toy"
+          "english": "I can draw a toy",
+          "image": "images/int3a_draw-monster_toy.webp"
         }
       ]
     },
@@ -111,7 +121,8 @@
           "audio": "audio/int3a__unit02__01__i_like_vanilla.mp3",
           "audio_source": "fish-coach-ray",
           "korean": "WFDYL? 바닐라",
-          "english": "I like vanilla"
+          "english": "I like vanilla",
+          "image": "images/int3a_flavor_vanilla.webp"
         },
         {
           "id": "int3a__unit02__02",
@@ -120,7 +131,8 @@
           "audio": "audio/int3a__unit02__02__i_like_chocolate.mp3",
           "audio_source": "fish-coach-ray",
           "korean": "WFDYL? 초콜릿",
-          "english": "I like chocolate"
+          "english": "I like chocolate",
+          "image": "images/int3a_flavor_chocolate.webp"
         },
         {
           "id": "int3a__unit02__03",
@@ -129,7 +141,8 @@
           "audio": "audio/int3a__unit02__03__i_like_strawberry.mp3",
           "audio_source": "fish-coach-ray",
           "korean": "WFDYL? 딸기",
-          "english": "I like strawberry"
+          "english": "I like strawberry",
+          "image": "images/int3a_flavor_strawberry.webp"
         },
         {
           "id": "int3a__unit02__04",
@@ -138,7 +151,8 @@
           "audio": "audio/int3a__unit02__04__i_like_melon.mp3",
           "audio_source": "fish-coach-ray",
           "korean": "WFDYL? 멜론",
-          "english": "I like melon"
+          "english": "I like melon",
+          "image": "images/int3a_flavor_melon.webp"
         },
         {
           "id": "int3a__unit02__05",
@@ -147,7 +161,8 @@
           "audio": "audio/int3a__unit02__05__i_like_mint.mp3",
           "audio_source": "fish-coach-ray",
           "korean": "WFDYL? 민트",
-          "english": "I like mint"
+          "english": "I like mint",
+          "image": "images/int3a_flavor_mint.webp"
         },
         {
           "id": "int3a__unit02__06",
@@ -156,7 +171,8 @@
           "audio": "audio/int3a__unit02__06__i_like_banana.mp3",
           "audio_source": "fish-coach-ray",
           "korean": "WFDYL? 바나나",
-          "english": "I like banana"
+          "english": "I like banana",
+          "image": "images/int3a_flavor_banana.webp"
         },
         {
           "id": "int3a__unit02__07",
@@ -165,7 +181,8 @@
           "audio": "audio/int3a__unit02__07__i_like_lemon.mp3",
           "audio_source": "fish-coach-ray",
           "korean": "WFDYL? 레몬",
-          "english": "I like lemon"
+          "english": "I like lemon",
+          "image": "images/int3a_flavor_lemon.webp"
         },
         {
           "id": "int3a__unit02__08",
@@ -174,7 +191,8 @@
           "audio": "audio/int3a__unit02__08__i_like_milk.mp3",
           "audio_source": "fish-coach-ray",
           "korean": "WFDYL? 우유",
-          "english": "I like milk"
+          "english": "I like milk",
+          "image": "images/int3a_flavor_milk.webp"
         },
         {
           "id": "int3a__unit02__09",
@@ -185,7 +203,8 @@
           "audio": "audio/int3a__unit02__09__i_like_red_bean.mp3",
           "audio_source": "fish-coach-ray",
           "korean": "WFDYL? 팥",
-          "english": "I like red bean"
+          "english": "I like red bean",
+          "image": "images/int3a_flavor_red_bean.webp"
         },
         {
           "id": "int3a__unit02__10",
@@ -194,7 +213,8 @@
           "audio": "audio/int3a__unit02__10__i_like_cotton_candy.mp3",
           "audio_source": "fish-coach-ray",
           "korean": "WFDYL? 솜사탕",
-          "english": "I like cotton candy"
+          "english": "I like cotton candy",
+          "image": "images/cotton-candy.webp"
         }
       ]
     },
@@ -209,7 +229,8 @@
           "audio": "audio/int3a__unit03__01__this_is_good.mp3",
           "audio_source": "fish-coach-ray",
           "korean": "이것은 좋습니다",
-          "english": "This is good"
+          "english": "This is good",
+          "image": "images/int3a_opposites_good.webp"
         },
         {
           "id": "int3a__unit03__02",
@@ -218,7 +239,8 @@
           "audio": "audio/int3a__unit03__02__that_is_bad.mp3",
           "audio_source": "fish-coach-ray",
           "korean": "저것은 나쁩니다",
-          "english": "That is bad"
+          "english": "That is bad",
+          "image": "images/int3a_opposites_bad.webp"
         },
         {
           "id": "int3a__unit03__03",
@@ -227,7 +249,8 @@
           "audio": "audio/int3a__unit03__03__this_is_cold.mp3",
           "audio_source": "fish-coach-ray",
           "korean": "이것은 차갑습니다",
-          "english": "This is cold"
+          "english": "This is cold",
+          "image": "images/int3a_opposites_cold.webp"
         },
         {
           "id": "int3a__unit03__04",
@@ -236,7 +259,8 @@
           "audio": "audio/int3a__unit03__04__that_is_hot.mp3",
           "audio_source": "fish-coach-ray",
           "korean": "저것은 뜨겁습니다",
-          "english": "That is hot"
+          "english": "That is hot",
+          "image": "images/int3a_opposites_hot.webp"
         },
         {
           "id": "int3a__unit03__05",
@@ -245,7 +269,8 @@
           "audio": "audio/int3a__unit03__05__this_is_small.mp3",
           "audio_source": "fish-coach-ray",
           "korean": "이것은 작습니다",
-          "english": "This is small"
+          "english": "This is small",
+          "image": "images/int3a_opposites_small.webp"
         },
         {
           "id": "int3a__unit03__06",
@@ -254,7 +279,8 @@
           "audio": "audio/int3a__unit03__06__that_is_big.mp3",
           "audio_source": "fish-coach-ray",
           "korean": "저것은 큽니다",
-          "english": "That is big"
+          "english": "That is big",
+          "image": "images/int3a_opposites_big.webp"
         },
         {
           "id": "int3a__unit03__07",
@@ -263,7 +289,8 @@
           "audio": "audio/int3a__unit03__07__this_is_soft.mp3",
           "audio_source": "fish-coach-ray",
           "korean": "이것은 부드럽습니다",
-          "english": "This is soft"
+          "english": "This is soft",
+          "image": "images/int3a_opposites_soft.webp"
         },
         {
           "id": "int3a__unit03__08",
@@ -272,7 +299,8 @@
           "audio": "audio/int3a__unit03__08__that_is_hard.mp3",
           "audio_source": "fish-coach-ray",
           "korean": "저것은 딱딱합니다",
-          "english": "That is hard"
+          "english": "That is hard",
+          "image": "images/int3a_opposites_hard.webp"
         },
         {
           "id": "int3a__unit03__09",
@@ -281,7 +309,8 @@
           "audio": "audio/int3a__unit03__09__this_is_quiet.mp3",
           "audio_source": "fish-coach-ray",
           "korean": "이것은 조용합니다",
-          "english": "This is quiet"
+          "english": "This is quiet",
+          "image": "images/quiet.webp"
         },
         {
           "id": "int3a__unit03__10",
@@ -290,7 +319,8 @@
           "audio": "audio/int3a__unit03__10__that_is_loud.mp3",
           "audio_source": "fish-coach-ray",
           "korean": "저것은 시끄럽습니다",
-          "english": "That is loud"
+          "english": "That is loud",
+          "image": "images/int3a_opposites_loud.webp"
         }
       ]
     },
@@ -307,7 +337,8 @@
           "audio": "audio/int3a__unit04__01__he_is_15_years_old.mp3",
           "audio_source": "fish-coach-ray",
           "korean": "그는 15살입니다",
-          "english": "He is 15 years old"
+          "english": "He is 15 years old",
+          "image": "images/int3a_how-old_age_15.webp"
         },
         {
           "id": "int3a__unit04__02",
@@ -318,7 +349,8 @@
           "audio": "audio/int3a__unit04__02__she_is_27_years_old.mp3",
           "audio_source": "fish-coach-ray",
           "korean": "그녀는 27살입니다",
-          "english": "She is 27 years old"
+          "english": "She is 27 years old",
+          "image": "images/woman-age-27.webp"
         },
         {
           "id": "int3a__unit04__03",
@@ -329,7 +361,8 @@
           "audio": "audio/int3a__unit04__03__he_is_5_years_old.mp3",
           "audio_source": "fish-coach-ray",
           "korean": "그는 5살입니다",
-          "english": "He is 5 years old"
+          "english": "He is 5 years old",
+          "image": "images/int3a_how-old_age_5.webp"
         },
         {
           "id": "int3a__unit04__04",
@@ -340,7 +373,8 @@
           "audio": "audio/int3a__unit04__04__she_is_10_years_old.mp3",
           "audio_source": "fish-coach-ray",
           "korean": "그녀는 10살입니다",
-          "english": "She is 10 years old"
+          "english": "She is 10 years old",
+          "image": "images/girl-age-10.webp"
         },
         {
           "id": "int3a__unit04__05",
@@ -349,7 +383,8 @@
           "audio": "audio/int3a__unit04__05__he_is_55_years_old.mp3",
           "audio_source": "fish-coach-ray",
           "korean": "그는 55살입니다",
-          "english": "He is 55 years old"
+          "english": "He is 55 years old",
+          "image": "images/int3a_how-old_age_55.webp"
         },
         {
           "id": "int3a__unit04__06",
@@ -360,7 +395,8 @@
           "audio": "audio/int3a__unit04__06__she_is_30_years_old.mp3",
           "audio_source": "fish-coach-ray",
           "korean": "그녀는 30살입니다",
-          "english": "She is 30 years old"
+          "english": "She is 30 years old",
+          "image": "images/woman-age-30.webp"
         },
         {
           "id": "int3a__unit04__07",
@@ -371,7 +407,8 @@
           "audio": "audio/int3a__unit04__07__he_is_100_years_old.mp3",
           "audio_source": "fish-coach-ray",
           "korean": "그는 100살입니다",
-          "english": "He is 100 years old"
+          "english": "He is 100 years old",
+          "image": "images/man-age-100.webp"
         },
         {
           "id": "int3a__unit04__08",
@@ -380,7 +417,8 @@
           "audio": "audio/int3a__unit04__08__she_is_39_years_old.mp3",
           "audio_source": "fish-coach-ray",
           "korean": "그녀는 39살입니다",
-          "english": "She is 39 years old"
+          "english": "She is 39 years old",
+          "image": "images/woman-age-39.webp"
         },
         {
           "id": "int3a__unit04__09",
@@ -391,7 +429,8 @@
           "audio": "audio/int3a__unit04__09__he_is_1_year_old.mp3",
           "audio_source": "fish-coach-ray",
           "korean": "그는 1살입니다",
-          "english": "He is 1 year old"
+          "english": "He is 1 year old",
+          "image": "images/int3a_how-old_age_1.webp"
         },
         {
           "id": "int3a__unit04__10",
@@ -400,7 +439,8 @@
           "audio": "audio/int3a__unit04__10__she_is_77_years_old.mp3",
           "audio_source": "fish-coach-ray",
           "korean": "그녀는 77살입니다",
-          "english": "She is 77 years old"
+          "english": "She is 77 years old",
+          "image": "images/int3a_how-old_age_77.webp"
         }
       ]
     },
@@ -415,7 +455,8 @@
           "audio": "audio/int3a__unit05__01__it_is_a_moth.mp3",
           "audio_source": "fish-coach-ray",
           "korean": "WITB? 나방",
-          "english": "It is a moth"
+          "english": "It is a moth",
+          "image": "images/int3a_bug_moth.webp"
         },
         {
           "id": "int3a__unit05__02",
@@ -424,7 +465,8 @@
           "audio": "audio/int3a__unit05__02__it_is_a_centipede.mp3",
           "audio_source": "fish-coach-ray",
           "korean": "WITB? 지네",
-          "english": "It is a centipede"
+          "english": "It is a centipede",
+          "image": "images/int3a_bug_centipede.webp"
         },
         {
           "id": "int3a__unit05__03",
@@ -433,7 +475,8 @@
           "audio": "audio/int3a__unit05__03__it_is_a_mosquito.mp3",
           "audio_source": "fish-coach-ray",
           "korean": "WITB? 모기",
-          "english": "It is a mosquito"
+          "english": "It is a mosquito",
+          "image": "images/int3a_bug_mosquito.webp"
         },
         {
           "id": "int3a__unit05__04",
@@ -442,7 +485,8 @@
           "audio": "audio/int3a__unit05__04__it_is_a_cicada.mp3",
           "audio_source": "fish-coach-ray",
           "korean": "WITB? 매미",
-          "english": "It is a cicada"
+          "english": "It is a cicada",
+          "image": "images/int3a_bug_cicada.webp"
         },
         {
           "id": "int3a__unit05__05",
@@ -451,7 +495,8 @@
           "audio": "audio/int3a__unit05__05__it_is_a_spider.mp3",
           "audio_source": "fish-coach-ray",
           "korean": "WITB? 거미",
-          "english": "It is a spider"
+          "english": "It is a spider",
+          "image": "images/int3a_bug_spider.webp"
         },
         {
           "id": "int3a__unit05__06",
@@ -460,7 +505,8 @@
           "audio": "audio/int3a__unit05__06__it_is_a_cockroach.mp3",
           "audio_source": "fish-coach-ray",
           "korean": "WITB? 바퀴벌레",
-          "english": "It is a cockroach"
+          "english": "It is a cockroach",
+          "image": "images/int3a_bug_cockroach.webp"
         },
         {
           "id": "int3a__unit05__07",
@@ -469,7 +515,8 @@
           "audio": "audio/int3a__unit05__07__it_is_an_ant.mp3",
           "audio_source": "fish-coach-ray",
           "korean": "WITB? 개미",
-          "english": "It is an ant"
+          "english": "It is an ant",
+          "image": "images/int3a_bug_ant.webp"
         },
         {
           "id": "int3a__unit05__08",
@@ -478,7 +525,8 @@
           "audio": "audio/int3a__unit05__08__it_is_a_silkworm.mp3",
           "audio_source": "fish-coach-ray",
           "korean": "WITB? 누에",
-          "english": "It is a silkworm"
+          "english": "It is a silkworm",
+          "image": "images/int3a_bug_silkworm.webp"
         },
         {
           "id": "int3a__unit05__09",
@@ -487,7 +535,8 @@
           "audio": "audio/int3a__unit05__09__it_is_a_butterfly.mp3",
           "audio_source": "fish-coach-ray",
           "korean": "WITB? 나비",
-          "english": "It is a butterfly"
+          "english": "It is a butterfly",
+          "image": "images/int3a_bug_butterfly.webp"
         },
         {
           "id": "int3a__unit05__10",
@@ -496,7 +545,8 @@
           "audio": "audio/int3a__unit05__10__it_is_a_firefly.mp3",
           "audio_source": "fish-coach-ray",
           "korean": "WITB? 반딧불이",
-          "english": "It is a firefly"
+          "english": "It is a firefly",
+          "image": "images/int3a_bug_firefly.webp"
         }
       ]
     },
@@ -511,7 +561,8 @@
           "audio": "audio/int3a__unit06__01__rose.mp3",
           "audio_source": "fish-coach-ray",
           "korean": "HWIYN? 장미",
-          "english": "Rose"
+          "english": "Rose",
+          "image": "images/int3a_what-is-your-name_rose.webp"
         },
         {
           "id": "int3a__unit06__02",
@@ -520,7 +571,8 @@
           "audio": "audio/int3a__unit06__02__iris.mp3",
           "audio_source": "fish-coach-ray",
           "korean": "HWIYN? 붓꽃",
-          "english": "Iris"
+          "english": "Iris",
+          "image": "images/int3a_what-is-your-name_iris.webp"
         },
         {
           "id": "int3a__unit06__03",
@@ -529,7 +581,8 @@
           "audio": "audio/int3a__unit06__03__hunter.mp3",
           "audio_source": "fish-coach-ray",
           "korean": "HWIYN? 사냥꾼",
-          "english": "Hunter"
+          "english": "Hunter",
+          "image": "images/int3a_what-is-your-name_hunter.webp"
         },
         {
           "id": "int3a__unit06__04",
@@ -538,7 +591,8 @@
           "audio": "audio/int3a__unit06__04__ginger.mp3",
           "audio_source": "fish-coach-ray",
           "korean": "HWIYN? 생강",
-          "english": "Ginger"
+          "english": "Ginger",
+          "image": "images/int3a_what-is-your-name_ginger.webp"
         },
         {
           "id": "int3a__unit06__05",
@@ -549,7 +603,8 @@
           "audio": "audio/int3a__unit06__05__stingray.mp3",
           "audio_source": "fish-coach-ray",
           "korean": "HWIYN? 가오리",
-          "english": "Stingray"
+          "english": "Stingray",
+          "image": "images/stingray.webp"
         },
         {
           "id": "int3a__unit06__06",
@@ -558,7 +613,8 @@
           "audio": "audio/int3a__unit06__06__mike.mp3",
           "audio_source": "fish-coach-ray",
           "korean": "HWIYN? 마이크",
-          "english": "Mike"
+          "english": "Mike",
+          "image": "images/int3a_what-is-your-name_mike.webp"
         },
         {
           "id": "int3a__unit06__07",
@@ -567,7 +623,8 @@
           "audio": "audio/int3a__unit06__07__ivy.mp3",
           "audio_source": "fish-coach-ray",
           "korean": "HWIYN? 담쟁이덩굴",
-          "english": "Ivy"
+          "english": "Ivy",
+          "image": "images/int3a_what-is-your-name_ivy.webp"
         },
         {
           "id": "int3a__unit06__08",
@@ -576,7 +633,8 @@
           "audio": "audio/int3a__unit06__08__baker.mp3",
           "audio_source": "fish-coach-ray",
           "korean": "HWIYN? 제빵사",
-          "english": "Baker"
+          "english": "Baker",
+          "image": "images/int3a_what-is-your-name_baker.webp"
         },
         {
           "id": "int3a__unit06__09",
@@ -585,7 +643,8 @@
           "audio": "audio/int3a__unit06__09__lily.mp3",
           "audio_source": "fish-coach-ray",
           "korean": "HWIYN? 백합",
-          "english": "Lily"
+          "english": "Lily",
+          "image": "images/int3a_what-is-your-name_lily.webp"
         },
         {
           "id": "int3a__unit06__10",
@@ -594,7 +653,8 @@
           "audio": "audio/int3a__unit06__10__violet.mp3",
           "audio_source": "fish-coach-ray",
           "korean": "HWIYN? 제비꽃",
-          "english": "Violet"
+          "english": "Violet",
+          "image": "images/int3a_what-is-your-name_violet.webp"
         }
       ]
     },
@@ -609,7 +669,8 @@
           "audio": "audio/int3a__unit07__01__stand_up.mp3",
           "audio_source": "fish-coach-ray",
           "korean": "일어서!",
-          "english": "Stand up!"
+          "english": "Stand up!",
+          "image": "images/stand-up.webp"
         },
         {
           "id": "int3a__unit07__02",
@@ -618,7 +679,8 @@
           "audio": "audio/int3a__unit07__02__run.mp3",
           "audio_source": "fish-coach-ray",
           "korean": "뛰어가!",
-          "english": "Run!"
+          "english": "Run!",
+          "image": "images/int3a_gym-class_run_around.webp"
         },
         {
           "id": "int3a__unit07__03",
@@ -629,7 +691,8 @@
           "audio": "audio/int3a__unit07__03__jump_rope.mp3",
           "audio_source": "fish-coach-ray",
           "korean": "줄넘기 해!",
-          "english": "Jump rope!"
+          "english": "Jump rope!",
+          "image": "images/int3a_gym-class_jump_rope.webp"
         },
         {
           "id": "int3a__unit07__04",
@@ -638,7 +701,8 @@
           "audio": "audio/int3a__unit07__04__climb_up.mp3",
           "audio_source": "fish-coach-ray",
           "korean": "기어 올라가!",
-          "english": "Climb up!"
+          "english": "Climb up!",
+          "image": "images/int3c_u04_rpg_lets_climb_jungle_gym.webp"
         },
         {
           "id": "int3a__unit07__05",
@@ -647,7 +711,8 @@
           "audio": "audio/int3a__unit07__05__clap_three_times.mp3",
           "audio_source": "fish-coach-ray",
           "korean": "박수 3번 쳐!",
-          "english": "Clap three times!"
+          "english": "Clap three times!",
+          "image": "images/int3a_gym-class_clap_3.webp"
         },
         {
           "id": "int3a__unit07__06",
@@ -656,7 +721,8 @@
           "audio": "audio/int3a__unit07__06__turn_around.mp3",
           "audio_source": "fish-coach-ray",
           "korean": "돌아!",
-          "english": "Turn around!"
+          "english": "Turn around!",
+          "image": "images/int3a_gym-class_turn_around.webp"
         },
         {
           "id": "int3a__unit07__07",
@@ -665,7 +731,8 @@
           "audio": "audio/int3a__unit07__07__dance.mp3",
           "audio_source": "fish-coach-ray",
           "korean": "춤춰!",
-          "english": "Dance!"
+          "english": "Dance!",
+          "image": "images/int3a_gym-class_dance.webp"
         },
         {
           "id": "int3a__unit07__08",
@@ -674,7 +741,8 @@
           "audio": "audio/int3a__unit07__08__sit_down.mp3",
           "audio_source": "fish-coach-ray",
           "korean": "앉아!",
-          "english": "Sit down!"
+          "english": "Sit down!",
+          "image": "images/sit-down.webp"
         },
         {
           "id": "int3a__unit07__09",
@@ -685,7 +753,8 @@
           "audio": "audio/int3a__unit07__09__get_down.mp3",
           "audio_source": "fish-coach-ray",
           "korean": "엎드려!",
-          "english": "Get down!"
+          "english": "Get down!",
+          "image": "images/get-down.webp"
         },
         {
           "id": "int3a__unit07__10",
@@ -694,7 +763,8 @@
           "audio": "audio/int3a__unit07__10__do_jumping_jacks.mp3",
           "audio_source": "fish-coach-ray",
           "korean": "점핑잭 해!",
-          "english": "Do jumping jacks!"
+          "english": "Do jumping jacks!",
+          "image": "images/int3a_gym-class_jumping_jacks.webp"
         }
       ]
     },
@@ -711,7 +781,8 @@
           "audio": "audio/int3a__unit08__01__i_am_11_years_old.mp3",
           "audio_source": "fish-coach-ray",
           "korean": "나는 11살입니다",
-          "english": "I am 11 years old"
+          "english": "I am 11 years old",
+          "image": "images/int3a_introduction_age_11.webp"
         },
         {
           "id": "int3a__unit08__02",
@@ -722,7 +793,8 @@
           "audio": "audio/int3a__unit08__02__i_am_18_years_old.mp3",
           "audio_source": "fish-coach-ray",
           "korean": "나는 18살입니다",
-          "english": "I am 18 years old"
+          "english": "I am 18 years old",
+          "image": "images/int3a_introduction_age_18.webp"
         },
         {
           "id": "int3a__unit08__03",
@@ -731,7 +803,8 @@
           "audio": "audio/int3a__unit08__03__i_can_sing_and_dance.mp3",
           "audio_source": "fish-coach-ray",
           "korean": "나는 노래하고 춤출 수 있습니다",
-          "english": "I can sing and dance"
+          "english": "I can sing and dance",
+          "image": "images/int3a_introduction_sing_dance.webp"
         },
         {
           "id": "int3a__unit08__04",
@@ -740,7 +813,8 @@
           "audio": "audio/int3a__unit08__04__i_can_draw.mp3",
           "audio_source": "fish-coach-ray",
           "korean": "나는 그릴 수 있습니다",
-          "english": "I can draw"
+          "english": "I can draw",
+          "image": "images/int3a_introduction_draw.webp"
         },
         {
           "id": "int3a__unit08__05",
@@ -749,7 +823,8 @@
           "audio": "audio/int3a__unit08__05__i_really_like_dogs.mp3",
           "audio_source": "fish-coach-ray",
           "korean": "나는 개를 정말 좋아합니다",
-          "english": "I really like dogs"
+          "english": "I really like dogs",
+          "image": "images/int3a_introduction_dogs.webp"
         },
         {
           "id": "int3a__unit08__06",
@@ -758,7 +833,8 @@
           "audio": "audio/int3a__unit08__06__i_like_music.mp3",
           "audio_source": "fish-coach-ray",
           "korean": "나는 음악을 좋아합니다",
-          "english": "I like music"
+          "english": "I like music",
+          "image": "images/int3a_introduction_music.webp"
         },
         {
           "id": "int3a__unit08__07",
@@ -767,7 +843,8 @@
           "audio": "audio/int3a__unit08__07__where_are_you_from.mp3",
           "audio_source": "fish-coach-ray",
           "korean": "너는 어디서 왔습니까?",
-          "english": "Where are you from?"
+          "english": "Where are you from?",
+          "image": "images/where-are-you-from.webp"
         },
         {
           "id": "int3a__unit08__08",
@@ -776,7 +853,8 @@
           "audio": "audio/int3a__unit08__08__i_am_from_seoul.mp3",
           "audio_source": "fish-coach-ray",
           "korean": "나는 서울에서 왔습니다",
-          "english": "I am from Seoul"
+          "english": "I am from Seoul",
+          "image": "images/int3a_introduction_seoul.webp"
         },
         {
           "id": "int3a__unit08__09",
@@ -787,7 +865,8 @@
           "audio": "audio/int3a__unit08__09__there_are_six_people_in_my_family.mp3",
           "audio_source": "fish-coach-ray",
           "korean": "내 가족은 6명 있습니다",
-          "english": "There are six people in my family"
+          "english": "There are six people in my family",
+          "image": "images/family-of-six.webp"
         },
         {
           "id": "int3a__unit08__10",
@@ -796,7 +875,8 @@
           "audio": "audio/int3a__unit08__10__what_school_do_you_go_to.mp3",
           "audio_source": "fish-coach-ray",
           "korean": "너는 무슨 학교에 갑니까?",
-          "english": "What school do you go to?"
+          "english": "What school do you go to?",
+          "image": "images/what-school.webp"
         }
       ]
     }

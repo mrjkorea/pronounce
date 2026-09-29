@@ -7,8 +7,13 @@ import {
   unknownWords,
 } from './engine.js';
 import { decodeAudioToMono, audioStats, normalizeForModel, trimSilence, capSpeechWindow } from './audio.js';
+import { sheetLines } from './sheet.js';
 
 const HEAR_BASE = 'https://mrjkorea.github.io/day4-speak/';
+const LOCAL_HEAR = new Set([
+  'audio/hear/it-is-here.mp3',
+  'audio/hear/it-is-there.mp3',
+]);
 const PASS_SCORE = 0.6;
 const MS_PER_WORD = 200;
 const SCORE_KEY = 'day4-pronounce-scores-v2';
@@ -312,14 +317,23 @@ function route() {
   return { name: 'home' };
 }
 
+function linePassed(line, unit, scores) {
+  if (line.kind === 'extra') {
+    const saved = scores[line.id];
+    return !!(saved && saved.pass);
+  }
+  return itemRowPassed(line.item, unit, scores);
+}
+
 function bookProgress(book) {
   const scores = loadScores();
   let n = 0;
   let pass = 0;
   for (const unit of book.units) {
-    for (const item of unit.items) {
-      n += 1;
-      if (itemRowPassed(item, unit, scores)) pass += 1;
+    const lines = sheetLines(book.id, unit);
+    n += lines.length;
+    for (const line of lines) {
+      if (linePassed(line, unit, scores)) pass += 1;
     }
   }
   return { n, pass };
@@ -338,8 +352,9 @@ function renderUnits(bookId) {
   if (!book) { appEl.innerHTML = '<p class="lead">That book is not here.</p>'; return; }
   const scores = loadScores();
   const rows = book.units.map((unit) => {
-    const passed = unit.items.filter((item) => itemRowPassed(item, unit, scores)).length;
-    return `<a class="unit" href="#/book/${book.id}/unit/${unit.id}">${unit.title}<small>${passed} / ${unit.items.length}</small></a>`;
+    const lines = sheetLines(book.id, unit);
+    const passed = lines.filter((line) => linePassed(line, unit, scores)).length;
+    return `<a class="unit" href="#/book/${book.id}/unit/${unit.id}">${unit.title}<small>${passed} / ${lines.length}</small></a>`;
   }).join('');
   appEl.innerHTML = `<a class="back" href="#/">← Books</a><h1>${book.label}</h1><p class="lead">Tap the unit you are studying.</p><div class="units">${rows}</div>`;
 }
@@ -391,6 +406,18 @@ function renderSharedQuestion(bookId, unit, scores, ready) {
   </section>`;
 }
 
+function hearSrc(rel) {
+  if (!rel) return '';
+  if (LOCAL_HEAR.has(rel)) return rel;
+  return HEAR_BASE + rel;
+}
+
+function koHtml(korean, imageRel, local, extraHtml) {
+  const src = imageRel ? (local ? imageRel : HEAR_BASE + imageRel) : '';
+  const pic = src ? `<img class="row-pic" alt="" src="${escapeHtml(src)}">` : '';
+  return `<div class="ko-wrap">${pic}<div class="ko-text"><div class="ko">${escapeHtml(korean)}</div>${extraHtml || ''}</div></div>`;
+}
+
 function renderSheet(bookId, unitId) {
   const book = byId.get(bookId);
   const unit = book && book.units.find((u) => u.id === unitId);
@@ -398,12 +425,23 @@ function renderSheet(bookId, unitId) {
   const scores = loadScores();
   const ready = !!session;
   const shared = renderSharedQuestion(bookId, unit, scores, ready);
-  const rows = unit.items.map((item) => {
-    const parts = rowParts(item, unit);
+  const lines = sheetLines(bookId, unit);
+  const rows = lines.map((line, index) => {
+    const item = line.item || {
+      id: line.id,
+      korean: line.korean,
+      english: line.english,
+      audio: line.audio,
+      image: line.image,
+    };
+    const parts = line.kind === 'extra'
+      ? [{ key: 'line', label: 'Answer', english: line.english, audio: line.audio }]
+      : rowParts(item, unit);
     const multi = parts.length > 1;
     const grading = gradingScoreKey && parts.some((p) => scoreStorageKey(item.id, p.key) === gradingScoreKey);
     const plan = analyzeUnit(unit);
     const showAnswer = plan.mode === 'shared' || parts[0].key === 'line';
+    const imageRel = line.image || item.image || '';
     const partBlocks = parts.map((p) => {
       const skey = scoreStorageKey(item.id, p.key);
       const saved = scores[skey];
@@ -414,7 +452,7 @@ function renderSheet(bookId, unitId) {
       if (!multi) {
         const enLine = showAnswer ? `<p class="part-text">${escapeHtml(p.english)}</p>` : '';
         return {
-          main: `<div class="ko">${escapeHtml(item.korean)}</div>${enLine}${triple}`,
+          main: koHtml(item.korean, imageRel, line.local, `${enLine}${triple}`),
           micBtn,
           saved,
         };
@@ -432,15 +470,15 @@ function renderSheet(bookId, unitId) {
     let body;
     let tail = '';
     if (multi) {
-      body = `<div class="row-parts"><div class="ko">${escapeHtml(item.korean)}</div>${partBlocks.join('')}</div>`;
+      body = `<div class="row-parts">${koHtml(item.korean, imageRel, line.local)}${partBlocks.join('')}</div>`;
     } else {
       const single = partBlocks[0];
-      body = `${single.main}${single.micBtn}`;
+      body = `<div class="row-main">${single.main}</div>${single.micBtn}`;
       tail = partResultHtml(single.saved);
     }
     const gradeBar = grading ? '<div class="grade-bar show"><div class="grade-fill"></div></div>' : '';
     return `<article class="row" data-id="${escapeHtml(item.id)}">
-      <div class="num">${item.n}</div>
+      <div class="num">${index + 1}</div>
       ${body}
       ${tail}
       ${gradeBar}
@@ -692,7 +730,7 @@ function playAudioUrl(url, times = 1) {
 
 async function playExpectedOnFail(gradeText, audioRel, pass) {
   if (pass || !audioRel) return;
-  const url = HEAR_BASE + audioRel;
+  const url = hearSrc(audioRel);
   const plays = needsTripleHint(gradeText) ? 3 : 1;
   await playAudioUrl(url, plays);
 }
@@ -785,7 +823,7 @@ async function onMic(btn) {
 function onHear(btn) {
   const rel = btn.getAttribute('data-audio');
   if (!rel) return;
-  const audio = new Audio(HEAR_BASE + rel);
+  const audio = new Audio(hearSrc(rel));
   audio.play().catch((err) => console.error(err));
 }
 

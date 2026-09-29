@@ -184,6 +184,30 @@ h1 {
   color: #9a907f;
 }
 
+.row-main {
+  min-width: 0;
+}
+
+.ko-wrap {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  min-width: 0;
+}
+
+.ko-text {
+  min-width: 0;
+}
+
+.row-pic {
+  width: 88px;
+  height: 88px;
+  flex: 0 0 88px;
+  border-radius: 12px;
+  object-fit: cover;
+  background: #efe8da;
+}
+
 .ko {
   font-size: 36px;
   font-weight: 800;

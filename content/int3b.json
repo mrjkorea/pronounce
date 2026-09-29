@@ -13,7 +13,8 @@
           "audio": "audio/int3b__unit01__01__i_am_in_kindergarten.mp3",
           "audio_source": "fish-coach-ray",
           "korean": "WGAYI? 유치원",
-          "english": "I am in kindergarten"
+          "english": "I am in kindergarten",
+          "image": "images/i3b_kinder.webp"
         },
         {
           "id": "int3b__unit01__02",
@@ -24,7 +25,8 @@
           "audio": "audio/int3b__unit01__02__i_am_in_first_grade.mp3",
           "audio_source": "fish-coach-ray",
           "korean": "WGAYI? 1학년",
-          "english": "I am in first grade"
+          "english": "I am in first grade",
+          "image": "images/grade-1.webp"
         },
         {
           "id": "int3b__unit01__03",
@@ -33,7 +35,8 @@
           "audio": "audio/int3b__unit01__03__i_am_in_second_grade.mp3",
           "audio_source": "fish-coach-ray",
           "korean": "WGAYI? 2학년",
-          "english": "I am in second grade"
+          "english": "I am in second grade",
+          "image": "images/grade-2.webp"
         },
         {
           "id": "int3b__unit01__04",
@@ -42,7 +45,8 @@
           "audio": "audio/int3b__unit01__04__i_am_in_third_grade.mp3",
           "audio_source": "fish-coach-ray",
           "korean": "WGAYI? 3학년",
-          "english": "I am in third grade"
+          "english": "I am in third grade",
+          "image": "images/grade-3.webp"
         },
         {
           "id": "int3b__unit01__05",
@@ -51,7 +55,8 @@
           "audio": "audio/int3b__unit01__05__i_am_in_fourth_grade.mp3",
           "audio_source": "fish-coach-ray",
           "korean": "WGAYI? 4학년",
-          "english": "I am in fourth grade"
+          "english": "I am in fourth grade",
+          "image": "images/grade-4.webp"
         },
         {
           "id": "int3b__unit01__06",
@@ -60,7 +65,8 @@
           "audio": "audio/int3b__unit01__06__i_am_in_fifth_grade.mp3",
           "audio_source": "fish-coach-ray",
           "korean": "WGAYI? 5학년",
-          "english": "I am in fifth grade"
+          "english": "I am in fifth grade",
+          "image": "images/grade-5.webp"
         },
         {
           "id": "int3b__unit01__07",
@@ -69,7 +75,8 @@
           "audio": "audio/int3b__unit01__07__i_am_in_sixth_grade.mp3",
           "audio_source": "fish-coach-ray",
           "korean": "WGAYI? 6학년",
-          "english": "I am in sixth grade"
+          "english": "I am in sixth grade",
+          "image": "images/grade-6.webp"
         },
         {
           "id": "int3b__unit01__08",
@@ -78,7 +85,8 @@
           "audio": "audio/int3b__unit01__08__i_am_in_seventh_grade.mp3",
           "audio_source": "fish-coach-ray",
           "korean": "WGAYI? 7학년",
-          "english": "I am in seventh grade"
+          "english": "I am in seventh grade",
+          "image": "images/grade-7.webp"
         },
         {
           "id": "int3b__unit01__09",
@@ -87,7 +95,8 @@
           "audio": "audio/int3b__unit01__09__i_am_in_eighth_grade.mp3",
           "audio_source": "fish-coach-ray",
           "korean": "WGAYI? 8학년",
-          "english": "I am in eighth grade"
+          "english": "I am in eighth grade",
+          "image": "images/grade-8.webp"
         },
         {
           "id": "int3b__unit01__10",
@@ -96,7 +105,8 @@
           "audio": "audio/int3b__unit01__10__i_am_in_ninth_grade.mp3",
           "audio_source": "fish-coach-ray",
           "korean": "WGAYI? 9학년",
-          "english": "I am in ninth grade"
+          "english": "I am in ninth grade",
+          "image": "images/grade-9.webp"
         }
       ]
     },
@@ -113,7 +123,8 @@
           "audio": "audio/int3b__unit02__01__it_is_a_guitar.mp3",
           "audio_source": "fish-coach-ray",
           "korean": "ITA? 기타",
-          "english": "It is a guitar"
+          "english": "It is a guitar",
+          "image": "images/i3b_guitar.webp"
         },
         {
           "id": "int3b__unit02__02",
@@ -122,7 +133,8 @@
           "audio": "audio/int3b__unit02__02__it_is_a_piano.mp3",
           "audio_source": "fish-coach-ray",
           "korean": "ITA? 피아노",
-          "english": "It is a piano"
+          "english": "It is a piano",
+          "image": "images/i3b_piano.webp"
         },
         {
           "id": "int3b__unit02__03",
@@ -131,7 +143,8 @@
           "audio": "audio/int3b__unit02__03__it_is_a_flute.mp3",
           "audio_source": "fish-coach-ray",
           "korean": "ITA? 플룻",
-          "english": "It is a flute"
+          "english": "It is a flute",
+          "image": "images/i3b_flute.webp"
         },
         {
           "id": "int3b__unit02__04",
@@ -142,7 +155,8 @@
           "audio": "audio/int3b__unit02__04__it_is_a_drum.mp3",
           "audio_source": "fish-coach-ray",
           "korean": "ITA? 드럼",
-          "english": "It is a drum"
+          "english": "It is a drum",
+          "image": "images/i3b_drum.webp"
         },
         {
           "id": "int3b__unit02__05",
@@ -151,7 +165,8 @@
           "audio": "audio/int3b__unit02__05__it_is_a_violin.mp3",
           "audio_source": "fish-coach-ray",
           "korean": "ITA? 바이올린",
-          "english": "It is a violin"
+          "english": "It is a violin",
+          "image": "images/i3b_violin.webp"
         },
         {
           "id": "int3b__unit02__06",
@@ -160,7 +175,8 @@
           "audio": "audio/int3b__unit02__06__it_is_a_saxophone.mp3",
           "audio_source": "fish-coach-ray",
           "korean": "ITA? 색소폰",
-          "english": "It is a saxophone"
+          "english": "It is a saxophone",
+          "image": "images/i3b_sax.webp"
         },
         {
           "id": "int3b__unit02__07",
@@ -169,7 +185,8 @@
           "audio": "audio/int3b__unit02__07__it_is_a_microwave.mp3",
           "audio_source": "fish-coach-ray",
           "korean": "ITA? 전자레인지",
-          "english": "It is a microwave"
+          "english": "It is a microwave",
+          "image": "images/i3b_microwave.webp"
         },
         {
           "id": "int3b__unit02__08",
@@ -178,7 +195,8 @@
           "audio": "audio/int3b__unit02__08__it_is_a_gayageum.mp3",
           "audio_source": "fish-coach-ray",
           "korean": "ITA? 가야금",
-          "english": "It is a gayageum"
+          "english": "It is a gayageum",
+          "image": "images/i3b_gayageum.webp"
         },
         {
           "id": "int3b__unit02__09",
@@ -187,7 +205,8 @@
           "audio": "audio/int3b__unit02__09__it_is_a_cello.mp3",
           "audio_source": "fish-coach-ray",
           "korean": "ITA? 첼로",
-          "english": "It is a cello"
+          "english": "It is a cello",
+          "image": "images/i3b_cello.webp"
         },
         {
           "id": "int3b__unit02__10",
@@ -196,7 +215,8 @@
           "audio": "audio/int3b__unit02__10__it_is_a_ukulele.mp3",
           "audio_source": "fish-coach-ray",
           "korean": "ITA? 우쿨렐레",
-          "english": "It is a ukulele"
+          "english": "It is a ukulele",
+          "image": "images/i3b_ukulele.webp"
         }
       ]
     },
@@ -213,7 +233,8 @@
           "audio": "audio/int3b__unit03__01__slower_please.mp3",
           "audio_source": "fish-coach-ray",
           "korean": "더 느리게 해주세요",
-          "english": "Slower please"
+          "english": "Slower please",
+          "image": "images/i3b_slower.webp"
         },
         {
           "id": "int3b__unit03__02",
@@ -222,7 +243,8 @@
           "audio": "audio/int3b__unit03__02__warmer_please.mp3",
           "audio_source": "fish-coach-ray",
           "korean": "더 따뜻하게 해주세요",
-          "english": "Warmer please"
+          "english": "Warmer please",
+          "image": "images/i3b_warmer.webp"
         },
         {
           "id": "int3b__unit03__03",
@@ -233,7 +255,8 @@
           "audio": "audio/int3b__unit03__03__louder_please.mp3",
           "audio_source": "fish-coach-ray",
           "korean": "더 크게 해주세요",
-          "english": "Louder please"
+          "english": "Louder please",
+          "image": "images/i3b_louder.webp"
         },
         {
           "id": "int3b__unit03__04",
@@ -242,7 +265,8 @@
           "audio": "audio/int3b__unit03__04__higher_please.mp3",
           "audio_source": "fish-coach-ray",
           "korean": "더 높게 해주세요",
-          "english": "Higher please"
+          "english": "Higher please",
+          "image": "images/i3b_higher.webp"
         },
         {
           "id": "int3b__unit03__05",
@@ -251,7 +275,8 @@
           "audio": "audio/int3b__unit03__05__cooler_please.mp3",
           "audio_source": "fish-coach-ray",
           "korean": "더 시원하게 해주세요",
-          "english": "Cooler please"
+          "english": "Cooler please",
+          "image": "images/cooler-please.webp"
         },
         {
           "id": "int3b__unit03__06",
@@ -262,7 +287,8 @@
           "audio": "audio/int3b__unit03__06__smaller_please.mp3",
           "audio_source": "fish-coach-ray",
           "korean": "더 작게 해주세요",
-          "english": "Smaller please"
+          "english": "Smaller please",
+          "image": "images/i3b_smaller.webp"
         },
         {
           "id": "int3b__unit03__07",
@@ -271,7 +297,8 @@
           "audio": "audio/int3b__unit03__07__more_please.mp3",
           "audio_source": "fish-coach-ray",
           "korean": "더 주세요",
-          "english": "More please"
+          "english": "More please",
+          "image": "images/more-please.webp"
         },
         {
           "id": "int3b__unit03__08",
@@ -280,7 +307,8 @@
           "audio": "audio/int3b__unit03__08__less_please.mp3",
           "audio_source": "fish-coach-ray",
           "korean": "덜 주세요",
-          "english": "Less please"
+          "english": "Less please",
+          "image": "images/less-please.webp"
         },
         {
           "id": "int3b__unit03__09",
@@ -289,7 +317,8 @@
           "audio": "audio/int3b__unit03__09__quieter_please.mp3",
           "audio_source": "fish-coach-ray",
           "korean": "더 조용하게 해주세요",
-          "english": "Quieter please"
+          "english": "Quieter please",
+          "image": "images/i3b_quieter.webp"
         },
         {
           "id": "int3b__unit03__10",
@@ -298,7 +327,8 @@
           "audio": "audio/int3b__unit03__10__louder_please.mp3",
           "audio_source": "fish-coach-ray",
           "korean": "더 시끄럽게 해주세요",
-          "english": "Louder please"
+          "english": "Louder please",
+          "image": "images/i3b_louder.webp"
         }
       ]
     },
@@ -315,7 +345,8 @@
           "audio": "audio/int3b__unit04__01__is_she_your_mom.mp3",
           "audio_source": "fish-coach-ray",
           "korean": "그녀는 너의 엄마입니까?",
-          "english": "Is she your mom?"
+          "english": "Is she your mom?",
+          "image": "images/i3b_mom.webp"
         },
         {
           "id": "int3b__unit04__02",
@@ -324,7 +355,8 @@
           "audio": "audio/int3b__unit04__02__is_she_your_aunt.mp3",
           "audio_source": "fish-coach-ray",
           "korean": "그녀는 너의 고모입니까?",
-          "english": "Is she your aunt?"
+          "english": "Is she your aunt?",
+          "image": "images/i3b_aunt.webp"
         },
         {
           "id": "int3b__unit04__03",
@@ -333,7 +365,8 @@
           "audio": "audio/int3b__unit04__03__she_is_my_grandmother.mp3",
           "audio_source": "fish-coach-ray",
           "korean": "그녀는 내 할머니입니다",
-          "english": "She is my grandmother"
+          "english": "She is my grandmother",
+          "image": "images/i3b_grandma.webp"
         },
         {
           "id": "int3b__unit04__04",
@@ -342,7 +375,8 @@
           "audio": "audio/int3b__unit04__04__she_is_my_sister.mp3",
           "audio_source": "fish-coach-ray",
           "korean": "그녀는 내 여동생입니다",
-          "english": "She is my sister"
+          "english": "She is my sister",
+          "image": "images/i3b_sister.webp"
         },
         {
           "id": "int3b__unit04__05",
@@ -351,7 +385,8 @@
           "audio": "audio/int3b__unit04__05__she_is_my_teacher.mp3",
           "audio_source": "fish-coach-ray",
           "korean": "그녀는 내 선생님입니다",
-          "english": "She is my teacher"
+          "english": "She is my teacher",
+          "image": "images/i3b_teacher.webp"
         },
         {
           "id": "int3b__unit04__06",
@@ -362,7 +397,8 @@
           "audio": "audio/int3b__unit04__06__is_he_your_dad.mp3",
           "audio_source": "fish-coach-ray",
           "korean": "그는 너의 아빠입니까?",
-          "english": "Is he your dad?"
+          "english": "Is he your dad?",
+          "image": "images/i3b_dad.webp"
         },
         {
           "id": "int3b__unit04__07",
@@ -371,7 +407,8 @@
           "audio": "audio/int3b__unit04__07__is_he_your_brother.mp3",
           "audio_source": "fish-coach-ray",
           "korean": "그는 너의 형입니까?",
-          "english": "Is he your brother?"
+          "english": "Is he your brother?",
+          "image": "images/i3b_brother.webp"
         },
         {
           "id": "int3b__unit04__08",
@@ -380,7 +417,8 @@
           "audio": "audio/int3b__unit04__08__he_is_my_grandfather.mp3",
           "audio_source": "fish-coach-ray",
           "korean": "그는 내 할아버지입니다",
-          "english": "He is my grandfather"
+          "english": "He is my grandfather",
+          "image": "images/i3b_grandpa.webp"
         },
         {
           "id": "int3b__unit04__09",
@@ -389,7 +427,8 @@
           "audio": "audio/int3b__unit04__09__he_is_my_uncle.mp3",
           "audio_source": "fish-coach-ray",
           "korean": "그는 내 삼촌입니다",
-          "english": "He is my uncle"
+          "english": "He is my uncle",
+          "image": "images/i3b_uncle.webp"
         },
         {
           "id": "int3b__unit04__10",
@@ -400,7 +439,8 @@
           "audio": "audio/int3b__unit04__10__he_is_me.mp3",
           "audio_source": "fish-coach-ray",
           "korean": "그는 저입니다",
-          "english": "He is me"
+          "english": "He is me",
+          "image": "images/i3b_me.webp"
         }
       ]
     },
@@ -417,7 +457,8 @@
           "audio": "audio/int3b__unit05__01__eat_up.mp3",
           "audio_source": "fish-coach-ray",
           "korean": "다 먹어!",
-          "english": "Eat up!"
+          "english": "Eat up!",
+          "image": "images/eat-up.webp"
         },
         {
           "id": "int3b__unit05__02",
@@ -428,7 +469,8 @@
           "audio": "audio/int3b__unit05__02__wash_up.mp3",
           "audio_source": "fish-coach-ray",
           "korean": "씻어!",
-          "english": "Wash up!"
+          "english": "Wash up!",
+          "image": "images/wash-up.webp"
         },
         {
           "id": "int3b__unit05__03",
@@ -437,7 +479,8 @@
           "audio": "audio/int3b__unit05__03__hurry_up.mp3",
           "audio_source": "fish-coach-ray",
           "korean": "서둘러!",
-          "english": "Hurry up!"
+          "english": "Hurry up!",
+          "image": "images/hurry-up.webp"
         },
         {
           "id": "int3b__unit05__04",
@@ -446,7 +489,8 @@
           "audio": "audio/int3b__unit05__04__clean_up.mp3",
           "audio_source": "fish-coach-ray",
           "korean": "청소 해!",
-          "english": "Clean up!"
+          "english": "Clean up!",
+          "image": "images/clean-up.webp"
         },
         {
           "id": "int3b__unit05__05",
@@ -455,7 +499,8 @@
           "audio": "audio/int3b__unit05__05__slow_down.mp3",
           "audio_source": "fish-coach-ray",
           "korean": "속도를 낮춰!",
-          "english": "Slow down!"
+          "english": "Slow down!",
+          "image": "images/i3b_slower.webp"
         },
         {
           "id": "int3b__unit05__06",
@@ -464,7 +509,8 @@
           "audio": "audio/int3b__unit05__06__put_it_down.mp3",
           "audio_source": "fish-coach-ray",
           "korean": "내려 놔!",
-          "english": "Put it down!"
+          "english": "Put it down!",
+          "image": "images/put-it-down.webp"
         },
         {
           "id": "int3b__unit05__07",
@@ -473,7 +519,8 @@
           "audio": "audio/int3b__unit05__07__come_down.mp3",
           "audio_source": "fish-coach-ray",
           "korean": "내려 와!",
-          "english": "Come down!"
+          "english": "Come down!",
+          "image": "images/come-down.webp"
         },
         {
           "id": "int3b__unit05__08",
@@ -484,7 +531,8 @@
           "audio": "audio/int3b__unit05__08__be_quiet.mp3",
           "audio_source": "fish-coach-ray",
           "korean": "조용히 해!",
-          "english": "Be quiet!"
+          "english": "Be quiet!",
+          "image": "images/i3b_quieter.webp"
         },
         {
           "id": "int3b__unit05__09",
@@ -493,7 +541,8 @@
           "audio": "audio/int3b__unit05__09__give_up.mp3",
           "audio_source": "fish-coach-ray",
           "korean": "포기 해!",
-          "english": "Give up!"
+          "english": "Give up!",
+          "image": "images/give-up.webp"
         },
         {
           "id": "int3b__unit05__10",
@@ -504,7 +553,8 @@
           "audio": "audio/int3b__unit05__10__cool_it_down.mp3",
           "audio_source": "fish-coach-ray",
           "korean": "식히다!",
-          "english": "Cool it down!"
+          "english": "Cool it down!",
+          "image": "images/cool-it-down.webp"
         }
       ]
     },
@@ -521,7 +571,8 @@
           "audio": "audio/int3b__unit06__01__they_are_apples.mp3",
           "audio_source": "fish-coach-ray",
           "korean": "WFAT? 사과",
-          "english": "They are apples"
+          "english": "They are apples",
+          "image": "images/i3b_apples.webp"
         },
         {
           "id": "int3b__unit06__02",
@@ -532,7 +583,8 @@
           "audio": "audio/int3b__unit06__02__they_are_mangoes.mp3",
           "audio_source": "fish-coach-ray",
           "korean": "WFAT? 망고",
-          "english": "They are mangoes"
+          "english": "They are mangoes",
+          "image": "images/i3b_mangos.webp"
         },
         {
           "id": "int3b__unit06__03",
@@ -543,7 +595,8 @@
           "audio": "audio/int3b__unit06__03__they_are_lychees.mp3",
           "audio_source": "fish-coach-ray",
           "korean": "WFAT? 여지",
-          "english": "They are lychees"
+          "english": "They are lychees",
+          "image": "images/i3b_lychee.webp"
         },
         {
           "id": "int3b__unit06__04",
@@ -554,7 +607,8 @@
           "audio": "audio/int3b__unit06__04__they_are_rambutans.mp3",
           "audio_source": "fish-coach-ray",
           "korean": "WFAT? 가시여지",
-          "english": "They are rambutans"
+          "english": "They are rambutans",
+          "image": "images/rambutans.webp"
         },
         {
           "id": "int3b__unit06__05",
@@ -565,7 +619,8 @@
           "audio": "audio/int3b__unit06__05__they_are_grapefruits.mp3",
           "audio_source": "fish-coach-ray",
           "korean": "WFAT? 자몽",
-          "english": "They are grapefruits"
+          "english": "They are grapefruits",
+          "image": "images/i3b_grapefruit.webp"
         },
         {
           "id": "int3b__unit06__06",
@@ -576,7 +631,8 @@
           "audio": "audio/int3b__unit06__06__they_are_mangosteens.mp3",
           "audio_source": "fish-coach-ray",
           "korean": "WFAT? 망고스틴",
-          "english": "They are mangosteens"
+          "english": "They are mangosteens",
+          "image": "images/i3b_mangosteen.webp"
         },
         {
           "id": "int3b__unit06__07",
@@ -587,7 +643,8 @@
           "audio": "audio/int3b__unit06__07__they_are_durians.mp3",
           "audio_source": "fish-coach-ray",
           "korean": "WFAT? 두리안",
-          "english": "They are durians"
+          "english": "They are durians",
+          "image": "images/i3b_durian.webp"
         },
         {
           "id": "int3b__unit06__08",
@@ -598,7 +655,8 @@
           "audio": "audio/int3b__unit06__08__they_are_lemons.mp3",
           "audio_source": "fish-coach-ray",
           "korean": "WFAT? 레몬",
-          "english": "They are lemons"
+          "english": "They are lemons",
+          "image": "images/i3b_lemon.webp"
         },
         {
           "id": "int3b__unit06__09",
@@ -609,7 +667,8 @@
           "audio": "audio/int3b__unit06__09__they_are_pineapples.mp3",
           "audio_source": "fish-coach-ray",
           "korean": "WFAT? 파인애플",
-          "english": "They are pineapples"
+          "english": "They are pineapples",
+          "image": "images/i3b_pineapple.webp"
         },
         {
           "id": "int3b__unit06__10",
@@ -620,7 +679,8 @@
           "audio": "audio/int3b__unit06__10__they_are_avocados.mp3",
           "audio_source": "fish-coach-ray",
           "korean": "WFAT? 아보카도",
-          "english": "They are avocados"
+          "english": "They are avocados",
+          "image": "images/i3b_avocado.webp"
         }
       ]
     },
@@ -635,7 +695,8 @@
           "audio": "audio/int3b__unit07__01__don_t_forget_your_transit_card.mp3",
           "audio_source": "fish-coach-ray",
           "korean": "교통카드",
-          "english": "Don't forget your transit card"
+          "english": "Don't forget your transit card",
+          "image": "images/int2b_transit_card.webp"
         },
         {
           "id": "int3b__unit07__02",
@@ -644,7 +705,8 @@
           "audio": "audio/int3b__unit07__02__don_t_forget_your_hat.mp3",
           "audio_source": "fish-coach-ray",
           "korean": "모자",
-          "english": "Don't forget your hat"
+          "english": "Don't forget your hat",
+          "image": "images/i3b_hat.webp"
         },
         {
           "id": "int3b__unit07__03",
@@ -653,7 +715,8 @@
           "audio": "audio/int3b__unit07__03__don_t_forget_your_coat.mp3",
           "audio_source": "fish-coach-ray",
           "korean": "외투",
-          "english": "Don't forget your coat"
+          "english": "Don't forget your coat",
+          "image": "images/pic_coat.webp"
         },
         {
           "id": "int3b__unit07__04",
@@ -662,7 +725,8 @@
           "audio": "audio/int3b__unit07__04__don_t_forget_your_money.mp3",
           "audio_source": "fish-coach-ray",
           "korean": "돈",
-          "english": "Don't forget your money"
+          "english": "Don't forget your money",
+          "image": "images/i3b_money.webp"
         },
         {
           "id": "int3b__unit07__05",
@@ -671,7 +735,8 @@
           "audio": "audio/int3b__unit07__05__don_t_forget_your_phone.mp3",
           "audio_source": "fish-coach-ray",
           "korean": "전화기",
-          "english": "Don't forget your phone"
+          "english": "Don't forget your phone",
+          "image": "images/i3b_phone.webp"
         },
         {
           "id": "int3b__unit07__06",
@@ -682,7 +747,8 @@
           "audio": "audio/int3b__unit07__06__don_t_forget_your_backpack.mp3",
           "audio_source": "fish-coach-ray",
           "korean": "책가방",
-          "english": "Don't forget your backpack"
+          "english": "Don't forget your backpack",
+          "image": "images/i3b_schoolbag.webp"
         },
         {
           "id": "int3b__unit07__07",
@@ -691,7 +757,8 @@
           "audio": "audio/int3b__unit07__07__don_t_forget_your_lunch.mp3",
           "audio_source": "fish-coach-ray",
           "korean": "점심",
-          "english": "Don't forget your lunch"
+          "english": "Don't forget your lunch",
+          "image": "images/i3b_lunch.webp"
         },
         {
           "id": "int3b__unit07__08",
@@ -700,7 +767,8 @@
           "audio": "audio/int3b__unit07__08__don_t_forget_your_little_sister.mp3",
           "audio_source": "fish-coach-ray",
           "korean": "여동생",
-          "english": "Don't forget your little sister"
+          "english": "Don't forget your little sister",
+          "image": "images/i3b_sister.webp"
         },
         {
           "id": "int3b__unit07__09",
@@ -709,7 +777,8 @@
           "audio": "audio/int3b__unit07__09__don_t_forget_your_umbrella.mp3",
           "audio_source": "fish-coach-ray",
           "korean": "우산",
-          "english": "Don't forget your umbrella"
+          "english": "Don't forget your umbrella",
+          "image": "images/i3b_umbrella.webp"
         },
         {
           "id": "int3b__unit07__10",
@@ -718,7 +787,8 @@
           "audio": "audio/int3b__unit07__10__don_t_forget_your_textbook.mp3",
           "audio_source": "fish-coach-ray",
           "korean": "교과서",
-          "english": "Don't forget your textbook"
+          "english": "Don't forget your textbook",
+          "image": "images/i3b_textbook.webp"
         }
       ]
     },
@@ -733,7 +803,8 @@
           "audio": "audio/int3b__unit08__01__where_are_you_from.mp3",
           "audio_source": "fish-coach-ray",
           "korean": "너는 어디서 왔습니까?",
-          "english": "Where are you from?"
+          "english": "Where are you from?",
+          "image": "images/where-are-you-from.webp"
         },
         {
           "id": "int3b__unit08__02",
@@ -742,7 +813,8 @@
           "audio": "audio/int3b__unit08__02__i_am_from_canada.mp3",
           "audio_source": "fish-coach-ray",
           "korean": "나는 캐나다에서 왔습니다",
-          "english": "I am from Canada"
+          "english": "I am from Canada",
+          "image": "images/i3b_canada.webp"
         },
         {
           "id": "int3b__unit08__03",
@@ -751,7 +823,8 @@
           "audio": "audio/int3b__unit08__03__how_tall_are_you.mp3",
           "audio_source": "fish-coach-ray",
           "korean": "너는 키가 몇입니까?",
-          "english": "How tall are you?"
+          "english": "How tall are you?",
+          "image": "images/how-tall.webp"
         },
         {
           "id": "int3b__unit08__04",
@@ -762,7 +835,8 @@
           "audio": "audio/int3b__unit08__04__i_am_187_centimeters_tall.mp3",
           "audio_source": "fish-coach-ray",
           "korean": "나는 187cm입니다",
-          "english": "I am 187 centimeters tall"
+          "english": "I am 187 centimeters tall",
+          "image": "images/187cm-tall.webp"
         },
         {
           "id": "int3b__unit08__05",
@@ -771,7 +845,8 @@
           "audio": "audio/int3b__unit08__05__why_did_you_come_to_korea.mp3",
           "audio_source": "fish-coach-ray",
           "korean": "너는 왜 한국에 왔습니까?",
-          "english": "Why did you come to Korea?"
+          "english": "Why did you come to Korea?",
+          "image": "images/why-come-to-korea.webp"
         },
         {
           "id": "int3b__unit08__06",
@@ -780,7 +855,8 @@
           "audio": "audio/int3b__unit08__06__i_came_to_teach_english.mp3",
           "audio_source": "fish-coach-ray",
           "korean": "나는 영어 가르치려고 왔습니다",
-          "english": "I came to teach English"
+          "english": "I came to teach English",
+          "image": "images/teach-english.webp"
         },
         {
           "id": "int3b__unit08__07",
@@ -789,7 +865,8 @@
           "audio": "audio/int3b__unit08__07__what_korean_food_do_you_like.mp3",
           "audio_source": "fish-coach-ray",
           "korean": "너는 무슨 한국 음식을 좋아합니까?",
-          "english": "What Korean food do you like?"
+          "english": "What Korean food do you like?",
+          "image": "images/korean-food-question.webp"
         },
         {
           "id": "int3b__unit08__08",
@@ -800,7 +877,8 @@
           "audio": "audio/int3b__unit08__08__i_like_gimbap.mp3",
           "audio_source": "fish-coach-ray",
           "korean": "나는 김밥을 좋아합니다!",
-          "english": "I like gimbap!"
+          "english": "I like gimbap!",
+          "image": "images/i3b_gimbap.webp"
         },
         {
           "id": "int3b__unit08__09",
@@ -809,7 +887,8 @@
           "audio": "audio/int3b__unit08__09__how_much_do_you_weigh.mp3",
           "audio_source": "fish-coach-ray",
           "korean": "너는 몸무게가 몇입니까?",
-          "english": "How much do you weigh?"
+          "english": "How much do you weigh?",
+          "image": "images/how-much-weigh.webp"
         },
         {
           "id": "int3b__unit08__10",
@@ -818,7 +897,8 @@
           "audio": "audio/int3b__unit08__10__that_is_a_secret.mp3",
           "audio_source": "fish-coach-ray",
           "korean": "그것은 비밀입니다!",
-          "english": "That is a secret!"
+          "english": "That is a secret!",
+          "image": "images/i3b_secret.webp"
         }
       ]
     }

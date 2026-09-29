@@ -13,7 +13,8 @@
           "audio": "audio/int3c__unit01__01__do_you_like_sweet_food.mp3",
           "audio_source": "fish-coach-ray",
           "korean": "너는 달콤한 음식을 좋아합니까?",
-          "english": "Do you like sweet food?"
+          "english": "Do you like sweet food?",
+          "image": "images/int3c_u01_sweet_food_do_you_like_sweet.webp"
         },
         {
           "id": "int3c__unit01__02",
@@ -24,7 +25,8 @@
           "audio": "audio/int3c__unit01__02__try_ddeok.mp3",
           "audio_source": "fish-coach-ray",
           "korean": "떡 먹어보세요",
-          "english": "Try ddeok"
+          "english": "Try ddeok",
+          "image": "images/int3c_u01_sweet_food_try_ddeok.webp"
         },
         {
           "id": "int3c__unit01__03",
@@ -33,7 +35,8 @@
           "audio": "audio/int3c__unit01__03__it_is_a_sticky_rice_dessert.mp3",
           "audio_source": "fish-coach-ray",
           "korean": "그것은 끈적한 쌀 후식입니다",
-          "english": "It is a sticky rice dessert"
+          "english": "It is a sticky rice dessert",
+          "image": "images/int3c_u01_sweet_food_sticky_rice_dessert.webp"
         },
         {
           "id": "int3c__unit01__04",
@@ -42,7 +45,8 @@
           "audio": "audio/int3c__unit01__04__do_you_like_salty_food.mp3",
           "audio_source": "fish-coach-ray",
           "korean": "너는 짠 음식을 좋아합니까?",
-          "english": "Do you like salty food?"
+          "english": "Do you like salty food?",
+          "image": "images/int3c_u01_sweet_food_salt.webp"
         },
         {
           "id": "int3c__unit01__05",
@@ -53,7 +57,8 @@
           "audio": "audio/int3c__unit01__05__try_doenjang_guk.mp3",
           "audio_source": "fish-coach-ray",
           "korean": "된장국 먹어보세요",
-          "english": "Try doenjang guk"
+          "english": "Try doenjang guk",
+          "image": "images/int3c_u01_sweet_food_try_doenjang_guk.webp"
         },
         {
           "id": "int3c__unit01__06",
@@ -64,7 +69,8 @@
           "audio": "audio/int3c__unit01__06__it_is_doenjang_jjigae.mp3",
           "audio_source": "fish-coach-ray",
           "korean": "그것은 된장찌개입니다",
-          "english": "It is doenjang jjigae"
+          "english": "It is doenjang jjigae",
+          "image": "images/int3c_u01_sweet_food_soy_paste_stew.webp"
         },
         {
           "id": "int3c__unit01__07",
@@ -73,7 +79,8 @@
           "audio": "audio/int3c__unit01__07__do_you_like_sour_food.mp3",
           "audio_source": "fish-coach-ray",
           "korean": "너는 신 음식을 좋아합니까?",
-          "english": "Do you like sour food?"
+          "english": "Do you like sour food?",
+          "image": "images/int3c_u01_sweet_food_do_you_like_sour.webp"
         },
         {
           "id": "int3c__unit01__08",
@@ -82,7 +89,8 @@
           "audio": "audio/int3c__unit01__08__try_this.mp3",
           "audio_source": "fish-coach-ray",
           "korean": "이거 먹어보세요",
-          "english": "Try this"
+          "english": "Try this",
+          "image": "images/int3c_u01_sweet_food_try_this.webp"
         },
         {
           "id": "int3c__unit01__09",
@@ -93,7 +101,8 @@
           "audio": "audio/int3c__unit01__09__what_is_it.mp3",
           "audio_source": "fish-coach-ray",
           "korean": "그것은 무엇입니까?",
-          "english": "What is it?"
+          "english": "What is it?",
+          "image": "images/int3c_u01_sweet_food_what_is_it.webp"
         },
         {
           "id": "int3c__unit01__10",
@@ -104,7 +113,8 @@
           "audio": "audio/int3c__unit01__10__i_don_t_know.mp3",
           "audio_source": "fish-coach-ray",
           "korean": "나는 모릅니다",
-          "english": "I don't know"
+          "english": "I don't know",
+          "image": "images/int3c_u01_sweet_food_i_do_not_know.webp"
         }
       ]
     },
@@ -121,7 +131,8 @@
           "audio": "audio/int3c__unit02__01__don_t_run.mp3",
           "audio_source": "fish-coach-ray",
           "korean": "뛰지 마",
-          "english": "Don't run"
+          "english": "Don't run",
+          "image": "images/int3c_u02_do_not_yell_do_not_run.webp"
         },
         {
           "id": "int3c__unit02__02",
@@ -132,7 +143,8 @@
           "audio": "audio/int3c__unit02__02__don_t_yell.mp3",
           "audio_source": "fish-coach-ray",
           "korean": "소리 지르지 마",
-          "english": "Don't yell"
+          "english": "Don't yell",
+          "image": "images/int3c_u02_do_not_yell_do_not_yell.webp"
         },
         {
           "id": "int3c__unit02__03",
@@ -143,7 +155,8 @@
           "audio": "audio/int3c__unit02__03__don_t_open_it.mp3",
           "audio_source": "fish-coach-ray",
           "korean": "그것을 열지 마",
-          "english": "Don't open it"
+          "english": "Don't open it",
+          "image": "images/int3c_u02_do_not_yell_do_not_open_it.webp"
         },
         {
           "id": "int3c__unit02__04",
@@ -154,7 +167,8 @@
           "audio": "audio/int3c__unit02__04__don_t_pull_it.mp3",
           "audio_source": "fish-coach-ray",
           "korean": "그것을 당기지 마",
-          "english": "Don't pull it"
+          "english": "Don't pull it",
+          "image": "images/int3c_u02_do_not_yell_do_not_pull_it.webp"
         },
         {
           "id": "int3c__unit02__05",
@@ -165,7 +179,8 @@
           "audio": "audio/int3c__unit02__05__don_t_sleep.mp3",
           "audio_source": "fish-coach-ray",
           "korean": "자지 마",
-          "english": "Don't sleep"
+          "english": "Don't sleep",
+          "image": "images/int3c_u02_do_not_yell_do_not_sleep.webp"
         },
         {
           "id": "int3c__unit02__06",
@@ -176,7 +191,8 @@
           "audio": "audio/int3c__unit02__06__don_t_throw_that.mp3",
           "audio_source": "fish-coach-ray",
           "korean": "저것을 던지지 마",
-          "english": "Don't throw that"
+          "english": "Don't throw that",
+          "image": "images/int3c_u02_do_not_yell_do_not_throw_that.webp"
         },
         {
           "id": "int3c__unit02__07",
@@ -187,7 +203,8 @@
           "audio": "audio/int3c__unit02__07__don_t_burp_here.mp3",
           "audio_source": "fish-coach-ray",
           "korean": "여기에 그르지 마",
-          "english": "Don't burp here"
+          "english": "Don't burp here",
+          "image": "images/dont-burp.webp"
         },
         {
           "id": "int3c__unit02__08",
@@ -198,7 +215,8 @@
           "audio": "audio/int3c__unit02__08__don_t_fight.mp3",
           "audio_source": "fish-coach-ray",
           "korean": "싸우지 마",
-          "english": "Don't fight"
+          "english": "Don't fight",
+          "image": "images/int3c_u02_do_not_yell_do_not_fight.webp"
         },
         {
           "id": "int3c__unit02__09",
@@ -209,7 +227,8 @@
           "audio": "audio/int3c__unit02__09__don_t_touch.mp3",
           "audio_source": "fish-coach-ray",
           "korean": "만지지 마",
-          "english": "Don't touch"
+          "english": "Don't touch",
+          "image": "images/int3c_u02_do_not_yell_do_not_touch.webp"
         },
         {
           "id": "int3c__unit02__10",
@@ -220,7 +239,8 @@
           "audio": "audio/int3c__unit02__10__don_t_cry.mp3",
           "audio_source": "fish-coach-ray",
           "korean": "울지 마",
-          "english": "Don't cry"
+          "english": "Don't cry",
+          "image": "images/int3c_u02_do_not_yell_please_do_not_cry.webp"
         }
       ]
     },
@@ -237,7 +257,8 @@
           "audio": "audio/int3c__unit03__01__can_i_wear_a_dress.mp3",
           "audio_source": "fish-coach-ray",
           "korean": "CIPO? 드레스",
-          "english": "Can I wear a dress?"
+          "english": "Can I wear a dress?",
+          "image": "images/int3c_u03_play_outside_dress.webp"
         },
         {
           "id": "int3c__unit03__02",
@@ -248,7 +269,8 @@
           "audio": "audio/int3c__unit03__02__can_i_wear_a_shirt.mp3",
           "audio_source": "fish-coach-ray",
           "korean": "CIPO? 셔츠",
-          "english": "Can I wear a shirt?"
+          "english": "Can I wear a shirt?",
+          "image": "images/int3c_u03_play_outside_shirt.webp"
         },
         {
           "id": "int3c__unit03__03",
@@ -259,7 +281,8 @@
           "audio": "audio/int3c__unit03__03__can_i_wear_pants.mp3",
           "audio_source": "fish-coach-ray",
           "korean": "CIPO? 바지",
-          "english": "Can I wear pants?"
+          "english": "Can I wear pants?",
+          "image": "images/int3c_u03_play_outside_pants.webp"
         },
         {
           "id": "int3c__unit03__04",
@@ -270,7 +293,8 @@
           "audio": "audio/int3c__unit03__04__can_i_wear_socks.mp3",
           "audio_source": "fish-coach-ray",
           "korean": "CIPO? 양말",
-          "english": "Can I wear socks?"
+          "english": "Can I wear socks?",
+          "image": "images/int3c_u03_play_outside_socks.webp"
         },
         {
           "id": "int3c__unit03__05",
@@ -281,7 +305,8 @@
           "audio": "audio/int3c__unit03__05__can_i_wear_a_coat.mp3",
           "audio_source": "fish-coach-ray",
           "korean": "CIPO? 외투",
-          "english": "Can I wear a coat?"
+          "english": "Can I wear a coat?",
+          "image": "images/int3c_u03_play_outside_jacket.webp"
         },
         {
           "id": "int3c__unit03__06",
@@ -292,7 +317,8 @@
           "audio": "audio/int3c__unit03__06__can_i_wear_gloves.mp3",
           "audio_source": "fish-coach-ray",
           "korean": "CIPO? 장갑",
-          "english": "Can I wear gloves?"
+          "english": "Can I wear gloves?",
+          "image": "images/int3c_u03_play_outside_gloves.webp"
         },
         {
           "id": "int3c__unit03__07",
@@ -303,7 +329,8 @@
           "audio": "audio/int3c__unit03__07__can_i_wear_shoes.mp3",
           "audio_source": "fish-coach-ray",
           "korean": "CIPO? 신발",
-          "english": "Can I wear shoes?"
+          "english": "Can I wear shoes?",
+          "image": "images/int3c_u03_play_outside_shoes.webp"
         },
         {
           "id": "int3c__unit03__08",
@@ -314,7 +341,8 @@
           "audio": "audio/int3c__unit03__08__can_i_wear_a_skirt.mp3",
           "audio_source": "fish-coach-ray",
           "korean": "CIPO? 치마",
-          "english": "Can I wear a skirt?"
+          "english": "Can I wear a skirt?",
+          "image": "images/int3c_u03_play_outside_skirt.webp"
         },
         {
           "id": "int3c__unit03__09",
@@ -325,7 +353,8 @@
           "audio": "audio/int3c__unit03__09__can_i_wear_a_hat.mp3",
           "audio_source": "fish-coach-ray",
           "korean": "CIPO? 모자",
-          "english": "Can I wear a hat?"
+          "english": "Can I wear a hat?",
+          "image": "images/int3c_u03_play_outside_hat.webp"
         },
         {
           "id": "int3c__unit03__10",
@@ -336,7 +365,8 @@
           "audio": "audio/int3c__unit03__10__can_i_wear_glasses.mp3",
           "audio_source": "fish-coach-ray",
           "korean": "CIPO? 안경",
-          "english": "Can I wear glasses?"
+          "english": "Can I wear glasses?",
+          "image": "images/int3c_u03_play_outside_glasses.webp"
         }
       ]
     },
@@ -351,7 +381,8 @@
           "audio": "audio/int3c__unit04__01__let_s_go_to_school.mp3",
           "audio_source": "fish-coach-ray",
           "korean": "학교에 갑시다",
-          "english": "Let's go to school"
+          "english": "Let's go to school",
+          "image": "images/int3c_u04_rpg_lets_go_to_school.webp"
         },
         {
           "id": "int3c__unit04__02",
@@ -360,7 +391,8 @@
           "audio": "audio/int3c__unit04__02__let_s_sing.mp3",
           "audio_source": "fish-coach-ray",
           "korean": "노래를 부릅시다",
-          "english": "Let's sing"
+          "english": "Let's sing",
+          "image": "images/int3c_u04_rpg_lets_sing_karaoke.webp"
         },
         {
           "id": "int3c__unit04__03",
@@ -369,7 +401,8 @@
           "audio": "audio/int3c__unit04__03__let_s_play_soccer.mp3",
           "audio_source": "fish-coach-ray",
           "korean": "축구를 합시다",
-          "english": "Let's play soccer"
+          "english": "Let's play soccer",
+          "image": "images/int3c_u04_rpg_lets_play_soccer.webp"
         },
         {
           "id": "int3c__unit04__04",
@@ -378,7 +411,8 @@
           "audio": "audio/int3c__unit04__04__let_s_climb_the_jungle_gym.mp3",
           "audio_source": "fish-coach-ray",
           "korean": "정글짐을 올라갑시다",
-          "english": "Let's climb the jungle gym"
+          "english": "Let's climb the jungle gym",
+          "image": "images/int3c_u04_rpg_lets_climb_jungle_gym.webp"
         },
         {
           "id": "int3c__unit04__05",
@@ -387,7 +421,8 @@
           "audio": "audio/int3c__unit04__05__let_s_watch_tv.mp3",
           "audio_source": "fish-coach-ray",
           "korean": "TV를 봅시다",
-          "english": "Let's watch TV"
+          "english": "Let's watch TV",
+          "image": "images/int3c_u04_rpg_lets_watch_tv.webp"
         },
         {
           "id": "int3c__unit04__06",
@@ -396,7 +431,8 @@
           "audio": "audio/int3c__unit04__06__let_s_cook.mp3",
           "audio_source": "fish-coach-ray",
           "korean": "요리합시다",
-          "english": "Let's cook"
+          "english": "Let's cook",
+          "image": "images/int3c_u04_rpg_lets_cook.webp"
         },
         {
           "id": "int3c__unit04__07",
@@ -407,7 +443,8 @@
           "audio": "audio/int3c__unit04__07__let_s_talk.mp3",
           "audio_source": "fish-coach-ray",
           "korean": "이야기합시다",
-          "english": "Let's talk"
+          "english": "Let's talk",
+          "image": "images/int3c_u04_rpg_lets_talk.webp"
         },
         {
           "id": "int3c__unit04__08",
@@ -416,7 +453,8 @@
           "audio": "audio/int3c__unit04__08__let_s_ride_bikes.mp3",
           "audio_source": "fish-coach-ray",
           "korean": "자전거 탑시다",
-          "english": "Let's ride bikes"
+          "english": "Let's ride bikes",
+          "image": "images/int3c_u04_rpg_lets_ride_bikes.webp"
         },
         {
           "id": "int3c__unit04__09",
@@ -425,7 +463,8 @@
           "audio": "audio/int3c__unit04__09__let_s_play_an_rpg.mp3",
           "audio_source": "fish-coach-ray",
           "korean": "RPG 게임 합시다",
-          "english": "Let's play an RPG"
+          "english": "Let's play an RPG",
+          "image": "images/int3c_u04_rpg_lets_play_rpg.webp"
         },
         {
           "id": "int3c__unit04__10",
@@ -434,7 +473,8 @@
           "audio": "audio/int3c__unit04__10__let_s_study.mp3",
           "audio_source": "fish-coach-ray",
           "korean": "공부합시다",
-          "english": "Let's study"
+          "english": "Let's study",
+          "image": "images/int3c_u04_rpg_lets_study.webp"
         }
       ]
     },
@@ -449,7 +489,8 @@
           "audio": "audio/int3c__unit05__01__i_have_a_pencil.mp3",
           "audio_source": "fish-coach-ray",
           "korean": "WDYH? 연필",
-          "english": "I have a pencil"
+          "english": "I have a pencil",
+          "image": "images/int3c_u05_what_do_you_have_i_have_pencil.webp"
         },
         {
           "id": "int3c__unit05__02",
@@ -458,7 +499,8 @@
           "audio": "audio/int3c__unit05__02__i_have_a_hat.mp3",
           "audio_source": "fish-coach-ray",
           "korean": "WDYH? 모자",
-          "english": "I have a hat"
+          "english": "I have a hat",
+          "image": "images/int3c_u05_what_do_you_have_i_have_hat.webp"
         },
         {
           "id": "int3c__unit05__03",
@@ -467,7 +509,8 @@
           "audio": "audio/int3c__unit05__03__i_have_a_pencil_case.mp3",
           "audio_source": "fish-coach-ray",
           "korean": "WDYH? 필통",
-          "english": "I have a pencil case"
+          "english": "I have a pencil case",
+          "image": "images/int3c_u05_what_do_you_have_pencil_case.webp"
         },
         {
           "id": "int3c__unit05__04",
@@ -476,7 +519,8 @@
           "audio": "audio/int3c__unit05__04__i_have_a_newspaper.mp3",
           "audio_source": "fish-coach-ray",
           "korean": "WDYH? 신문",
-          "english": "I have a newspaper"
+          "english": "I have a newspaper",
+          "image": "images/int3c_u05_what_do_you_have_newspaper.webp"
         },
         {
           "id": "int3c__unit05__05",
@@ -485,7 +529,8 @@
           "audio": "audio/int3c__unit05__05__i_have_a_book.mp3",
           "audio_source": "fish-coach-ray",
           "korean": "WDYH? 책",
-          "english": "I have a book"
+          "english": "I have a book",
+          "image": "images/int3c_u05_what_do_you_have_i_have_book.webp"
         },
         {
           "id": "int3c__unit05__06",
@@ -494,7 +539,8 @@
           "audio": "audio/int3c__unit05__06__i_have_a_puzzle.mp3",
           "audio_source": "fish-coach-ray",
           "korean": "WDYH? 퍼즐",
-          "english": "I have a puzzle"
+          "english": "I have a puzzle",
+          "image": "images/int3c_u05_what_do_you_have_i_have_puzzle.webp"
         },
         {
           "id": "int3c__unit05__07",
@@ -505,7 +551,8 @@
           "audio": "audio/int3c__unit05__07__i_have_a_chessboard.mp3",
           "audio_source": "fish-coach-ray",
           "korean": "WDYH? 체스판",
-          "english": "I have a chessboard"
+          "english": "I have a chessboard",
+          "image": "images/int3c_u05_what_do_you_have_i_have_chess_board.webp"
         },
         {
           "id": "int3c__unit05__08",
@@ -514,7 +561,8 @@
           "audio": "audio/int3c__unit05__08__i_have_a_phone.mp3",
           "audio_source": "fish-coach-ray",
           "korean": "WDYH? 휴대폰",
-          "english": "I have a phone"
+          "english": "I have a phone",
+          "image": "images/int3c_u05_what_do_you_have_i_have_phone.webp"
         },
         {
           "id": "int3c__unit05__09",
@@ -523,7 +571,8 @@
           "audio": "audio/int3c__unit05__09__i_have_a_pillow.mp3",
           "audio_source": "fish-coach-ray",
           "korean": "WDYH? 베개",
-          "english": "I have a pillow"
+          "english": "I have a pillow",
+          "image": "images/int3c_u05_what_do_you_have_pillow.webp"
         },
         {
           "id": "int3c__unit05__10",
@@ -532,7 +581,8 @@
           "audio": "audio/int3c__unit05__10__i_have_a_cup.mp3",
           "audio_source": "fish-coach-ray",
           "korean": "WDYH? 컵",
-          "english": "I have a cup"
+          "english": "I have a cup",
+          "image": "images/int3c_u05_what_do_you_have_i_have_cup.webp"
         }
       ]
     },
@@ -547,7 +597,8 @@
           "audio": "audio/int3c__unit06__01__how_many_cities_are_there.mp3",
           "audio_source": "fish-coach-ray",
           "korean": "도시",
-          "english": "How many cities are there?"
+          "english": "How many cities are there?",
+          "image": "images/int3c_u06_how_many_cities_how_many_cities.webp"
         },
         {
           "id": "int3c__unit06__02",
@@ -556,7 +607,8 @@
           "audio": "audio/int3c__unit06__02__how_many_provinces_are_there.mp3",
           "audio_source": "fish-coach-ray",
           "korean": "지방",
-          "english": "How many provinces are there?"
+          "english": "How many provinces are there?",
+          "image": "images/int3c_u06_how_many_cities_how_many_provinces.webp"
         },
         {
           "id": "int3c__unit06__03",
@@ -565,7 +617,8 @@
           "audio": "audio/int3c__unit06__03__how_many_national_parks_are_there.mp3",
           "audio_source": "fish-coach-ray",
           "korean": "국립공원",
-          "english": "How many national parks are there?"
+          "english": "How many national parks are there?",
+          "image": "images/int3c_u06_how_many_cities_how_many_parks.webp"
         },
         {
           "id": "int3c__unit06__04",
@@ -574,7 +627,8 @@
           "audio": "audio/int3c__unit06__04__how_many_islands_are_there.mp3",
           "audio_source": "fish-coach-ray",
           "korean": "섬",
-          "english": "How many islands are there?"
+          "english": "How many islands are there?",
+          "image": "images/int3c_u06_how_many_cities_how_many_islands.webp"
         },
         {
           "id": "int3c__unit06__05",
@@ -583,7 +637,8 @@
           "audio": "audio/int3c__unit06__05__how_many_volcanoes_are_there.mp3",
           "audio_source": "fish-coach-ray",
           "korean": "화산",
-          "english": "How many volcanoes are there?"
+          "english": "How many volcanoes are there?",
+          "image": "images/int3c_u06_how_many_cities_how_many_volcanoes.webp"
         },
         {
           "id": "int3c__unit06__06",
@@ -592,7 +647,8 @@
           "audio": "audio/int3c__unit06__06__how_many_deserts_are_there.mp3",
           "audio_source": "fish-coach-ray",
           "korean": "사막",
-          "english": "How many deserts are there?"
+          "english": "How many deserts are there?",
+          "image": "images/int3c_u06_how_many_cities_how_many_deserts.webp"
         },
         {
           "id": "int3c__unit06__07",
@@ -601,7 +657,8 @@
           "audio": "audio/int3c__unit06__07__how_many_people_are_there.mp3",
           "audio_source": "fish-coach-ray",
           "korean": "사람",
-          "english": "How many people are there?"
+          "english": "How many people are there?",
+          "image": "images/int3c_u06_how_many_cities_how_many_people.webp"
         },
         {
           "id": "int3c__unit06__08",
@@ -610,7 +667,8 @@
           "audio": "audio/int3c__unit06__08__how_many_mountains_are_there.mp3",
           "audio_source": "fish-coach-ray",
           "korean": "산",
-          "english": "How many mountains are there?"
+          "english": "How many mountains are there?",
+          "image": "images/int3c_u06_how_many_cities_mountains.webp"
         },
         {
           "id": "int3c__unit06__09",
@@ -619,7 +677,8 @@
           "audio": "audio/int3c__unit06__09__how_many_tigers_are_there.mp3",
           "audio_source": "fish-coach-ray",
           "korean": "호랑이",
-          "english": "How many tigers are there?"
+          "english": "How many tigers are there?",
+          "image": "images/int3c_u06_how_many_cities_tigers.webp"
         },
         {
           "id": "int3c__unit06__10",
@@ -628,7 +687,8 @@
           "audio": "audio/int3c__unit06__10__how_many_students_are_there.mp3",
           "audio_source": "fish-coach-ray",
           "korean": "학생",
-          "english": "How many students are there?"
+          "english": "How many students are there?",
+          "image": "images/int3c_u06_how_many_cities_students.webp"
         }
       ]
     },
@@ -645,7 +705,8 @@
           "audio": "audio/int3c__unit07__01__yes_i_can_dance.mp3",
           "audio_source": "fish-coach-ray",
           "korean": "춤추다",
-          "english": "Yes, I can dance"
+          "english": "Yes, I can dance",
+          "image": "images/int3c_u07_can_you_fly_dance.webp"
         },
         {
           "id": "int3c__unit07__02",
@@ -656,7 +717,8 @@
           "audio": "audio/int3c__unit07__02__yes_i_can_jump.mp3",
           "audio_source": "fish-coach-ray",
           "korean": "뛰다",
-          "english": "Yes, I can jump"
+          "english": "Yes, I can jump",
+          "image": "images/int3c_u07_can_you_fly_jump.webp"
         },
         {
           "id": "int3c__unit07__03",
@@ -667,7 +729,8 @@
           "audio": "audio/int3c__unit07__03__yes_i_can_sing.mp3",
           "audio_source": "fish-coach-ray",
           "korean": "노래하다",
-          "english": "Yes, I can sing"
+          "english": "Yes, I can sing",
+          "image": "images/pic_sing.webp"
         },
         {
           "id": "int3c__unit07__04",
@@ -678,7 +741,8 @@
           "audio": "audio/int3c__unit07__04__no_i_cannot_fight.mp3",
           "audio_source": "fish-coach-ray",
           "korean": "싸우다",
-          "english": "No, I cannot fight"
+          "english": "No, I cannot fight",
+          "image": "images/int3c_u07_can_you_fly_fight.webp"
         },
         {
           "id": "int3c__unit07__05",
@@ -689,7 +753,8 @@
           "audio": "audio/int3c__unit07__05__yes_i_can_type.mp3",
           "audio_source": "fish-coach-ray",
           "korean": "타자를 치다",
-          "english": "Yes, I can type"
+          "english": "Yes, I can type",
+          "image": "images/int3c_u07_can_you_fly_type.webp"
         },
         {
           "id": "int3c__unit07__06",
@@ -700,7 +765,8 @@
           "audio": "audio/int3c__unit07__06__yes_i_can_walk.mp3",
           "audio_source": "fish-coach-ray",
           "korean": "걷다",
-          "english": "Yes, I can walk"
+          "english": "Yes, I can walk",
+          "image": "images/int3c_u07_can_you_fly_walk.webp"
         },
         {
           "id": "int3c__unit07__07",
@@ -711,7 +777,8 @@
           "audio": "audio/int3c__unit07__07__yes_i_can_cook.mp3",
           "audio_source": "fish-coach-ray",
           "korean": "요리하다",
-          "english": "Yes, I can cook"
+          "english": "Yes, I can cook",
+          "image": "images/int3c_u07_can_you_fly_cook.webp"
         },
         {
           "id": "int3c__unit07__08",
@@ -722,7 +789,8 @@
           "audio": "audio/int3c__unit07__08__no_i_cannot_fly.mp3",
           "audio_source": "fish-coach-ray",
           "korean": "날다",
-          "english": "No, I cannot fly"
+          "english": "No, I cannot fly",
+          "image": "images/cannot-fly.webp"
         },
         {
           "id": "int3c__unit07__09",
@@ -733,7 +801,8 @@
           "audio": "audio/int3c__unit07__09__yes_i_can_love.mp3",
           "audio_source": "fish-coach-ray",
           "korean": "사랑하다",
-          "english": "Yes, I can love"
+          "english": "Yes, I can love",
+          "image": "images/int3c_u07_can_you_fly_love.webp"
         },
         {
           "id": "int3c__unit07__10",
@@ -744,7 +813,8 @@
           "audio": "audio/int3c__unit07__10__yes_i_can_run.mp3",
           "audio_source": "fish-coach-ray",
           "korean": "달리다",
-          "english": "Yes, I can run"
+          "english": "Yes, I can run",
+          "image": "images/pic_run_fast.webp"
         }
       ]
     },
@@ -761,7 +831,8 @@
           "audio": "audio/int3c__unit08__01__it_is_one_o_clock.mp3",
           "audio_source": "fish-coach-ray",
           "korean": "WTII? 1시",
-          "english": "It is one o'clock"
+          "english": "It is one o'clock",
+          "image": "images/int3c_u08_what_time_one_oclock.webp"
         },
         {
           "id": "int3c__unit08__02",
@@ -772,7 +843,8 @@
           "audio": "audio/int3c__unit08__02__it_is_five_o_clock.mp3",
           "audio_source": "fish-coach-ray",
           "korean": "WTII? 5시",
-          "english": "It is five o'clock"
+          "english": "It is five o'clock",
+          "image": "images/int3c_u08_what_time_five_oclock.webp"
         },
         {
           "id": "int3c__unit08__03",
@@ -783,7 +855,8 @@
           "audio": "audio/int3c__unit08__03__it_is_six_o_clock.mp3",
           "audio_source": "fish-coach-ray",
           "korean": "WTII? 6시",
-          "english": "It is six o'clock"
+          "english": "It is six o'clock",
+          "image": "images/int3c_u08_what_time_six_oclock.webp"
         },
         {
           "id": "int3c__unit08__04",
@@ -794,7 +867,8 @@
           "audio": "audio/int3c__unit08__04__it_is_seven_o_clock.mp3",
           "audio_source": "fish-coach-ray",
           "korean": "WTII? 7시",
-          "english": "It is seven o'clock"
+          "english": "It is seven o'clock",
+          "image": "images/int3c_u08_what_time_seven_oclock.webp"
         },
         {
           "id": "int3c__unit08__05",
@@ -805,7 +879,8 @@
           "audio": "audio/int3c__unit08__05__it_is_eight_o_clock.mp3",
           "audio_source": "fish-coach-ray",
           "korean": "WTII? 8시",
-          "english": "It is eight o'clock"
+          "english": "It is eight o'clock",
+          "image": "images/int3c_u08_what_time_eight_oclock.webp"
         },
         {
           "id": "int3c__unit08__06",
@@ -816,7 +891,8 @@
           "audio": "audio/int3c__unit08__06__it_is_nine_o_clock.mp3",
           "audio_source": "fish-coach-ray",
           "korean": "WTII? 9시",
-          "english": "It is nine o'clock"
+          "english": "It is nine o'clock",
+          "image": "images/int3c_u08_what_time_nine_oclock.webp"
         },
         {
           "id": "int3c__unit08__07",
@@ -827,7 +903,8 @@
           "audio": "audio/int3c__unit08__07__it_is_ten_o_clock.mp3",
           "audio_source": "fish-coach-ray",
           "korean": "WTII? 10시",
-          "english": "It is ten o'clock"
+          "english": "It is ten o'clock",
+          "image": "images/int3c_u08_what_time_ten_oclock.webp"
         },
         {
           "id": "int3c__unit08__08",
@@ -838,7 +915,8 @@
           "audio": "audio/int3c__unit08__08__it_is_eleven_o_clock.mp3",
           "audio_source": "fish-coach-ray",
           "korean": "WTII? 11시",
-          "english": "It is eleven o'clock"
+          "english": "It is eleven o'clock",
+          "image": "images/int3c_u08_what_time_eleven_oclock.webp"
         },
         {
           "id": "int3c__unit08__09",
@@ -849,7 +927,8 @@
           "audio": "audio/int3c__unit08__09__it_is_twelve_o_clock.mp3",
           "audio_source": "fish-coach-ray",
           "korean": "WTII? 12시",
-          "english": "It is twelve o'clock"
+          "english": "It is twelve o'clock",
+          "image": "images/int3c_u08_what_time_twelve_oclock.webp"
         },
         {
           "id": "int3c__unit08__10",
@@ -860,7 +939,8 @@
           "audio": "audio/int3c__unit08__10__it_is_two_o_clock.mp3",
           "audio_source": "fish-coach-ray",
           "korean": "WTII? 2시",
-          "english": "It is two o'clock"
+          "english": "It is two o'clock",
+          "image": "images/int3c_u08_what_time_two_oclock.webp"
         }
       ]
     }

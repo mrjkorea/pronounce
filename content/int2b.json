@@ -13,7 +13,8 @@
           "audio": "audio/int2b__unit01__01__it_is_monday.mp3",
           "audio_source": "fish-coach-ray",
           "korean": "WDIIT? 월요일",
-          "english": "It is Monday"
+          "english": "It is Monday",
+          "image": "images/day-monday.webp"
         },
         {
           "id": "int2b__unit01__02",
@@ -22,7 +23,8 @@
           "audio": "audio/int2b__unit01__02__it_is_tuesday.mp3",
           "audio_source": "fish-coach-ray",
           "korean": "WDIIT? 화요일",
-          "english": "It is Tuesday"
+          "english": "It is Tuesday",
+          "image": "images/day-tuesday.webp"
         },
         {
           "id": "int2b__unit01__03",
@@ -31,7 +33,8 @@
           "audio": "audio/int2b__unit01__03__it_is_wednesday.mp3",
           "audio_source": "fish-coach-ray",
           "korean": "WDIIT? 수요일",
-          "english": "It is Wednesday"
+          "english": "It is Wednesday",
+          "image": "images/day-wednesday.webp"
         },
         {
           "id": "int2b__unit01__04",
@@ -40,7 +43,8 @@
           "audio": "audio/int2b__unit01__04__it_is_thursday.mp3",
           "audio_source": "fish-coach-ray",
           "korean": "WDIIT? 목요일",
-          "english": "It is Thursday"
+          "english": "It is Thursday",
+          "image": "images/day-thursday.webp"
         },
         {
           "id": "int2b__unit01__05",
@@ -49,7 +53,8 @@
           "audio": "audio/int2b__unit01__05__it_is_friday.mp3",
           "audio_source": "fish-coach-ray",
           "korean": "WDIIT? 금요일",
-          "english": "It is Friday"
+          "english": "It is Friday",
+          "image": "images/day-friday.webp"
         },
         {
           "id": "int2b__unit01__06",
@@ -58,7 +63,8 @@
           "audio": "audio/int2b__unit01__06__it_is_saturday.mp3",
           "audio_source": "fish-coach-ray",
           "korean": "WDIIT? 토요일",
-          "english": "It is Saturday"
+          "english": "It is Saturday",
+          "image": "images/day-saturday.webp"
         },
         {
           "id": "int2b__unit01__07",
@@ -67,7 +73,8 @@
           "audio": "audio/int2b__unit01__07__it_is_sunday.mp3",
           "audio_source": "fish-coach-ray",
           "korean": "WDIIT? 일요일",
-          "english": "It is Sunday"
+          "english": "It is Sunday",
+          "image": "images/day-sunday.webp"
         },
         {
           "id": "int2b__unit01__08",
@@ -76,7 +83,8 @@
           "audio": "audio/int2b__unit01__08__it_is_a_holiday.mp3",
           "audio_source": "fish-coach-ray",
           "korean": "WDIIT? 공휴일",
-          "english": "It is a holiday"
+          "english": "It is a holiday",
+          "image": "images/holiday.webp"
         },
         {
           "id": "int2b__unit01__09",
@@ -85,7 +93,8 @@
           "audio": "audio/int2b__unit01__09__it_is_a_school_day.mp3",
           "audio_source": "fish-coach-ray",
           "korean": "WDIIT? 수업일",
-          "english": "It is a school day"
+          "english": "It is a school day",
+          "image": "images/int2b_school_day.webp"
         },
         {
           "id": "int2b__unit01__10",
@@ -94,7 +103,8 @@
           "audio": "audio/int2b__unit01__10__it_is_a_work_day.mp3",
           "audio_source": "fish-coach-ray",
           "korean": "WDIIT? 근무일",
-          "english": "It is a work day"
+          "english": "It is a work day",
+          "image": "images/int2b_work_day.webp"
         }
       ]
     },
@@ -111,7 +121,8 @@
           "audio": "audio/int2b__unit02__01__it_is_seven_thirty.mp3",
           "audio_source": "fish-coach-ray",
           "korean": "WTII(N)? 7시 30분",
-          "english": "It is seven thirty"
+          "english": "It is seven thirty",
+          "image": "images/clock-7-30.webp"
         },
         {
           "id": "int2b__unit02__02",
@@ -122,7 +133,8 @@
           "audio": "audio/int2b__unit02__02__it_is_breakfast_time.mp3",
           "audio_source": "fish-coach-ray",
           "korean": "WTII(N)? 아침 식사시간",
-          "english": "It is breakfast time"
+          "english": "It is breakfast time",
+          "image": "images/int2b_breakfast.webp"
         },
         {
           "id": "int2b__unit02__03",
@@ -133,7 +145,8 @@
           "audio": "audio/int2b__unit02__03__it_is_eight_o_clock.mp3",
           "audio_source": "fish-coach-ray",
           "korean": "WTII(N)? 8시",
-          "english": "It is eight o'clock"
+          "english": "It is eight o'clock",
+          "image": "images/int3c_u08_what_time_eight_oclock.webp"
         },
         {
           "id": "int2b__unit02__04",
@@ -144,7 +157,8 @@
           "audio": "audio/int2b__unit02__04__it_is_school_time.mp3",
           "audio_source": "fish-coach-ray",
           "korean": "WTII(N)? 학교 시간",
-          "english": "It is school time"
+          "english": "It is school time",
+          "image": "images/int2b_school.webp"
         },
         {
           "id": "int2b__unit02__05",
@@ -155,7 +169,8 @@
           "audio": "audio/int2b__unit02__05__it_is_three_thirty.mp3",
           "audio_source": "fish-coach-ray",
           "korean": "WTII(N)? 3시 30분",
-          "english": "It is three thirty"
+          "english": "It is three thirty",
+          "image": "images/int2b_clock_330.webp"
         },
         {
           "id": "int2b__unit02__06",
@@ -166,7 +181,8 @@
           "audio": "audio/int2b__unit02__06__it_is_snack_time.mp3",
           "audio_source": "fish-coach-ray",
           "korean": "WTII(N)? 간식 시간",
-          "english": "It is snack time"
+          "english": "It is snack time",
+          "image": "images/int2b_snack.webp"
         },
         {
           "id": "int2b__unit02__07",
@@ -177,7 +193,8 @@
           "audio": "audio/int2b__unit02__07__it_is_ten_a_m.mp3",
           "audio_source": "fish-coach-ray",
           "korean": "WTII(N)? 오전 10시",
-          "english": "It is ten a.m."
+          "english": "It is ten a.m.",
+          "image": "images/int2b_clock_10am.webp"
         },
         {
           "id": "int2b__unit02__08",
@@ -186,7 +203,8 @@
           "audio": "audio/int2b__unit02__08__it_is_online_class_time.mp3",
           "audio_source": "fish-coach-ray",
           "korean": "WTII(N)? 온라인 수업시간",
-          "english": "It is online class time"
+          "english": "It is online class time",
+          "image": "images/int2b_laptop_class.webp"
         },
         {
           "id": "int2b__unit02__09",
@@ -197,7 +215,8 @@
           "audio": "audio/int2b__unit02__09__it_is_eleven_a_m.mp3",
           "audio_source": "fish-coach-ray",
           "korean": "WTII(N)? 오전 11시",
-          "english": "It is eleven a.m."
+          "english": "It is eleven a.m.",
+          "image": "images/int2b_clock_11am.webp"
         },
         {
           "id": "int2b__unit02__10",
@@ -208,7 +227,8 @@
           "audio": "audio/int2b__unit02__10__it_is_recess.mp3",
           "audio_source": "fish-coach-ray",
           "korean": "WTII(N)? 휴식 시간",
-          "english": "It is recess"
+          "english": "It is recess",
+          "image": "images/int2b_recess.webp"
         }
       ]
     },
@@ -225,7 +245,8 @@
           "audio": "audio/int2b__unit03__01__i_want_to_be_a_pro_gamer.mp3",
           "audio_source": "fish-coach-ray",
           "korean": "프로게이머",
-          "english": "I want to be a pro-gamer"
+          "english": "I want to be a pro-gamer",
+          "image": "images/int2b_pro_gamer.webp"
         },
         {
           "id": "int2b__unit03__02",
@@ -236,7 +257,8 @@
           "audio": "audio/int2b__unit03__02__i_want_to_be_an_actor.mp3",
           "audio_source": "fish-coach-ray",
           "korean": "배우",
-          "english": "I want to be an actor"
+          "english": "I want to be an actor",
+          "image": "images/int2b_actor.webp"
         },
         {
           "id": "int2b__unit03__03",
@@ -245,7 +267,8 @@
           "audio": "audio/int2b__unit03__03__i_want_to_be_a_food_critic.mp3",
           "audio_source": "fish-coach-ray",
           "korean": "음식 비평가",
-          "english": "I want to be a food critic"
+          "english": "I want to be a food critic",
+          "image": "images/int2b_food_critic.webp"
         },
         {
           "id": "int2b__unit03__04",
@@ -254,7 +277,8 @@
           "audio": "audio/int2b__unit03__04__i_want_to_be_an_english_teacher.mp3",
           "audio_source": "fish-coach-ray",
           "korean": "영어 선생님",
-          "english": "I want to be an English teacher"
+          "english": "I want to be an English teacher",
+          "image": "images/int2b_english_teacher.webp"
         },
         {
           "id": "int2b__unit03__05",
@@ -263,7 +287,8 @@
           "audio": "audio/int2b__unit03__05__i_want_to_be_a_police_officer.mp3",
           "audio_source": "fish-coach-ray",
           "korean": "경찰관",
-          "english": "I want to be a police officer"
+          "english": "I want to be a police officer",
+          "image": "images/int2b_police.webp"
         },
         {
           "id": "int2b__unit03__06",
@@ -272,7 +297,8 @@
           "audio": "audio/int2b__unit03__06__i_want_to_be_a_scientist.mp3",
           "audio_source": "fish-coach-ray",
           "korean": "과학자",
-          "english": "I want to be a scientist"
+          "english": "I want to be a scientist",
+          "image": "images/int2b_scientist.webp"
         },
         {
           "id": "int2b__unit03__07",
@@ -281,7 +307,8 @@
           "audio": "audio/int2b__unit03__07__i_want_to_be_a_doctor.mp3",
           "audio_source": "fish-coach-ray",
           "korean": "의사",
-          "english": "I want to be a doctor"
+          "english": "I want to be a doctor",
+          "image": "images/int2b_doctor.webp"
         },
         {
           "id": "int2b__unit03__08",
@@ -290,7 +317,8 @@
           "audio": "audio/int2b__unit03__08__i_want_to_be_a_judge.mp3",
           "audio_source": "fish-coach-ray",
           "korean": "판사",
-          "english": "I want to be a judge"
+          "english": "I want to be a judge",
+          "image": "images/int2b_judge.webp"
         },
         {
           "id": "int2b__unit03__09",
@@ -301,7 +329,8 @@
           "audio": "audio/int2b__unit03__09__i_want_to_be_the_president.mp3",
           "audio_source": "fish-coach-ray",
           "korean": "대통령",
-          "english": "I want to be the president"
+          "english": "I want to be the president",
+          "image": "images/int2b_president.webp"
         },
         {
           "id": "int2b__unit03__10",
@@ -310,7 +339,8 @@
           "audio": "audio/int2b__unit03__10__i_want_to_be_a_computer_hacker.mp3",
           "audio_source": "fish-coach-ray",
           "korean": "컴퓨터 해커",
-          "english": "I want to be a computer hacker"
+          "english": "I want to be a computer hacker",
+          "image": "images/int2b_hacker.webp"
         }
       ]
     },
@@ -325,7 +355,8 @@
           "audio": "audio/int2b__unit04__01__how_much_is_this.mp3",
           "audio_source": "fish-coach-ray",
           "korean": "이것은 얼마입니까?",
-          "english": "How much is this?"
+          "english": "How much is this?",
+          "image": "images/how-much-is-this.webp"
         },
         {
           "id": "int2b__unit04__02",
@@ -334,7 +365,8 @@
           "audio": "audio/int2b__unit04__02__it_is_about_100_won.mp3",
           "audio_source": "fish-coach-ray",
           "korean": "그것은 100원 정도입니다",
-          "english": "It is about 100 won"
+          "english": "It is about 100 won",
+          "image": "images/int2b_won_coin.webp"
         },
         {
           "id": "int2b__unit04__03",
@@ -343,7 +375,8 @@
           "audio": "audio/int2b__unit04__03__how_much_is_that.mp3",
           "audio_source": "fish-coach-ray",
           "korean": "저것은 얼마입니까?",
-          "english": "How much is that?"
+          "english": "How much is that?",
+          "image": "images/how-much-is-that.webp"
         },
         {
           "id": "int2b__unit04__04",
@@ -352,7 +385,8 @@
           "audio": "audio/int2b__unit04__04__it_is_about_500_won.mp3",
           "audio_source": "fish-coach-ray",
           "korean": "그것은 500원 정도입니다",
-          "english": "It is about 500 won"
+          "english": "It is about 500 won",
+          "image": "images/500-won.webp"
         },
         {
           "id": "int2b__unit04__05",
@@ -361,7 +395,8 @@
           "audio": "audio/int2b__unit04__05__how_much_are_these.mp3",
           "audio_source": "fish-coach-ray",
           "korean": "이것들은 얼마입니까?",
-          "english": "How much are these?"
+          "english": "How much are these?",
+          "image": "images/how-much-are-these.webp"
         },
         {
           "id": "int2b__unit04__06",
@@ -372,7 +407,8 @@
           "audio": "audio/int2b__unit04__06__they_are_about_1000_won.mp3",
           "audio_source": "fish-coach-ray",
           "korean": "그것들은 1000원 정도입니다",
-          "english": "They are about 1000 won"
+          "english": "They are about 1000 won",
+          "image": "images/1000-won.webp"
         },
         {
           "id": "int2b__unit04__07",
@@ -381,7 +417,8 @@
           "audio": "audio/int2b__unit04__07__how_much_are_those.mp3",
           "audio_source": "fish-coach-ray",
           "korean": "저것들은 얼마입니까?",
-          "english": "How much are those?"
+          "english": "How much are those?",
+          "image": "images/how-much-are-those.webp"
         },
         {
           "id": "int2b__unit04__08",
@@ -390,7 +427,8 @@
           "audio": "audio/int2b__unit04__08__they_are_about_5000_won.mp3",
           "audio_source": "fish-coach-ray",
           "korean": "그것들은 5000원 정도입니다",
-          "english": "They are about 5000 won"
+          "english": "They are about 5000 won",
+          "image": "images/5000-won.webp"
         },
         {
           "id": "int2b__unit04__09",
@@ -399,7 +437,8 @@
           "audio": "audio/int2b__unit04__09__everything_here_is_cheap.mp3",
           "audio_source": "fish-coach-ray",
           "korean": "여기 있는 건 다 쌉니다!",
-          "english": "Everything here is cheap!"
+          "english": "Everything here is cheap!",
+          "image": "images/everything-cheap.webp"
         },
         {
           "id": "int2b__unit04__10",
@@ -408,7 +447,8 @@
           "audio": "audio/int2b__unit04__10__let_s_buy_some_more.mp3",
           "audio_source": "fish-coach-ray",
           "korean": "좀 더 사자!",
-          "english": "Let's buy some more!"
+          "english": "Let's buy some more!",
+          "image": "images/buy-some-more.webp"
         }
       ]
     },
@@ -425,7 +465,8 @@
           "audio": "audio/int2b__unit05__01__is_he_smart.mp3",
           "audio_source": "fish-coach-ray",
           "korean": "똑똑합니까?",
-          "english": "Is he smart?"
+          "english": "Is he smart?",
+          "image": "images/int2b_smart.webp"
         },
         {
           "id": "int2b__unit05__02",
@@ -436,7 +477,8 @@
           "audio": "audio/int2b__unit05__02__is_he_fat.mp3",
           "audio_source": "fish-coach-ray",
           "korean": "뚱뚱합니까?",
-          "english": "Is he fat?"
+          "english": "Is he fat?",
+          "image": "images/int2b_fat.webp"
         },
         {
           "id": "int2b__unit05__03",
@@ -447,7 +489,8 @@
           "audio": "audio/int2b__unit05__03__is_he_tall.mp3",
           "audio_source": "fish-coach-ray",
           "korean": "키가 큽니까?",
-          "english": "Is he tall?"
+          "english": "Is he tall?",
+          "image": "images/int2b_tall.webp"
         },
         {
           "id": "int2b__unit05__04",
@@ -458,7 +501,8 @@
           "audio": "audio/int2b__unit05__04__is_he_short.mp3",
           "audio_source": "fish-coach-ray",
           "korean": "키가 작습니까?",
-          "english": "Is he short?"
+          "english": "Is he short?",
+          "image": "images/int2b_short.webp"
         },
         {
           "id": "int2b__unit05__05",
@@ -469,7 +513,8 @@
           "audio": "audio/int2b__unit05__05__is_he_thin.mp3",
           "audio_source": "fish-coach-ray",
           "korean": "말랐습니까?",
-          "english": "Is he thin?"
+          "english": "Is he thin?",
+          "image": "images/int2b_thin.webp"
         },
         {
           "id": "int2b__unit05__06",
@@ -480,7 +525,8 @@
           "audio": "audio/int2b__unit05__06__is_he_old.mp3",
           "audio_source": "fish-coach-ray",
           "korean": "늙었습니까?",
-          "english": "Is he old?"
+          "english": "Is he old?",
+          "image": "images/int3a_how-old_age_55.webp"
         },
         {
           "id": "int2b__unit05__07",
@@ -491,7 +537,8 @@
           "audio": "audio/int2b__unit05__07__is_he_young.mp3",
           "audio_source": "fish-coach-ray",
           "korean": "어립니까?",
-          "english": "Is he young?"
+          "english": "Is he young?",
+          "image": "images/int2b_young.webp"
         },
         {
           "id": "int2b__unit05__08",
@@ -502,7 +549,8 @@
           "audio": "audio/int2b__unit05__08__is_he_ugly.mp3",
           "audio_source": "fish-coach-ray",
           "korean": "못생겼습니까?",
-          "english": "Is he ugly?"
+          "english": "Is he ugly?",
+          "image": "images/int2b_ugly.webp"
         },
         {
           "id": "int2b__unit05__09",
@@ -513,7 +561,8 @@
           "audio": "audio/int2b__unit05__09__is_he_good_looking.mp3",
           "audio_source": "fish-coach-ray",
           "korean": "잘생겼습니까?",
-          "english": "Is he good-looking?"
+          "english": "Is he good-looking?",
+          "image": "images/int2b_good_looking.webp"
         },
         {
           "id": "int2b__unit05__10",
@@ -524,7 +573,8 @@
           "audio": "audio/int2b__unit05__10__is_he_rich.mp3",
           "audio_source": "fish-coach-ray",
           "korean": "부유합니까?",
-          "english": "Is he rich?"
+          "english": "Is he rich?",
+          "image": "images/int2b_rich.webp"
         }
       ]
     },
@@ -539,7 +589,8 @@
           "audio": "audio/int2b__unit06__01__this_is_my_english_teacher.mp3",
           "audio_source": "fish-coach-ray",
           "korean": "영어 선생님",
-          "english": "This is my English teacher"
+          "english": "This is my English teacher",
+          "image": "images/int2b_english_teacher.webp"
         },
         {
           "id": "int2b__unit06__02",
@@ -548,7 +599,8 @@
           "audio": "audio/int2b__unit06__02__this_is_my_math_teacher.mp3",
           "audio_source": "fish-coach-ray",
           "korean": "수학 선생님",
-          "english": "This is my math teacher"
+          "english": "This is my math teacher",
+          "image": "images/int2b_math.webp"
         },
         {
           "id": "int2b__unit06__03",
@@ -557,7 +609,8 @@
           "audio": "audio/int2b__unit06__03__this_is_my_science_teacher.mp3",
           "audio_source": "fish-coach-ray",
           "korean": "과학 선생님",
-          "english": "This is my science teacher"
+          "english": "This is my science teacher",
+          "image": "images/int2b_science.webp"
         },
         {
           "id": "int2b__unit06__04",
@@ -566,7 +619,8 @@
           "audio": "audio/int2b__unit06__04__this_is_my_history_teacher.mp3",
           "audio_source": "fish-coach-ray",
           "korean": "역사 선생님",
-          "english": "This is my history teacher"
+          "english": "This is my history teacher",
+          "image": "images/int2b_history.webp"
         },
         {
           "id": "int2b__unit06__05",
@@ -575,7 +629,8 @@
           "audio": "audio/int2b__unit06__05__this_is_my_music_teacher.mp3",
           "audio_source": "fish-coach-ray",
           "korean": "음악 선생님",
-          "english": "This is my music teacher"
+          "english": "This is my music teacher",
+          "image": "images/int2b_music.webp"
         },
         {
           "id": "int2b__unit06__06",
@@ -584,7 +639,8 @@
           "audio": "audio/int2b__unit06__06__this_is_my_art_teacher.mp3",
           "audio_source": "fish-coach-ray",
           "korean": "미술 선생님",
-          "english": "This is my art teacher"
+          "english": "This is my art teacher",
+          "image": "images/int2b_art.webp"
         },
         {
           "id": "int2b__unit06__07",
@@ -595,7 +651,8 @@
           "audio": "audio/int2b__unit06__07__this_is_my_gym_teacher.mp3",
           "audio_source": "fish-coach-ray",
           "korean": "체육 선생님",
-          "english": "This is my gym teacher"
+          "english": "This is my gym teacher",
+          "image": "images/int2b_gym_subj.webp"
         },
         {
           "id": "int2b__unit06__08",
@@ -604,7 +661,8 @@
           "audio": "audio/int2b__unit06__08__this_is_my_korean_teacher.mp3",
           "audio_source": "fish-coach-ray",
           "korean": "국어 선생님",
-          "english": "This is my Korean teacher"
+          "english": "This is my Korean teacher",
+          "image": "images/int2b_korean_book.webp"
         },
         {
           "id": "int2b__unit06__09",
@@ -613,7 +671,8 @@
           "audio": "audio/int2b__unit06__09__this_is_my_social_studies_teacher.mp3",
           "audio_source": "fish-coach-ray",
           "korean": "사회 선생님",
-          "english": "This is my social studies teacher"
+          "english": "This is my social studies teacher",
+          "image": "images/int2b_social.webp"
         },
         {
           "id": "int2b__unit06__10",
@@ -622,7 +681,8 @@
           "audio": "audio/int2b__unit06__10__this_is_my_japanese_teacher.mp3",
           "audio_source": "fish-coach-ray",
           "korean": "일본어 선생님",
-          "english": "This is my Japanese teacher"
+          "english": "This is my Japanese teacher",
+          "image": "images/japanese-teacher.webp"
         }
       ]
     },
@@ -639,7 +699,8 @@
           "audio": "audio/int2b__unit07__01__is_it_in_the_pencil_case.mp3",
           "audio_source": "fish-coach-ray",
           "korean": "돈? 필통 안에",
-          "english": "Is it in the pencil case?"
+          "english": "Is it in the pencil case?",
+          "image": "images/int2b_pencil_case.webp"
         },
         {
           "id": "int2b__unit07__02",
@@ -650,7 +711,8 @@
           "audio": "audio/int2b__unit07__02__is_it_on_the_book.mp3",
           "audio_source": "fish-coach-ray",
           "korean": "폰? 책 위에",
-          "english": "Is it on the book?"
+          "english": "Is it on the book?",
+          "image": "images/int2b_books.webp"
         },
         {
           "id": "int2b__unit07__03",
@@ -661,7 +723,8 @@
           "audio": "audio/int2b__unit07__03__is_it_under_the_desk.mp3",
           "audio_source": "fish-coach-ray",
           "korean": "지갑? 책상 아래",
-          "english": "Is it under the desk?"
+          "english": "Is it under the desk?",
+          "image": "images/int2b_desk.webp"
         },
         {
           "id": "int2b__unit07__04",
@@ -672,7 +735,8 @@
           "audio": "audio/int2b__unit07__04__is_it_behind_the_phone.mp3",
           "audio_source": "fish-coach-ray",
           "korean": "열쇠? 휴대폰 뒤에",
-          "english": "Is it behind the phone?"
+          "english": "Is it behind the phone?",
+          "image": "images/int2b_phone.webp"
         },
         {
           "id": "int2b__unit07__05",
@@ -683,7 +747,8 @@
           "audio": "audio/int2b__unit07__05__is_it_in_front_of_the_stairs.mp3",
           "audio_source": "fish-coach-ray",
           "korean": "안경? 계단 앞에",
-          "english": "Is it in front of the stairs?"
+          "english": "Is it in front of the stairs?",
+          "image": "images/int2b_stairs.webp"
         },
         {
           "id": "int2b__unit07__06",
@@ -694,7 +759,8 @@
           "audio": "audio/int2b__unit07__06__is_it_between_the_shoes.mp3",
           "audio_source": "fish-coach-ray",
           "korean": "양말? 신발 사이에",
-          "english": "Is it between the shoes?"
+          "english": "Is it between the shoes?",
+          "image": "images/int2b_shoes.webp"
         },
         {
           "id": "int2b__unit07__07",
@@ -705,7 +771,8 @@
           "audio": "audio/int2b__unit07__07__is_it_next_to_the_bus_stop.mp3",
           "audio_source": "fish-coach-ray",
           "korean": "반지? 버스 정류장 옆에",
-          "english": "Is it next to the bus stop?"
+          "english": "Is it next to the bus stop?",
+          "image": "images/int2b_bus_stop.webp"
         },
         {
           "id": "int2b__unit07__08",
@@ -716,7 +783,8 @@
           "audio": "audio/int2b__unit07__08__is_it_in_the_pocket.mp3",
           "audio_source": "fish-coach-ray",
           "korean": "안경? 주머니 안에",
-          "english": "Is it in the pocket?"
+          "english": "Is it in the pocket?",
+          "image": "images/int2b_pocket.webp"
         },
         {
           "id": "int2b__unit07__09",
@@ -725,7 +793,8 @@
           "audio": "audio/int2b__unit07__09__is_it_across_the_street.mp3",
           "audio_source": "fish-coach-ray",
           "korean": "돈? 길 건너편에",
-          "english": "Is it across the street?"
+          "english": "Is it across the street?",
+          "image": "images/across-the-street.webp"
         },
         {
           "id": "int2b__unit07__10",
@@ -734,7 +803,8 @@
           "audio": "audio/int2b__unit07__10__is_it_outside_the_house.mp3",
           "audio_source": "fish-coach-ray",
           "korean": "폰? 집 밖에",
-          "english": "Is it outside the house?"
+          "english": "Is it outside the house?",
+          "image": "images/outside-the-house.webp"
         }
       ]
     },
@@ -749,7 +819,8 @@
           "audio": "audio/int2b__unit08__01__this_is_mine.mp3",
           "audio_source": "fish-coach-ray",
           "korean": "이것은 내 것입니다",
-          "english": "This is mine"
+          "english": "This is mine",
+          "image": "images/this-is-mine.webp"
         },
         {
           "id": "int2b__unit08__02",
@@ -758,7 +829,8 @@
           "audio": "audio/int2b__unit08__02__it_is_not_yours_it_is_mine.mp3",
           "audio_source": "fish-coach-ray",
           "korean": "그것은 네 것이 아닙니다. 그것은 내 것입니다",
-          "english": "It is not yours. It is mine"
+          "english": "It is not yours. It is mine",
+          "image": "images/not-yours-mine.webp"
         },
         {
           "id": "int2b__unit08__03",
@@ -767,7 +839,8 @@
           "audio": "audio/int2b__unit08__03__it_is_not_mine_it_is_ours.mp3",
           "audio_source": "fish-coach-ray",
           "korean": "그것은 내 것이 아닙니다. 그것은 우리 것입니다",
-          "english": "It is not mine. It is ours"
+          "english": "It is not mine. It is ours",
+          "image": "images/not-mine-ours.webp"
         },
         {
           "id": "int2b__unit08__04",
@@ -776,7 +849,8 @@
           "audio": "audio/int2b__unit08__04__this_is_not_yours_it_is_hers.mp3",
           "audio_source": "fish-coach-ray",
           "korean": "이것은 네 것이 아니라 그녀의 것입니다",
-          "english": "This is not yours, it is hers"
+          "english": "This is not yours, it is hers",
+          "image": "images/not-yours-hers.webp"
         },
         {
           "id": "int2b__unit08__05",
@@ -785,7 +859,8 @@
           "audio": "audio/int2b__unit08__05__these_are_not_yours.mp3",
           "audio_source": "fish-coach-ray",
           "korean": "이것들은 네 것이 아닙니다",
-          "english": "These are not yours"
+          "english": "These are not yours",
+          "image": "images/these-not-yours.webp"
         },
         {
           "id": "int2b__unit08__06",
@@ -794,7 +869,8 @@
           "audio": "audio/int2b__unit08__06__they_are_not_theirs_they_are_mine.mp3",
           "audio_source": "fish-coach-ray",
           "korean": "그것들은 그들의 것이 아닙니다. 그것들은 내 것입니다",
-          "english": "They are not theirs. They are mine"
+          "english": "They are not theirs. They are mine",
+          "image": "images/not-theirs-mine.webp"
         },
         {
           "id": "int2b__unit08__07",
@@ -803,7 +879,8 @@
           "audio": "audio/int2b__unit08__07__this_is_yours.mp3",
           "audio_source": "fish-coach-ray",
           "korean": "이것은 네 것입니다",
-          "english": "This is yours"
+          "english": "This is yours",
+          "image": "images/this-is-yours.webp"
         },
         {
           "id": "int2b__unit08__08",
@@ -812,7 +889,8 @@
           "audio": "audio/int2b__unit08__08__it_is_not_yours_it_is_his.mp3",
           "audio_source": "fish-coach-ray",
           "korean": "그것은 네 것이 아니라 그의 것입니다",
-          "english": "It is not yours, it is his"
+          "english": "It is not yours, it is his",
+          "image": "images/not-yours-his.webp"
         },
         {
           "id": "int2b__unit08__09",
@@ -821,7 +899,8 @@
           "audio": "audio/int2b__unit08__09__what_about_mine.mp3",
           "audio_source": "fish-coach-ray",
           "korean": "내 것은요?",
-          "english": "What about mine?"
+          "english": "What about mine?",
+          "image": "images/what-about-mine.webp"
         },
         {
           "id": "int2b__unit08__10",
@@ -830,7 +909,8 @@
           "audio": "audio/int2b__unit08__10__this_is_mine_and_this_is_mine_and_this_is_mine.mp3",
           "audio_source": "fish-coach-ray",
           "korean": "이것은 내 것이고, 이것도 내 것이고, 이것도 내 것입니다",
-          "english": "This is mine and this is mine and this is mine"
+          "english": "This is mine and this is mine and this is mine",
+          "image": "images/mine-mine-mine.webp"
         }
       ]
     }
