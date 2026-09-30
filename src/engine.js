@@ -29,11 +29,11 @@ let _arpabetIds = null; // { blank_id, map: {AA:[ids...]} }
 async function loadG2P(baseUrl = '') {
   // Day 4 page: subset of the lines on the sheet, plus the two map files.
   const [cmu, ovr, aid] = await Promise.all([
-    fetch(`${baseUrl}models/cmudict.day4.json`).then((r) => {
+    fetch(`${baseUrl}models/cmudict.day4.json?v=20260930-words`).then((r) => {
       if (!r.ok) throw new Error('dictionary load failed');
       return r.json();
     }),
-    fetch(`${baseUrl}models/phone_overrides.json`).then(r => r.json()),
+    fetch(`${baseUrl}models/phone_overrides.json?v=20260930-words`).then(r => r.json()),
     fetch(`${baseUrl}models/arpabet_to_ids.json`).then(r => r.json()),
   ]);
   _cmudict = cmu;

@@ -5,7 +5,7 @@ import {
   aggregate,
   tokenizeWords,
   unknownWords,
-} from './engine.js';
+} from './engine.js?v=20260930-words';
 import { decodeAudioToMono, audioStats, normalizeForModel, trimSilence, capSpeechWindow } from './audio.js';
 import { sheetLines } from './sheet.js';
 
