@@ -5,20 +5,23 @@
   <meta name="viewport" content="width=device-width, initial-scale=1">
   <title>Pronounce · Day 4</title>
   <link rel="stylesheet" href="https://mrjkorea.github.io/mrj-signin/mrj-auth.css">
-  <link rel="stylesheet" href="src/styles.css?v=20260930-hide">
+  <link rel="stylesheet" href="src/styles.css?v=20260930-l1">
   <script src="https://mrjkorea.github.io/mrj-signin/mrj-auth.js"></script>
   <script src="https://mrjkorea.github.io/mrj-signin/mrj-auth-boot.js" data-mrj-app="pronounce"></script>
 </head>
 <body class="auth-wait">
   <header class="top">
-    <a class="brand" href="#/">Pronounce · Day 4</a>
+    <div class="top-row">
+      <a class="brand" href="#/">Pronounce · Day 4</a>
+      <label class="lang-label"><select id="langMenu" aria-label="Language"></select></label>
+    </div>
     <p id="modelLabel" class="model-label">Loading the sound checker…</p>
     <div class="track" id="modelTrack" aria-hidden="true"><div id="modelFill"></div></div>
   </header>
   <main id="app"></main>
   <script src="vendor/ort/ort.wasm.min.js"></script>
   <script src="mrj-scores.js?v=20260928-onebook"></script>
-  <script type="module" src="src/app.js?v=20260930-words"></script>
+  <script type="module" src="src/app.js?v=20260930-l1"></script>
   <script>
     window.addEventListener('mrj-auth-ready', function () {
       document.body.classList.remove('auth-wait');

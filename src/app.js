@@ -17,6 +17,25 @@ const LOCAL_HEAR = new Set([
 const PASS_SCORE = 0.6;
 const MS_PER_WORD = 200;
 const SCORE_KEY = 'day4-pronounce-scores-v2';
+const LANG_KEY = 'day4-ui-lang';
+const UI_LANGS = [
+  ['en', 'English'],
+  ['ko', '한국어'],
+  ['zh-Hans', '中文'],
+  ['ja', '日本語'],
+  ['es', 'Español'],
+  ['hi', 'हिन्दी'],
+  ['de', 'Deutsch'],
+  ['vi', 'Tiếng Việt'],
+  ['pt-BR', 'Português'],
+  ['id', 'Bahasa Indonesia'],
+  ['fr', 'Français'],
+  ['ar', 'العربية'],
+  ['tr', 'Türkçe'],
+  ['it', 'Italiano'],
+  ['pl', 'Polski'],
+];
+let l1Pack = null;
 const CACHE_NAME = 'day4-wav2vec2-int8-v1';
 const BOOK_ORDER = ['basic_a', 'basic_b', 'basic_c', 'int3a', 'int3b', 'int3c', 'int2a', 'int2b', 'int2c'];
 
@@ -365,6 +384,49 @@ function escapeHtml(s) {
   return String(s).replace(/[&<>"']/g, (c) => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c]));
 }
 
+function currentLang() {
+  const code = localStorage.getItem(LANG_KEY) || 'ko';
+  return UI_LANGS.some(([id]) => id === code) ? code : 'ko';
+}
+
+function applyLangDir() {
+  const code = currentLang();
+  document.documentElement.lang = code;
+  document.documentElement.dir = code === 'ar' ? 'rtl' : 'ltr';
+}
+
+function fillLangMenu() {
+  const sel = document.getElementById('langMenu');
+  if (!sel) return;
+  const cur = currentLang();
+  sel.innerHTML = UI_LANGS.map(([code, name]) => (
+    `<option value="${code}"${code === cur ? ' selected' : ''}>${name}</option>`
+  )).join('');
+}
+
+function lineCue(item) {
+  if (!item) return '';
+  const lang = currentLang();
+  if (lang === 'ko') return item.korean || '';
+  const row = l1Pack && l1Pack.lines && l1Pack.lines[item.id];
+  if (row && row[lang]) return row[lang];
+  return item.korean || '';
+}
+
+function questionCue(english) {
+  const lang = currentLang();
+  const row = l1Pack && l1Pack.questions && l1Pack.questions[english];
+  if (row && row[lang]) return row[lang];
+  return lang === 'en' ? english : '';
+}
+
+function noteCue() {
+  const lang = currentLang();
+  const note = l1Pack && l1Pack.note;
+  if (note && note[lang]) return note[lang];
+  return lang === 'ko' ? '이 질문을 한 번만 말하세요.' : 'Say this question one time.';
+}
+
 function wordChipsHtml(words) {
   if (!words || !words.length) return '';
   const chips = words.map((w) => {
@@ -409,8 +471,11 @@ function renderSharedQuestion(bookId, unit, scores, ready) {
   const gradingShared = gradingScoreKey === sk;
   const gradeBar = gradingShared ? '<div class="grade-bar shared-grade show"><div class="grade-fill"></div></div>' : '';
   const prompt = englishRevealed(saved) ? englishCueHtml(plan.question, 'en-prompt') : '';
+  const meaning = questionCue(plan.question);
+  const meaningHtml = meaning ? `<p class="l1-prompt">${escapeHtml(meaning)}</p>` : '';
   return `<section class="shared-q ${doneCls}" data-shared="${escapeHtml(sk)}">
-    <p class="shared-note">이 질문을 한 번만 말하세요.</p>
+    <p class="shared-note">${escapeHtml(noteCue())}</p>
+    ${meaningHtml}
     ${prompt}
     <button type="button" class="mic shared-mic" data-score-key="${escapeHtml(sk)}" data-grade-text="${escapeHtml(plan.question)}" data-audio-rel="${escapeHtml(questionAudioRel(plan.question))}" ${ready ? '' : 'disabled'}>${micLabel}</button>
     ${result}
@@ -466,7 +531,7 @@ function lineArticleHtml(line, unit, index, scores, ready) {
     const micBtn = `<button type="button" class="mic" data-score-key="${escapeHtml(skey)}" data-item-id="${escapeHtml(item.id)}" data-part-key="${escapeHtml(p.key)}" data-grade-text="${escapeHtml(p.english)}" data-audio-rel="${escapeHtml(audioRel)}" ${ready ? '' : 'disabled'}>${micLabel}</button>`;
     if (!multi) {
       return {
-        main: koHtml(item.korean, imageRel, line.local, cue),
+        main: koHtml(lineCue(item), imageRel, line.local, cue),
         micBtn,
         saved,
       };
@@ -484,7 +549,7 @@ function lineArticleHtml(line, unit, index, scores, ready) {
   let body;
   let tail = '';
   if (multi) {
-    body = `<div class="row-parts">${koHtml(item.korean, imageRel, line.local)}${partBlocks.join('')}</div>`;
+    body = `<div class="row-parts">${koHtml(lineCue(item), imageRel, line.local)}${partBlocks.join('')}</div>`;
   } else {
     const single = partBlocks[0];
     body = `<div class="row-main">${single.main}</div>${single.micBtn}`;
@@ -511,7 +576,9 @@ function renderSheet(bookId, unitId) {
   const wait = modelError
     ? `<p class="note">${escapeHtml(modelError)}</p>`
     : (ready ? '' : '<p class="note">The sound checker is still loading. Mic turns on when the bar finishes.</p>');
-  appEl.innerHTML = `<a class="back" href="#/book/${book.id}">← ${escapeHtml(book.label)}</a><h1>${escapeHtml(unit.title)}</h1>${wait}<div class="sheet">${shared}${rows}</div>`;
+  const beside = questionCue(unit.title);
+  const besideHtml = beside && beside !== unit.title ? `<span class="l1-beside">${escapeHtml(beside)}</span>` : '';
+  appEl.innerHTML = `<a class="back" href="#/book/${book.id}">← ${escapeHtml(book.label)}</a><h1>${escapeHtml(unit.title)}${besideHtml}</h1>${wait}<div class="sheet">${shared}${rows}</div>`;
 }
 
 function render() {
@@ -865,7 +932,26 @@ if (appEl) {
     render();
   });
 
-  loadContent().then(render).catch((err) => {
+  fillLangMenu();
+  applyLangDir();
+  const langMenu = document.getElementById('langMenu');
+  if (langMenu) {
+    langMenu.addEventListener('change', () => {
+      localStorage.setItem(LANG_KEY, langMenu.value);
+      applyLangDir();
+      render();
+    });
+  }
+
+  loadContent().then(async () => {
+    try {
+      const response = await fetch('content/l1.json?v=20260930-l1');
+      if (response.ok) l1Pack = await response.json();
+    } catch (err) {
+      console.error(err);
+    }
+    render();
+  }).catch((err) => {
     appEl.innerHTML = '<p class="lead">Could not load the sheets.</p>';
     console.error(err);
   });

@@ -38,6 +38,39 @@ body.auth-wait #app {
   margin: 0 auto 18px;
 }
 
+.top-row {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+}
+
+.lang-label select {
+  font: inherit;
+  font-size: 18px;
+  font-weight: 700;
+  padding: 8px 10px;
+  border-radius: 10px;
+  border: 1px solid #d9d0c2;
+  background: #fff;
+  color: var(--ink);
+}
+
+.l1-beside {
+  display: block;
+  margin-top: 6px;
+  font-size: 22px;
+  font-weight: 700;
+  line-height: 1.35;
+}
+
+.l1-prompt {
+  margin: 0 0 10px;
+  font-size: 22px;
+  font-weight: 700;
+  line-height: 1.35;
+}
+
 .brand {
   display: inline-block;
   color: inherit;
