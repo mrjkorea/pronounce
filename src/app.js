@@ -79,6 +79,7 @@ const QUESTION_CODES = {
 
 const SILENCE_MS = 1200;
 const SILENCE_GRACE_MS = 1600;
+const PART2_SILENCE_MS = 400;
 const SILENCE_CHECK_MS = 80;
 const SILENCE_RMS = 0.008;
 const MAX_RECORD_MS = 60000;
@@ -585,10 +586,13 @@ function partResultHtml(saved) {
 }
 
 function micButtonHtml(skey, itemId, partKey, english, audioRel, allowed, ready, label) {
-  const text = label && label !== 'Mic' ? label : (ready ? 'Mic' : 'Wait');
+  const live = !!(capture && capture.scoreKey === skey);
+  const text = live ? 'Listening…' : (label && label !== 'Mic' ? label : (ready ? 'Mic' : 'Wait'));
   const itemAttr = itemId ? ` data-item-id="${escapeHtml(itemId)}"` : '';
   const partAttr = partKey ? ` data-part-key="${escapeHtml(partKey)}"` : '';
-  return `<button type="button" class="mic" data-score-key="${escapeHtml(skey)}"${itemAttr}${partAttr} data-grade-text="${escapeHtml(english)}" data-audio-rel="${escapeHtml(audioRel)}" ${allowed && ready ? '' : 'disabled'}>${text}</button>`;
+  const enabled = live || (allowed && ready);
+  const cls = live ? 'mic live' : 'mic';
+  return `<button type="button" class="${cls}" data-score-key="${escapeHtml(skey)}"${itemAttr}${partAttr} data-grade-text="${escapeHtml(english)}" data-audio-rel="${escapeHtml(audioRel)}" ${enabled ? '' : 'disabled'}>${text}</button>`;
 }
 
 function askHtml(show) {
@@ -800,7 +804,7 @@ function sheetView(flow, targets) {
     const id = targets[i].id;
     allow[id] = checkerReady && canStartMic({
       phase: flow.phase,
-      recording: !!capture,
+      recording: flow.phase === 'part2' ? false : !!capture,
       grading: part1Busy || rushInFlight > 0,
       timerRunning: running,
       lineOpen: lineOpenFor(flow, id),
@@ -1039,7 +1043,9 @@ function stopSilenceWatch() {
   disconnectSilenceNodes();
 }
 
-function startSilenceWatch(stream, ctx, onDone) {
+function startSilenceWatch(stream, ctx, onDone, silenceMs, graceMs) {
+  const endSilence = silenceMs == null ? SILENCE_MS : silenceMs;
+  const grace = graceMs == null ? SILENCE_GRACE_MS : graceMs;
   stopSilenceWatch();
   let finished = false;
   const finish = () => {
@@ -1078,10 +1084,10 @@ function startSilenceWatch(stream, ctx, onDone) {
       if (rms >= SILENCE_RMS) {
         spoke = true;
         quietMs = 0;
-      } else if (totalMs > SILENCE_GRACE_MS && spoke) {
+      } else if (totalMs > grace && spoke) {
         quietMs += SILENCE_CHECK_MS;
       }
-      if (quietMs >= SILENCE_MS || totalMs >= MAX_RECORD_MS || (!spoke && totalMs >= 12000)) {
+      if (quietMs >= endSilence || totalMs >= MAX_RECORD_MS || (!spoke && totalMs >= 12000)) {
         finish();
         return;
       }
@@ -1224,23 +1230,77 @@ async function gradeStudentOrTeacher(meta, blob) {
   if (stillOnSheet(meta.bookId, meta.unitId)) render();
 }
 
+function yieldForTap() {
+  return new Promise((resolve) => setTimeout(resolve, 0));
+}
+
+function encodeWavOffTap(floatChunks, sampleRate) {
+  return new Promise((resolve, reject) => {
+    let worker;
+    try {
+      worker = new Worker(new URL('./wav-worker.js?v=20261005-nextmic', import.meta.url));
+    } catch (err) {
+      reject(err);
+      return;
+    }
+    const transfers = [];
+    for (let i = 0; i < floatChunks.length; i++) {
+      if (floatChunks[i] && floatChunks[i].buffer) transfers.push(floatChunks[i].buffer);
+    }
+    worker.onmessage = (ev) => {
+      worker.terminate();
+      resolve(new Blob([ev.data.buf], { type: 'audio/wav' }));
+    };
+    worker.onerror = (err) => {
+      worker.terminate();
+      reject(err);
+    };
+    worker.postMessage({ chunks: floatChunks, sampleRate }, transfers);
+  });
+}
+
+function commitPart2Take(meta) {
+  beginRushCheck(meta.scoreKey);
+  let flow = markRushRecorded(loadUnitFlow(meta.bookId, meta.unitId), meta.scoreKey);
+  flow = stopIfLastRushLine(flow, meta.ids, Date.now());
+  saveUnitFlow(meta.bookId, meta.unitId, flow);
+}
+
+function missPart2Take(meta) {
+  endRushCheck(meta.scoreKey);
+  const missed = noteRushGrade(loadUnitFlow(meta.bookId, meta.unitId), meta.scoreKey, { pass: false, scorePct: 0 });
+  saveUnitFlow(meta.bookId, meta.unitId, missed);
+  if (stillOnSheet(meta.bookId, meta.unitId)) render();
+}
+
+async function gradePart2OffTap(meta) {
+  await yieldForTap();
+  let blob = null;
+  try {
+    blob = await encodeWavOffTap(meta.chunks, meta.ctx.sampleRate || 48000);
+  } catch (err) {
+    console.error(err);
+  }
+  meta.ctx.close().catch(() => {});
+  if (blob) {
+    void gradeRush(meta, blob);
+    return;
+  }
+  missPart2Take(meta);
+}
+
+function queuePart2Grade(meta) {
+  if (!meta || !meta.scoreKey || !meta.gradeText) return;
+  commitPart2Take(meta);
+  if (stillOnSheet(meta.bookId, meta.unitId)) render();
+  void gradePart2OffTap(meta);
+}
+
 async function finishTake() {
   const meta = claimCapture();
   if (!meta || !meta.scoreKey || !meta.gradeText) return;
   if (meta.phase === 'part2') {
-    beginRushCheck(meta.scoreKey);
-    let flow = markRushRecorded(loadUnitFlow(meta.bookId, meta.unitId), meta.scoreKey);
-    flow = stopIfLastRushLine(flow, meta.ids, Date.now());
-    saveUnitFlow(meta.bookId, meta.unitId, flow);
-    if (stillOnSheet(meta.bookId, meta.unitId)) render();
-    const blob = await blobFrom(meta);
-    if (blob) void gradeRush(meta, blob);
-    else {
-      endRushCheck(meta.scoreKey);
-      const missed = noteRushGrade(loadUnitFlow(meta.bookId, meta.unitId), meta.scoreKey, { pass: false, scorePct: 0 });
-      saveUnitFlow(meta.bookId, meta.unitId, missed);
-      if (stillOnSheet(meta.bookId, meta.unitId)) render();
-    }
+    queuePart2Grade(meta);
     return;
   }
   part1Busy = true;
@@ -1268,14 +1328,9 @@ async function endPart2(bookId, unitId) {
   flow = stopTimer(flow, Date.now());
   saveUnitFlow(bookId, unitId, flow);
   if (stillOnSheet(bookId, unitId)) render();
-  const blob = meta ? await blobFrom(meta) : null;
-  if (meta && blob) void gradeRush(meta, blob);
-  else if (meta && meta.scoreKey) {
-    endRushCheck(meta.scoreKey);
-    const missed = noteRushGrade(loadUnitFlow(bookId, unitId), meta.scoreKey, { pass: false, scorePct: 0 });
-    saveUnitFlow(bookId, unitId, missed);
-    if (stillOnSheet(bookId, unitId)) render();
-  }
+  if (meta && meta.scoreKey && meta.gradeText) void gradePart2OffTap(meta);
+  else if (meta && meta.scoreKey) missPart2Take(meta);
+  else if (meta) meta.ctx.close().catch(() => {});
 }
 
 function weakWords(result) {
@@ -1381,27 +1436,35 @@ async function playExpectedOnFail(gradeText, audioRel, pass) {
 }
 
 let armingMic = false;
+let armToken = 0;
 
 async function onMic(btn) {
-  if (armingMic || capture) return;
   const r = route();
   if (r.name !== 'sheet') return;
   const book = byId.get(r.bookId);
   const unit = book && book.units.find((u) => u.id === r.unitId);
   if (!unit) return;
-  const flow = loadUnitFlow(r.bookId, r.unitId);
+  const flowNow = loadUnitFlow(r.bookId, r.unitId);
   const scoreKey = btn.getAttribute('data-score-key');
   const gradeText = btn.getAttribute('data-grade-text');
   const audioRel = btn.getAttribute('data-audio-rel');
   const itemId = btn.getAttribute('data-item-id');
   if (!scoreKey || !gradeText || !checkerReady) return;
+  const switching = !!(capture && flowNow.phase === 'part2' && capture.scoreKey !== scoreKey);
+  if (capture && !switching) return;
+  if (armingMic && flowNow.phase !== 'part2') return;
   if (!canStartMic({
-    phase: flow.phase,
-    recording: !!capture || armingMic,
+    phase: flowNow.phase,
+    recording: false,
     grading: part1Busy || rushInFlight > 0,
-    timerRunning: timerRunning(flow),
-    lineOpen: lineOpenFor(flow, scoreKey),
+    timerRunning: timerRunning(flowNow),
+    lineOpen: lineOpenFor(flowNow, scoreKey),
   })) return;
+  if (switching) {
+    const prev = claimCapture();
+    if (prev && prev.phase === 'part2') queuePart2Grade(prev);
+  }
+  const token = ++armToken;
   armingMic = true;
   let stream;
   try {
@@ -1409,21 +1472,22 @@ async function onMic(btn) {
       audio: { echoCancellation: true, noiseSuppression: true, autoGainControl: true },
     });
   } catch (err) {
-    armingMic = false;
+    if (token === armToken) armingMic = false;
     modelLabel.classList.remove('done');
     modelLabel.textContent = 'The microphone is blocked. Allow the mic and tap again.';
     console.error(err);
     return;
   }
-  if (capture || !canStartMic({
+  const flow = loadUnitFlow(r.bookId, r.unitId);
+  if (token !== armToken || capture || !canStartMic({
     phase: flow.phase,
     recording: false,
     grading: part1Busy || rushInFlight > 0,
-    timerRunning: timerRunning(loadUnitFlow(r.bookId, r.unitId)),
-    lineOpen: lineOpenFor(loadUnitFlow(r.bookId, r.unitId), scoreKey),
+    timerRunning: timerRunning(flow),
+    lineOpen: lineOpenFor(flow, scoreKey),
   })) {
     stream.getTracks().forEach((t) => t.stop());
-    armingMic = false;
+    if (token === armToken) armingMic = false;
     return;
   }
   const targets = speakTargets(r.bookId, unit);
@@ -1438,9 +1502,14 @@ async function onMic(btn) {
   capture.ids = targets.map((target) => target.id);
   capture.wordCount = sumWords(targets.map((target) => target.english));
   armingMic = false;
+  const part2 = flow.phase === 'part2';
   startSilenceWatch(stream, capture.ctx, () => {
     chain(() => finishTake());
-  });
+  }, part2 ? PART2_SILENCE_MS : SILENCE_MS, part2 ? 0 : SILENCE_GRACE_MS);
+  if (part2) {
+    if (stillOnSheet(r.bookId, r.unitId)) render();
+    return;
+  }
   appEl.querySelectorAll('.mic').forEach((el) => {
     el.disabled = el !== btn;
     if (el === btn) { el.textContent = 'Listening…'; el.classList.add('live'); }
