@@ -54,3 +54,5 @@ Sheet check: Basic A unit 3 shows 9 Korean lines and no English. After a saved t
 ## Pass rule
 
 Pass only when the GOP score is at least 0.80, the speech window is not too quiet, and the speech is at least 200 ms per English word. A missing dictionary word fails the line. Loud noise does not pass on its own.
+
+After a saved result, pass or fail, the full English sentence and every word chip stay visible (green for a passed word, red for a failed word), with PASS in large text and Not yet on a fail; English stays hidden before the first try.

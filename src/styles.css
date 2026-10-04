@@ -355,6 +355,20 @@ h1 {
 .verdict.pass { color: var(--pass); }
 .verdict.fail { color: var(--fail); }
 
+.verdict.pass .pass-mark {
+  display: block;
+  font-size: 72px;
+  line-height: 0.95;
+  letter-spacing: 0.08em;
+}
+
+.verdict.pass .verdict-pct {
+  display: block;
+  margin-top: 4px;
+  font-size: 22px;
+  font-weight: 700;
+}
+
 .meta, .english {
   margin: 0 0 8px;
   font-size: 22px;

@@ -555,7 +555,7 @@ function wordChipsHtml(words) {
 }
 
 function englishRevealed(saved) {
-  return !!(saved && saved.pass === false);
+  return !!saved;
 }
 
 function englishCueHtml(english, className) {
@@ -565,13 +565,15 @@ function englishCueHtml(english, className) {
 
 function partResultHtml(saved) {
   if (!saved) return '';
-  const verdict = saved.pass ? 'Pass' : 'Not yet';
   const cls = saved.pass ? 'pass' : 'fail';
   const pct = saved.scorePct != null ? saved.scorePct : Math.round((saved.score || 0) * 100);
+  const verdict = saved.pass
+    ? `<span class="pass-mark">PASS</span><span class="verdict-pct">${pct}</span>`
+    : `Not yet · ${pct}`;
   const reason = saved.reason ? `<p class="meta">${escapeHtml(saved.reason)}</p>` : '';
   const chips = englishRevealed(saved) ? wordChipsHtml(saved.words) : '';
   return `<div class="after show">
-    <p class="verdict ${cls}">${verdict} · ${pct}</p>
+    <p class="verdict ${cls}">${verdict}</p>
     ${chips}
     ${reason}
   </div>`;
