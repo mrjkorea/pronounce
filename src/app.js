@@ -28,7 +28,7 @@ import {
   timerRunning,
   timerSeconds,
   tryTeacherPassword,
-} from './flow.js';
+} from './flow.js?v=20261005-words2';
 
 const HEAR_BASE = 'https://mrjkorea.github.io/day4-speak/';
 const LOCAL_HEAR = new Set([
