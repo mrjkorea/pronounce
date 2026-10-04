@@ -214,7 +214,12 @@ export function canStartMic({ phase, recording, grading, timerRunning: running, 
 export function lineOpenFor(flow, id) {
   if (flow.phase === 'part1') return !isLocked(flow, id) && !studentPassed(flow, id);
   if (flow.phase === 'teacher') return stuckIds(flow, [id]).length === 1;
-  if (flow.phase === 'part2') return true;
+  if (flow.phase === 'part2') {
+    if (!timerRunning(flow)) return false;
+    const grade = flow.rushGrades[id];
+    if (grade && grade.pass) return false;
+    return true;
+  }
   return false;
 }
 
@@ -224,10 +229,12 @@ export function resultsView(flow, lines) {
   const teacherSaid = [];
   let passed = 0;
   let recorded = 0;
+  let rushPassed = 0;
   for (let i = 0; i < list.length; i++) {
     const line = list[i];
     if (studentPassed(flow, line.id)) passed += 1;
     if (flow.rushRecorded[line.id]) recorded += 1;
+    if (flow.rushGrades[line.id] && flow.rushGrades[line.id].pass) rushPassed += 1;
     if (flow.teacher[line.id] === 'skipped') {
       skipped.push({ id: line.id, label: line.korean || line.id, mark: 'skipped' });
     } else if (flow.teacher[line.id] === 'passed') {
@@ -238,6 +245,7 @@ export function resultsView(flow, lines) {
     secondsUsed: flow.part2.secondsUsed == null ? 0 : flow.part2.secondsUsed,
     limitSec: flow.part2.limitSec,
     recorded,
+    rushPassed,
     total: list.length,
     passed,
     skipped,

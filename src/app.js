@@ -99,6 +99,7 @@ let silenceNodes = null;
 let gradingScoreKey = null;
 let part1Busy = false;
 let rushInFlight = 0;
+const rushChecking = new Map();
 let logitSeq = 0;
 const logitWaiters = new Map();
 let chainTail = Promise.resolve();
@@ -555,7 +556,7 @@ function wordChipsHtml(words) {
 }
 
 function englishRevealed(saved) {
-  return !!saved;
+  return !!(saved && saved.pass === false);
 }
 
 function englishCueHtml(english, className) {
@@ -565,15 +566,13 @@ function englishCueHtml(english, className) {
 
 function partResultHtml(saved) {
   if (!saved) return '';
+  const verdict = saved.pass ? 'Pass' : 'Not yet';
   const cls = saved.pass ? 'pass' : 'fail';
   const pct = saved.scorePct != null ? saved.scorePct : Math.round((saved.score || 0) * 100);
-  const verdict = saved.pass
-    ? `<span class="pass-mark">PASS</span><span class="verdict-pct">${pct}</span>`
-    : `Not yet · ${pct}`;
   const reason = saved.reason ? `<p class="meta">${escapeHtml(saved.reason)}</p>` : '';
   const chips = englishRevealed(saved) ? wordChipsHtml(saved.words) : '';
   return `<div class="after show">
-    <p class="verdict ${cls}">${verdict}</p>
+    <p class="verdict ${cls}">${verdict} · ${pct}</p>
     ${chips}
     ${reason}
   </div>`;
@@ -592,9 +591,28 @@ function askHtml(show) {
   return `<p class="ask-teacher">${escapeHtml(text)}</p>`;
 }
 
-function checkHtml(show) {
-  if (!show) return '';
-  return '<span class="got-it" aria-label="Recorded">✓</span>';
+function beginRushCheck(id) {
+  rushChecking.set(id, (rushChecking.get(id) || 0) + 1);
+}
+
+function endRushCheck(id) {
+  const left = (rushChecking.get(id) || 1) - 1;
+  if (left <= 0) rushChecking.delete(id);
+  else rushChecking.set(id, left);
+}
+
+function rushMark(flow, id) {
+  if (rushChecking.get(id)) return 'checking';
+  const grade = flow.rushGrades && flow.rushGrades[id];
+  if (!grade) return '';
+  return grade.pass ? 'pass' : 'fail';
+}
+
+function checkHtml(mark) {
+  if (mark === 'pass') return '<span class="got-it" aria-label="Pass">✓</span>';
+  if (mark === 'fail') return '<span class="not-yet" aria-label="Not yet"><span class="rush-x" aria-hidden="true">✗</span> Not yet</span>';
+  if (mark === 'checking') return '<span class="rush-checking">Checking</span>';
+  return '';
 }
 
 function renderSharedQuestion(bookId, unit, scores, ready, view) {
@@ -612,13 +630,12 @@ function renderSharedQuestion(bookId, unit, scores, ready, view) {
   const gradingShared = gradingScoreKey === sk && !view.hideVerdict;
   const gradeBar = gradingShared ? '<div class="grade-bar shared-grade show"><div class="grade-fill"></div></div>' : '';
   const doneCls = saved && saved.pass ? 'done' : '';
-  const recorded = view.recorded && view.recorded[sk];
   const mic = micButtonHtml(sk, '', '', plan.question, questionAudioRel(plan.question), allowed, ready, view.micLabel);
   return `<section class="shared-q ${doneCls}" data-shared="${escapeHtml(sk)}">
     <p class="shared-note">${escapeHtml(noteCue())}</p>
     ${meaningHtml}
     ${prompt}
-    <div class="mic-cell">${checkHtml(recorded)}${mic}</div>
+    <div class="mic-cell">${checkHtml(view.marks && view.marks[sk])}${mic}</div>
     ${askHtml(view.locked && view.locked[sk])}
     ${result}
     ${gradeBar}
@@ -672,7 +689,7 @@ function lineArticleHtml(line, unit, index, scores, ready, view) {
     const cue = revealed ? englishCueHtml(p.english, 'part-text') : '';
     const audioRel = p.audio || questionAudioRel(p.english);
     const micBtn = micButtonHtml(skey, item.id, p.key, p.english, audioRel, allowed, ready, view.micLabel);
-    const recorded = checkHtml(view.recorded && view.recorded[skey]);
+    const recorded = checkHtml(view.marks && view.marks[skey]);
     const ask = askHtml(view.locked && view.locked[skey]);
     const result = view.hideVerdict ? '' : partResultHtml(saved);
     if (!multi) {
@@ -765,7 +782,7 @@ function speakWordCount(bookId, unit) {
 function sheetView(flow, targets) {
   const allow = {};
   const locked = {};
-  const recorded = {};
+  const marks = {};
   const running = timerRunning(flow);
   for (let i = 0; i < targets.length; i++) {
     const id = targets[i].id;
@@ -777,13 +794,13 @@ function sheetView(flow, targets) {
       lineOpen: lineOpenFor(flow, id),
     });
     if (flow.phase === 'part1' && isLocked(flow, id)) locked[id] = true;
-    if (flow.rushRecorded[id]) recorded[id] = true;
+    if (flow.phase === 'part2' || flow.phase === 'results') marks[id] = rushMark(flow, id);
   }
   const rush = flow.phase === 'part2' || flow.phase === 'results';
   return {
     allow,
     locked,
-    recorded,
+    marks,
     forceHideEnglish: flow.phase !== 'part1',
     hideVerdict: rush,
     micLabel: flow.phase === 'teacher' ? 'Teacher mic' : 'Mic',
@@ -804,7 +821,7 @@ function resultsHtml(flow, targets) {
   return `<section class="part-results">
     <h2>Results</h2>
     <p>Seconds used: ${view.secondsUsed}. Limit ${view.limitSec}.</p>
-    <p>Recorded ${view.recorded} / ${view.total}</p>
+    <p>Part 2 pronunciation: ${view.rushPassed} passed</p>
     <p>Part 1 pronunciation: ${view.passed} passed</p>
     ${skips}
     ${said}
@@ -816,7 +833,9 @@ function rushBarHtml(flow) {
   const started = !!flow.part2.startedAt && !flow.part2.stoppedAt && flow.phase === 'part2';
   const showStart = flow.phase === 'part2' && !flow.part2.startedAt;
   const clock = flow.phase === 'results' ? '0' : String(started ? clockSeconds(flow, Date.now()) : limit);
+  const banner = flow.phase === 'part2' ? '<p class="rush-banner">Part 2 · Timer</p>' : '';
   return `<section class="rush">
+    ${banner}
     <p class="rush-limit">Limit ${limit} seconds</p>
     <p class="rush-clock" id="rushClock">${clock}</p>
     ${showStart ? `<button type="button" id="rushStart" ${checkerReady ? '' : 'disabled'}>Start</button>` : ''}
@@ -891,11 +910,16 @@ function prepareUnitFlow(bookId, unit) {
 function renderSheet(bookId, unitId) {
   const book = byId.get(bookId);
   const unit = book && book.units.find((u) => u.id === unitId);
-  if (!unit) { appEl.innerHTML = '<p class="lead">That unit is not here.</p>'; return; }
+  if (!unit) {
+    document.body.classList.remove('phase-part2');
+    appEl.innerHTML = '<p class="lead">That unit is not here.</p>';
+    return;
+  }
   const prepared = prepareUnitFlow(bookId, unit);
   const flow = prepared.flow;
   const targets = prepared.targets;
   const ready = !!checkerReady;
+  document.body.classList.toggle('phase-part2', flow.phase === 'part2');
   const scores = flow.attempts || {};
   const wait = modelError
     ? `<p class="note">${escapeHtml(modelError)}</p>`
@@ -939,13 +963,19 @@ function syncClock(flow) {
 
 function render() {
   if (!books.length) {
+    document.body.classList.remove('phase-part2');
     appEl.innerHTML = '<p class="lead">Loading the sheets…</p>';
     return;
   }
   const r = route();
-  if (r.name === 'units') renderUnits(r.bookId);
-  else if (r.name === 'sheet') renderSheet(r.bookId, r.unitId);
-  else renderHome();
+  if (r.name === 'units') {
+    document.body.classList.remove('phase-part2');
+    renderUnits(r.bookId);
+  } else if (r.name === 'sheet') renderSheet(r.bookId, r.unitId);
+  else {
+    document.body.classList.remove('phase-part2');
+    renderHome();
+  }
 }
 
 function findItem(id) {
@@ -1121,7 +1151,15 @@ async function gradeRush(meta, blob) {
     console.error(err);
   } finally {
     rushInFlight -= 1;
+    endRushCheck(meta.scoreKey);
+    if (stillOnSheet(meta.bookId, meta.unitId)) render();
   }
+}
+
+function stopIfLastRushLine(flow, ids, now) {
+  const list = ids || [];
+  if (!list.length || !list.every((id) => flow.rushRecorded[id])) return flow;
+  return stopTimer(flow, now);
 }
 
 async function gradeStudentOrTeacher(meta, blob) {
@@ -1176,11 +1214,19 @@ async function finishTake() {
   const meta = claimCapture();
   if (!meta || !meta.scoreKey || !meta.gradeText) return;
   if (meta.phase === 'part2') {
-    const flow = markRushRecorded(loadUnitFlow(meta.bookId, meta.unitId), meta.scoreKey);
+    beginRushCheck(meta.scoreKey);
+    let flow = markRushRecorded(loadUnitFlow(meta.bookId, meta.unitId), meta.scoreKey);
+    flow = stopIfLastRushLine(flow, meta.ids, Date.now());
     saveUnitFlow(meta.bookId, meta.unitId, flow);
     if (stillOnSheet(meta.bookId, meta.unitId)) render();
     const blob = await blobFrom(meta);
     if (blob) void gradeRush(meta, blob);
+    else {
+      endRushCheck(meta.scoreKey);
+      const missed = noteRushGrade(loadUnitFlow(meta.bookId, meta.unitId), meta.scoreKey, { pass: false, scorePct: 0 });
+      saveUnitFlow(meta.bookId, meta.unitId, missed);
+      if (stillOnSheet(meta.bookId, meta.unitId)) render();
+    }
     return;
   }
   part1Busy = true;
@@ -1201,12 +1247,21 @@ async function endPart2(bookId, unitId) {
   if (cur.phase !== 'part2' || !cur.part2.startedAt || cur.part2.stoppedAt) return;
   const meta = claimCapture();
   let flow = loadUnitFlow(bookId, unitId);
-  if (meta && meta.scoreKey) flow = markRushRecorded(flow, meta.scoreKey);
+  if (meta && meta.scoreKey) {
+    beginRushCheck(meta.scoreKey);
+    flow = markRushRecorded(flow, meta.scoreKey);
+  }
   flow = stopTimer(flow, Date.now());
   saveUnitFlow(bookId, unitId, flow);
   if (stillOnSheet(bookId, unitId)) render();
   const blob = meta ? await blobFrom(meta) : null;
   if (meta && blob) void gradeRush(meta, blob);
+  else if (meta && meta.scoreKey) {
+    endRushCheck(meta.scoreKey);
+    const missed = noteRushGrade(loadUnitFlow(bookId, unitId), meta.scoreKey, { pass: false, scorePct: 0 });
+    saveUnitFlow(bookId, unitId, missed);
+    if (stillOnSheet(bookId, unitId)) render();
+  }
 }
 
 function weakWords(result) {
@@ -1304,6 +1359,8 @@ function playAudioUrl(url, times = 1) {
 
 async function playExpectedOnFail(gradeText, audioRel, pass) {
   if (pass || !audioRel) return;
+  const here = route();
+  if (here.name === 'sheet' && loadUnitFlow(here.bookId, here.unitId).phase === 'part2') return;
   const url = hearSrc(audioRel);
   const plays = needsTripleHint(gradeText) ? 3 : 1;
   await playAudioUrl(url, plays);
@@ -1410,6 +1467,8 @@ function onTeacherGate(ev) {
 }
 
 function onHear(btn) {
+  const here = route();
+  if (here.name === 'sheet' && loadUnitFlow(here.bookId, here.unitId).phase === 'part2') return;
   const rel = btn.getAttribute('data-audio');
   if (!rel) return;
   const audio = new Audio(hearSrc(rel));
