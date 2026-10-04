@@ -556,7 +556,13 @@ function wordChipsHtml(words) {
 }
 
 function englishRevealed(saved) {
-  return !!(saved && saved.pass === false);
+  return !!(saved && (saved.pass === true || saved.pass === false));
+}
+
+function shownGrade(view, key, saved) {
+  if (view && view.rush) return (view.rushGrades && view.rushGrades[key]) || null;
+  if (view && view.forceHideEnglish) return null;
+  return saved || null;
 }
 
 function englishCueHtml(english, className) {
@@ -622,8 +628,10 @@ function renderSharedQuestion(bookId, unit, scores, ready, view) {
   const sk = sharedScoreKey(bookId, unit.id);
   const saved = scores[sk];
   const allowed = view.allow ? !!view.allow[sk] : !!ready;
-  const hideEnglish = !!view.forceHideEnglish;
-  const prompt = !hideEnglish && englishRevealed(saved) ? englishCueHtml(plan.question, 'en-prompt') : '';
+  const shown = shownGrade(view, sk, saved);
+  const revealed = englishRevealed(shown);
+  const prompt = revealed ? englishCueHtml(plan.question, 'en-prompt') : '';
+  const rushMarks = view.rush && revealed ? wordChipsHtml(shown.words) : '';
   const meaning = questionCue(plan.question);
   const meaningHtml = meaning ? `<p class="l1-prompt">${escapeHtml(meaning)}</p>` : '';
   const result = view.hideVerdict ? '' : partResultHtml(saved);
@@ -635,6 +643,7 @@ function renderSharedQuestion(bookId, unit, scores, ready, view) {
     <p class="shared-note">${escapeHtml(noteCue())}</p>
     ${meaningHtml}
     ${prompt}
+    ${rushMarks}
     <div class="mic-cell">${checkHtml(view.marks && view.marks[sk])}${mic}</div>
     ${askHtml(view.locked && view.locked[sk])}
     ${result}
@@ -685,8 +694,10 @@ function lineArticleHtml(line, unit, index, scores, ready, view) {
     const skey = scoreStorageKey(item.id, p.key);
     const saved = scores[skey];
     const allowed = view.allow ? !!view.allow[skey] : !!ready;
-    const revealed = !view.forceHideEnglish && englishRevealed(saved);
+    const shown = shownGrade(view, skey, saved);
+    const revealed = englishRevealed(shown);
     const cue = revealed ? englishCueHtml(p.english, 'part-text') : '';
+    const rushMarks = view.rush && revealed ? wordChipsHtml(shown.words) : '';
     const audioRel = p.audio || questionAudioRel(p.english);
     const micBtn = micButtonHtml(skey, item.id, p.key, p.english, audioRel, allowed, ready, view.micLabel);
     const recorded = checkHtml(view.marks && view.marks[skey]);
@@ -694,7 +705,7 @@ function lineArticleHtml(line, unit, index, scores, ready, view) {
     const result = view.hideVerdict ? '' : partResultHtml(saved);
     if (!multi) {
       return {
-        main: koHtml(lineCue(item), imageRel, line.local, cue + ask),
+        main: koHtml(lineCue(item), imageRel, line.local, cue + rushMarks + ask),
         micBtn: recorded + micBtn,
         saved,
         result,
@@ -705,6 +716,7 @@ function lineArticleHtml(line, unit, index, scores, ready, view) {
       <div>
         ${label}
         ${cue}
+        ${rushMarks}
         ${ask}
         ${result}
       </div>
@@ -801,6 +813,8 @@ function sheetView(flow, targets) {
     allow,
     locked,
     marks,
+    rush,
+    rushGrades: flow.rushGrades || {},
     forceHideEnglish: flow.phase !== 'part1',
     hideVerdict: rush,
     micLabel: flow.phase === 'teacher' ? 'Teacher mic' : 'Mic',

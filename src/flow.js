@@ -119,9 +119,25 @@ export function markRushRecorded(flow, id) {
   return Object.assign({}, flow, { rushRecorded });
 }
 
+function storedRushWords(graded) {
+  const list = graded && Array.isArray(graded.words) ? graded.words : [];
+  const out = [];
+  for (let i = 0; i < list.length; i++) {
+    const row = list[i];
+    if (!row || !row.word) continue;
+    const score = Number(row.score);
+    out.push({ word: String(row.word), score: Number.isFinite(score) ? score : 0 });
+  }
+  return out;
+}
+
 export function noteRushGrade(flow, id, graded) {
   const rushGrades = Object.assign({}, flow.rushGrades, {
-    [id]: { pass: !!(graded && graded.pass), scorePct: graded && graded.scorePct ? graded.scorePct : 0 },
+    [id]: {
+      pass: !!(graded && graded.pass),
+      scorePct: graded && graded.scorePct ? graded.scorePct : 0,
+      words: storedRushWords(graded),
+    },
   });
   return Object.assign({}, flow, { rushGrades });
 }
