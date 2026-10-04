@@ -8,6 +8,27 @@ import {
 } from './engine.js?v=20260930-words';
 import { decodeAudioToMono, audioStats, normalizeForModel, trimSilence, capSpeechWindow } from './audio.js';
 import { sheetLines } from './sheet.js';
+import {
+  FLOW_STORAGE_KEY,
+  LOCK_TEXT,
+  advanceFlow,
+  canStartMic,
+  isLocked,
+  lineOpenFor,
+  markRushRecorded,
+  normalizeFlow,
+  noteAttempt,
+  noteRushGrade,
+  noteTeacherPass,
+  reconcileFlow,
+  resultsView,
+  startTimer,
+  stopTimer,
+  sumWords,
+  timerRunning,
+  timerSeconds,
+  tryTeacherPassword,
+} from './flow.js';
 
 const HEAR_BASE = 'https://mrjkorea.github.io/day4-speak/';
 const LOCAL_HEAR = new Set([
@@ -36,6 +57,7 @@ const UI_LANGS = [
   ['pl', 'Polski'],
 ];
 let l1Pack = null;
+const WASM_THREADS = 1;
 const CACHE_NAME = 'day4-wav2vec2-int8-v1';
 const BOOK_ORDER = ['basic_a', 'basic_b', 'basic_c', 'int3a', 'int3b', 'int3c', 'int2a', 'int2b', 'int2c'];
 
@@ -61,13 +83,6 @@ const SILENCE_CHECK_MS = 80;
 const SILENCE_RMS = 0.008;
 const MAX_RECORD_MS = 60000;
 
-let ort = typeof window !== 'undefined' ? window.ort : null;
-if (ort) {
-  ort.env.wasm.wasmPaths = new URL('vendor/ort/', window.location.href).href;
-  ort.env.wasm.numThreads = 1;
-  ort.env.wasm.proxy = false;
-}
-
 const appEl = typeof document !== 'undefined' ? document.getElementById('app') : null;
 const modelLabel = typeof document !== 'undefined' ? document.getElementById('modelLabel') : null;
 const modelFill = typeof document !== 'undefined' ? document.getElementById('modelFill') : null;
@@ -75,12 +90,20 @@ const modelTrack = typeof document !== 'undefined' ? document.getElementById('mo
 
 let books = [];
 let byId = new Map();
-let session = null;
+let gradeWorker = null;
+let checkerReady = false;
 let modelError = '';
 let capture = null;
 let silenceTimer = null;
 let silenceNodes = null;
 let gradingScoreKey = null;
+let part1Busy = false;
+let rushInFlight = 0;
+let logitSeq = 0;
+const logitWaiters = new Map();
+let chainTail = Promise.resolve();
+let clockTimer = null;
+let teacherMiss = {};
 
 function koreanCode(korean) {
   const m = String(korean || '').match(/^([A-Z0-9()]+)\?\s*/);
@@ -220,6 +243,35 @@ function saveScores(scores) {
   localStorage.setItem(SCORE_KEY, JSON.stringify(scores));
 }
 
+function flowKey(bookId, unitId) {
+  return bookId + '/' + unitId;
+}
+
+function loadFlowBook() {
+  try {
+    const raw = JSON.parse(localStorage.getItem(FLOW_STORAGE_KEY) || '{}');
+    return raw && typeof raw === 'object' ? raw : {};
+  } catch (_) {
+    return {};
+  }
+}
+
+function loadUnitFlow(bookId, unitId) {
+  return normalizeFlow(loadFlowBook()[flowKey(bookId, unitId)]);
+}
+
+function saveUnitFlow(bookId, unitId, flow) {
+  const all = loadFlowBook();
+  all[flowKey(bookId, unitId)] = flow;
+  localStorage.setItem(FLOW_STORAGE_KEY, JSON.stringify(all));
+}
+
+function chain(fn) {
+  const next = chainTail.then(fn, fn);
+  chainTail = next.then(() => {}, () => {});
+  return next;
+}
+
 function setProgress(frac, text) {
   const pct = Math.max(0, Math.min(100, Math.round(frac * 100)));
   modelFill.style.width = pct + '%';
@@ -291,6 +343,71 @@ async function assembleModel(onProgress) {
   return buf;
 }
 
+function onWorkerMessage(ev) {
+  const msg = ev.data || {};
+  if (msg.type === 'ready') {
+    if (msg.numThreads !== WASM_THREADS) {
+      modelError = 'Sound checker started with the wrong thread count.';
+      modelLabel.textContent = modelError;
+      return;
+    }
+    checkerReady = true;
+    return;
+  }
+  if (msg.type === 'logits') {
+    const waiter = logitWaiters.get(msg.id);
+    if (!waiter) return;
+    logitWaiters.delete(msg.id);
+    waiter.resolve(msg);
+    return;
+  }
+  if (msg.type === 'error') {
+    const waiter = msg.id && logitWaiters.get(msg.id);
+    if (waiter) {
+      logitWaiters.delete(msg.id);
+      waiter.reject(new Error(msg.message || 'sound checker failed'));
+      return;
+    }
+    modelError = msg.message || 'Sound checker did not start.';
+  }
+}
+
+function requestLogits(samples) {
+  const id = ++logitSeq;
+  const input = new Float32Array(samples);
+  return new Promise((resolve, reject) => {
+    logitWaiters.set(id, { resolve, reject });
+    gradeWorker.postMessage({ type: 'run', id, input }, [input.buffer]);
+  });
+}
+
+function startGradeWorker(modelBuffer) {
+  gradeWorker = new Worker(new URL('./grade-worker.js', import.meta.url));
+  return new Promise((resolve, reject) => {
+    const onReady = (ev) => {
+      onWorkerMessage(ev);
+      if (checkerReady) {
+        gradeWorker.removeEventListener('message', onReady);
+        gradeWorker.addEventListener('message', onWorkerMessage);
+        resolve();
+      } else if (modelError) {
+        reject(new Error(modelError));
+      }
+    };
+    gradeWorker.addEventListener('message', onReady);
+    gradeWorker.addEventListener('error', () => {
+      reject(new Error('sound checker worker failed'));
+    });
+    const wasmPaths = new URL('../vendor/ort/', import.meta.url).href;
+    gradeWorker.postMessage({
+      type: 'init',
+      model: modelBuffer,
+      wasmPaths,
+      numThreads: WASM_THREADS,
+    }, [modelBuffer]);
+  });
+}
+
 async function bootModel() {
   try {
     setProgress(0.02, 'Loading the sound checker…');
@@ -299,11 +416,11 @@ async function bootModel() {
       setProgress(frac * 0.9, 'Downloading the sound checker… ' + Math.round(frac * 100) + '%');
     });
     setProgress(0.92, 'Starting the sound checker…');
-    session = await ort.InferenceSession.create(buf, { executionProviders: ['wasm'] });
+    await startGradeWorker(buf);
     if (new URLSearchParams(location.search).get('probe') === '1') {
       const silence = new Float32Array(1600);
-      const out = await session.run({ input_values: new ort.Tensor('float32', silence, [1, 1600]) });
-      document.documentElement.dataset.probe = out.logits.dims.join('x');
+      const out = await requestLogits(silence);
+      document.documentElement.dataset.probe = out.dims.join('x');
     }
     await g2p;
     setProgress(1, 'Ready');
@@ -460,24 +577,47 @@ function partResultHtml(saved) {
   </div>`;
 }
 
-function renderSharedQuestion(bookId, unit, scores, ready) {
+function micButtonHtml(skey, itemId, partKey, english, audioRel, allowed, ready, label) {
+  const text = label && label !== 'Mic' ? label : (ready ? 'Mic' : 'Wait');
+  const itemAttr = itemId ? ` data-item-id="${escapeHtml(itemId)}"` : '';
+  const partAttr = partKey ? ` data-part-key="${escapeHtml(partKey)}"` : '';
+  return `<button type="button" class="mic" data-score-key="${escapeHtml(skey)}"${itemAttr}${partAttr} data-grade-text="${escapeHtml(english)}" data-audio-rel="${escapeHtml(audioRel)}" ${allowed && ready ? '' : 'disabled'}>${text}</button>`;
+}
+
+function askHtml(show) {
+  if (!show) return '';
+  const text = LOCK_TEXT === 'Please ask your teacher for help.' ? LOCK_TEXT : 'Please ask your teacher for help.';
+  return `<p class="ask-teacher">${escapeHtml(text)}</p>`;
+}
+
+function checkHtml(show) {
+  if (!show) return '';
+  return '<span class="got-it" aria-label="Recorded">✓</span>';
+}
+
+function renderSharedQuestion(bookId, unit, scores, ready, view) {
   const plan = analyzeUnit(unit);
   if (plan.mode !== 'shared') return '';
+  view = view || {};
   const sk = sharedScoreKey(bookId, unit.id);
   const saved = scores[sk];
-  const micLabel = ready ? 'Mic' : 'Wait';
-  const doneCls = saved && saved.pass ? 'done' : '';
-  const result = partResultHtml(saved);
-  const gradingShared = gradingScoreKey === sk;
-  const gradeBar = gradingShared ? '<div class="grade-bar shared-grade show"><div class="grade-fill"></div></div>' : '';
-  const prompt = englishRevealed(saved) ? englishCueHtml(plan.question, 'en-prompt') : '';
+  const allowed = view.allow ? !!view.allow[sk] : !!ready;
+  const hideEnglish = !!view.forceHideEnglish;
+  const prompt = !hideEnglish && englishRevealed(saved) ? englishCueHtml(plan.question, 'en-prompt') : '';
   const meaning = questionCue(plan.question);
   const meaningHtml = meaning ? `<p class="l1-prompt">${escapeHtml(meaning)}</p>` : '';
+  const result = view.hideVerdict ? '' : partResultHtml(saved);
+  const gradingShared = gradingScoreKey === sk && !view.hideVerdict;
+  const gradeBar = gradingShared ? '<div class="grade-bar shared-grade show"><div class="grade-fill"></div></div>' : '';
+  const doneCls = saved && saved.pass ? 'done' : '';
+  const recorded = view.recorded && view.recorded[sk];
+  const mic = micButtonHtml(sk, '', '', plan.question, questionAudioRel(plan.question), allowed, ready, view.micLabel);
   return `<section class="shared-q ${doneCls}" data-shared="${escapeHtml(sk)}">
     <p class="shared-note">${escapeHtml(noteCue())}</p>
     ${meaningHtml}
     ${prompt}
-    <button type="button" class="mic shared-mic" data-score-key="${escapeHtml(sk)}" data-grade-text="${escapeHtml(plan.question)}" data-audio-rel="${escapeHtml(questionAudioRel(plan.question))}" ${ready ? '' : 'disabled'}>${micLabel}</button>
+    <div class="mic-cell">${checkHtml(recorded)}${mic}</div>
+    ${askHtml(view.locked && view.locked[sk])}
     ${result}
     ${gradeBar}
   </section>`;
@@ -509,7 +649,8 @@ function lineParts(line, unit) {
   return rowParts(item, unit);
 }
 
-function lineArticleHtml(line, unit, index, scores, ready) {
+function lineArticleHtml(line, unit, index, scores, ready, view) {
+  view = view || {};
   const item = line.item || {
     id: line.id,
     korean: line.korean,
@@ -519,21 +660,25 @@ function lineArticleHtml(line, unit, index, scores, ready) {
   };
   const parts = lineParts(line, unit);
   const multi = parts.length > 1;
-  const grading = gradingScoreKey && parts.some((p) => scoreStorageKey(item.id, p.key) === gradingScoreKey);
+  const grading = !view.hideVerdict && gradingScoreKey && parts.some((p) => scoreStorageKey(item.id, p.key) === gradingScoreKey);
   const imageRel = line.image || item.image || '';
   const partBlocks = parts.map((p) => {
     const skey = scoreStorageKey(item.id, p.key);
     const saved = scores[skey];
-    const micLabel = ready ? 'Mic' : 'Wait';
-    const revealed = englishRevealed(saved);
+    const allowed = view.allow ? !!view.allow[skey] : !!ready;
+    const revealed = !view.forceHideEnglish && englishRevealed(saved);
     const cue = revealed ? englishCueHtml(p.english, 'part-text') : '';
     const audioRel = p.audio || questionAudioRel(p.english);
-    const micBtn = `<button type="button" class="mic" data-score-key="${escapeHtml(skey)}" data-item-id="${escapeHtml(item.id)}" data-part-key="${escapeHtml(p.key)}" data-grade-text="${escapeHtml(p.english)}" data-audio-rel="${escapeHtml(audioRel)}" ${ready ? '' : 'disabled'}>${micLabel}</button>`;
+    const micBtn = micButtonHtml(skey, item.id, p.key, p.english, audioRel, allowed, ready, view.micLabel);
+    const recorded = checkHtml(view.recorded && view.recorded[skey]);
+    const ask = askHtml(view.locked && view.locked[skey]);
+    const result = view.hideVerdict ? '' : partResultHtml(saved);
     if (!multi) {
       return {
-        main: koHtml(lineCue(item), imageRel, line.local, cue),
-        micBtn,
+        main: koHtml(lineCue(item), imageRel, line.local, cue + ask),
+        micBtn: recorded + micBtn,
         saved,
+        result,
       };
     }
     const label = revealed ? `<div class="part-label">${escapeHtml(p.label)}</div>` : '';
@@ -541,9 +686,10 @@ function lineArticleHtml(line, unit, index, scores, ready) {
       <div>
         ${label}
         ${cue}
-        ${partResultHtml(saved)}
+        ${ask}
+        ${result}
       </div>
-      ${micBtn}
+      <div class="mic-cell">${recorded}${micBtn}</div>
     </div>`;
   });
   let body;
@@ -552,8 +698,8 @@ function lineArticleHtml(line, unit, index, scores, ready) {
     body = `<div class="row-parts">${koHtml(lineCue(item), imageRel, line.local)}${partBlocks.join('')}</div>`;
   } else {
     const single = partBlocks[0];
-    body = `<div class="row-main">${single.main}</div>${single.micBtn}`;
-    tail = partResultHtml(single.saved);
+    body = `<div class="row-main">${single.main}</div><div class="mic-cell">${single.micBtn}</div>`;
+    tail = single.result;
   }
   const gradeBar = grading ? '<div class="grade-bar show"><div class="grade-fill"></div></div>' : '';
   return `<article class="row" data-id="${escapeHtml(item.id)}">
@@ -564,21 +710,229 @@ function lineArticleHtml(line, unit, index, scores, ready) {
   </article>`;
 }
 
+function speakTargets(bookId, unit) {
+  const out = [];
+  const plan = analyzeUnit(unit);
+  if (plan.mode === 'shared') {
+    out.push({
+      id: sharedScoreKey(bookId, unit.id),
+      english: plan.question,
+      korean: '이 질문을 한 번만 말하세요.',
+      image: '',
+      local: false,
+      audio: questionAudioRel(plan.question),
+      itemId: '',
+      partKey: 'shared',
+      shared: true,
+    });
+  }
+  const lines = sheetLines(bookId, unit);
+  for (let i = 0; i < lines.length; i++) {
+    const line = lines[i];
+    const parts = lineParts(line, unit);
+    const item = line.item || {
+      id: line.id,
+      korean: line.korean,
+      english: line.english,
+      audio: line.audio,
+      image: line.image,
+    };
+    for (let p = 0; p < parts.length; p++) {
+      const part = parts[p];
+      out.push({
+        id: scoreStorageKey(item.id, part.key),
+        english: part.english,
+        korean: item.korean,
+        image: line.image || item.image || '',
+        local: !!line.local,
+        audio: part.audio || questionAudioRel(part.english),
+        itemId: item.id,
+        partKey: part.key,
+        shared: false,
+        line,
+      });
+    }
+  }
+  return out;
+}
+
+function speakWordCount(bookId, unit) {
+  return sumWords(speakTargets(bookId, unit).map((target) => target.english));
+}
+
+function sheetView(flow, targets) {
+  const allow = {};
+  const locked = {};
+  const recorded = {};
+  const running = timerRunning(flow);
+  for (let i = 0; i < targets.length; i++) {
+    const id = targets[i].id;
+    allow[id] = checkerReady && canStartMic({
+      phase: flow.phase,
+      recording: !!capture,
+      grading: part1Busy || rushInFlight > 0,
+      timerRunning: running,
+      lineOpen: lineOpenFor(flow, id),
+    });
+    if (flow.phase === 'part1' && isLocked(flow, id)) locked[id] = true;
+    if (flow.rushRecorded[id]) recorded[id] = true;
+  }
+  const rush = flow.phase === 'part2' || flow.phase === 'results';
+  return {
+    allow,
+    locked,
+    recorded,
+    forceHideEnglish: flow.phase !== 'part1',
+    hideVerdict: rush,
+    micLabel: flow.phase === 'teacher' ? 'Teacher mic' : 'Mic',
+  };
+}
+
+function clockSeconds(flow, now) {
+  const limit = flow.part2.limitSec || 60;
+  if (!flow.part2.startedAt || flow.part2.stoppedAt || flow.phase === 'results') return limit;
+  const leftMs = limit * 1000 - (now - flow.part2.startedAt);
+  return Math.max(0, Math.ceil(leftMs / 1000));
+}
+
+function resultsHtml(flow, targets) {
+  const view = resultsView(flow, targets);
+  const skips = view.skipped.map((line) => `<p class="skip-line">${escapeHtml(line.label)} <b>skipped</b></p>`).join('');
+  const said = view.teacherSaid.map((line) => `<p class="teacher-line">${escapeHtml(line.label)} <b>teacher</b></p>`).join('');
+  return `<section class="part-results">
+    <h2>Results</h2>
+    <p>Seconds used: ${view.secondsUsed}. Limit ${view.limitSec}.</p>
+    <p>Recorded ${view.recorded} / ${view.total}</p>
+    <p>Part 1 pronunciation: ${view.passed} passed</p>
+    ${skips}
+    ${said}
+  </section>`;
+}
+
+function rushBarHtml(flow) {
+  const limit = flow.part2.limitSec || timerSecondsSafe(flow);
+  const started = !!flow.part2.startedAt && !flow.part2.stoppedAt && flow.phase === 'part2';
+  const showStart = flow.phase === 'part2' && !flow.part2.startedAt;
+  const clock = flow.phase === 'results' ? '0' : String(started ? clockSeconds(flow, Date.now()) : limit);
+  return `<section class="rush">
+    <p class="rush-limit">Limit ${limit} seconds</p>
+    <p class="rush-clock" id="rushClock">${clock}</p>
+    ${showStart ? `<button type="button" id="rushStart" ${checkerReady ? '' : 'disabled'}>Start</button>` : ''}
+    ${started ? '<button type="button" id="rushStop">Stop</button>' : ''}
+  </section>`;
+}
+
+function timerSecondsSafe(flow) {
+  return flow.part2.limitSec === 90 ? 90 : 60;
+}
+
+function teacherMeaning(target) {
+  if (!target.shared) return '';
+  const meaning = questionCue(target.english);
+  const meaningHtml = meaning ? `<p class="l1-prompt">${escapeHtml(meaning)}</p>` : '';
+  return `<p class="shared-note">${escapeHtml(noteCue())}</p>${meaningHtml}`;
+}
+
+function teacherKorean(target) {
+  if (target.shared) return '';
+  return lineCue({
+    id: target.itemId || target.id,
+    korean: target.korean || '',
+  });
+}
+
+function teacherBlockHtml(targets, ready, flow) {
+  const stuck = targets.filter((target) => lineOpenFor(flow, target.id));
+  const rows = stuck.map((target) => {
+    const miss = teacherMiss[target.id] ? '<p class="verdict fail">Not yet</p>' : '';
+    const allowed = checkerReady && canStartMic({
+      phase: 'teacher',
+      recording: !!capture,
+      grading: part1Busy || rushInFlight > 0,
+      timerRunning: false,
+      lineOpen: true,
+    });
+    const mic = micButtonHtml(target.id, target.itemId, target.partKey, target.english, target.audio, allowed, ready, 'Teacher mic');
+    return `<article class="row teacher-row" data-id="${escapeHtml(target.id)}">
+      ${koHtml(teacherKorean(target), target.image, target.local, teacherMeaning(target))}
+      <div class="mic-cell">${mic}</div>
+      ${miss}
+    </article>`;
+  }).join('');
+  return `<form id="teacherGate" class="teacher-gate" method="post" action="#/" autocomplete="off">
+      <label class="gate-label">Password
+        <input type="password" id="teacherPassword" autocomplete="off" spellcheck="false">
+      </label>
+      <button type="submit" class="gate-go">Enter</button>
+      <p class="gate-bad" id="teacherGateBad" hidden>That password is not right.</p>
+    </form>
+    <div class="sheet">${rows}</div>`;
+}
+
+function prepareUnitFlow(bookId, unit) {
+  const targets = speakTargets(bookId, unit);
+  const ids = targets.map((target) => target.id);
+  const wordCount = sumWords(targets.map((target) => target.english));
+  let flow = reconcileFlow(loadUnitFlow(bookId, unit.id), Date.now());
+  if (flow.phase === 'part1' || flow.phase === 'teacher') {
+    flow = advanceFlow(flow, ids, wordCount);
+  }
+  if (flow.phase === 'part2' && !flow.part2.wordCount) {
+    flow = Object.assign({}, flow, {
+      part2: Object.assign({}, flow.part2, { wordCount, limitSec: timerSeconds(wordCount) }),
+    });
+  }
+  saveUnitFlow(bookId, unit.id, flow);
+  return { targets, flow, wordCount };
+}
+
 function renderSheet(bookId, unitId) {
   const book = byId.get(bookId);
   const unit = book && book.units.find((u) => u.id === unitId);
   if (!unit) { appEl.innerHTML = '<p class="lead">That unit is not here.</p>'; return; }
-  const scores = loadScores();
-  const ready = !!session;
-  const shared = renderSharedQuestion(bookId, unit, scores, ready);
-  const lines = sheetLines(bookId, unit);
-  const rows = lines.map((line, index) => lineArticleHtml(line, unit, index, scores, ready)).join('');
+  const prepared = prepareUnitFlow(bookId, unit);
+  const flow = prepared.flow;
+  const targets = prepared.targets;
+  const ready = !!checkerReady;
+  const scores = flow.attempts || {};
   const wait = modelError
     ? `<p class="note">${escapeHtml(modelError)}</p>`
     : (ready ? '' : '<p class="note">The sound checker is still loading. Mic turns on when the bar finishes.</p>');
   const beside = questionCue(unit.title);
   const besideHtml = beside && beside !== unit.title ? `<span class="l1-beside">${escapeHtml(beside)}</span>` : '';
-  appEl.innerHTML = `<a class="back" href="#/book/${book.id}">← ${escapeHtml(book.label)}</a><h1>${escapeHtml(unit.title)}${besideHtml}</h1>${wait}<div class="sheet">${shared}${rows}</div>`;
+  const back = `<a class="back" href="#/book/${book.id}">← ${escapeHtml(book.label)}</a><h1>${escapeHtml(unit.title)}${besideHtml}</h1>${wait}`;
+  if (flow.phase === 'teacher') {
+    appEl.innerHTML = `${back}<div class="phase" data-phase="teacher">${teacherBlockHtml(targets, ready, flow)}</div>`;
+    syncClock(null);
+    return;
+  }
+  const view = sheetView(flow, targets);
+  const shared = renderSharedQuestion(bookId, unit, scores, ready, view);
+  const lines = sheetLines(bookId, unit);
+  const rows = lines.map((line, index) => lineArticleHtml(line, unit, index, scores, ready, view)).join('');
+  const rush = flow.phase === 'part2' || flow.phase === 'results' ? rushBarHtml(flow) : '';
+  const results = flow.phase === 'results' ? resultsHtml(flow, targets) : '';
+  appEl.innerHTML = `${back}${rush}${results}<div class="sheet phase" data-phase="${escapeHtml(flow.phase)}">${shared}${rows}</div>`;
+  syncClock(flow.phase === 'part2' ? flow : null);
+}
+
+function syncClock(flow) {
+  if (clockTimer) {
+    clearInterval(clockTimer);
+    clockTimer = null;
+  }
+  if (!flow || !timerRunning(flow)) return;
+  clockTimer = setInterval(() => {
+    const r = route();
+    if (r.name !== 'sheet') return;
+    const live = loadUnitFlow(r.bookId, r.unitId);
+    if (!timerRunning(live)) {
+      chain(() => endPart2(r.bookId, r.unitId));
+      return;
+    }
+    const el = document.getElementById('rushClock');
+    if (el) el.textContent = String(clockSeconds(live, Date.now()));
+  }, 200);
 }
 
 function render() {
@@ -712,17 +1066,145 @@ function startCapture(stream) {
   return { ctx, src, proc, gain, chunks, stream };
 }
 
-async function stopCapture() {
+function claimCapture() {
   const rec = capture;
   capture = null;
   stopSilenceWatch();
   if (!rec) return null;
   try { rec.proc.disconnect(); rec.src.disconnect(); rec.gain.disconnect(); } catch (_) {}
   rec.stream.getTracks().forEach((t) => t.stop());
+  return rec;
+}
+
+async function blobFrom(rec) {
+  if (!rec) return null;
   const rate = rec.ctx.sampleRate || 48000;
   const blob = encodeWav(rec.chunks, rate);
   rec.ctx.close().catch(() => {});
   return blob;
+}
+
+async function stopCapture() {
+  const rec = claimCapture();
+  return blobFrom(rec);
+}
+
+function stillOnSheet(bookId, unitId) {
+  const r = route();
+  return r.name === 'sheet' && r.bookId === bookId && r.unitId === unitId;
+}
+
+function studentRecord(graded, gradeText, reason) {
+  return {
+    score: graded ? graded.score : 0,
+    scorePct: graded ? graded.scorePct : 0,
+    pass: graded ? !!graded.pass : false,
+    weak: graded ? graded.weak : [],
+    reason: graded ? graded.reason : reason,
+    english: graded ? graded.english : scoringTarget(gradeText),
+    words: graded ? graded.words : [],
+    at: Date.now(),
+  };
+}
+
+async function gradeRush(meta, blob) {
+  rushInFlight += 1;
+  try {
+    const graded = await gradeBlob(blob, meta.gradeText);
+    const flow = noteRushGrade(loadUnitFlow(meta.bookId, meta.unitId), meta.scoreKey, graded);
+    saveUnitFlow(meta.bookId, meta.unitId, flow);
+  } catch (err) {
+    const flow = noteRushGrade(loadUnitFlow(meta.bookId, meta.unitId), meta.scoreKey, { pass: false, scorePct: 0 });
+    saveUnitFlow(meta.bookId, meta.unitId, flow);
+    console.error(err);
+  } finally {
+    rushInFlight -= 1;
+  }
+}
+
+async function gradeStudentOrTeacher(meta, blob) {
+  part1Busy = true;
+  gradingScoreKey = meta.scoreKey;
+  if (stillOnSheet(meta.bookId, meta.unitId)) render();
+  let graded = null;
+  let thrown = null;
+  try {
+    graded = await gradeBlob(blob, meta.gradeText);
+  } catch (err) {
+    thrown = err;
+    console.error(err);
+  }
+  if (meta.phase === 'teacher') {
+    if (graded && graded.pass) {
+      delete teacherMiss[meta.scoreKey];
+      let flow = noteTeacherPass(loadUnitFlow(meta.bookId, meta.unitId), meta.scoreKey);
+      flow = advanceFlow(flow, meta.ids, meta.wordCount);
+      saveUnitFlow(meta.bookId, meta.unitId, flow);
+    } else {
+      teacherMiss[meta.scoreKey] = true;
+    }
+  } else {
+    const failReason = thrown && thrown.code === 'too_short'
+      ? 'Too short. Say the whole English line.'
+      : 'Could not check that try. Say it again.';
+    const record = thrown ? studentRecord(null, meta.gradeText, failReason) : studentRecord(graded, meta.gradeText);
+    let flow = noteAttempt(loadUnitFlow(meta.bookId, meta.unitId), meta.scoreKey, record);
+    flow = advanceFlow(flow, meta.ids, meta.wordCount);
+    saveUnitFlow(meta.bookId, meta.unitId, flow);
+    const scores = loadScores();
+    scores[meta.scoreKey] = record;
+    saveScores(scores);
+    if (meta.itemId) {
+      noteScoreToAuth(meta.itemId, record.scorePct);
+      logToOneBook(meta.itemId, record);
+    }
+    if (stillOnSheet(meta.bookId, meta.unitId)) {
+      const gradeText = meta.gradeText;
+      const audioRel = meta.audioRel;
+      if (thrown) await playExpectedOnFail(gradeText, audioRel, false);
+      else await playExpectedOnFail(gradeText, audioRel, graded.pass);
+    }
+  }
+  part1Busy = false;
+  gradingScoreKey = null;
+  if (stillOnSheet(meta.bookId, meta.unitId)) render();
+}
+
+async function finishTake() {
+  const meta = claimCapture();
+  if (!meta || !meta.scoreKey || !meta.gradeText) return;
+  if (meta.phase === 'part2') {
+    const flow = markRushRecorded(loadUnitFlow(meta.bookId, meta.unitId), meta.scoreKey);
+    saveUnitFlow(meta.bookId, meta.unitId, flow);
+    if (stillOnSheet(meta.bookId, meta.unitId)) render();
+    const blob = await blobFrom(meta);
+    if (blob) void gradeRush(meta, blob);
+    return;
+  }
+  part1Busy = true;
+  gradingScoreKey = meta.scoreKey;
+  if (stillOnSheet(meta.bookId, meta.unitId)) render();
+  const blob = await blobFrom(meta);
+  if (!blob) {
+    part1Busy = false;
+    gradingScoreKey = null;
+    if (stillOnSheet(meta.bookId, meta.unitId)) render();
+    return;
+  }
+  await gradeStudentOrTeacher(meta, blob);
+}
+
+async function endPart2(bookId, unitId) {
+  const cur = loadUnitFlow(bookId, unitId);
+  if (cur.phase !== 'part2' || !cur.part2.startedAt || cur.part2.stoppedAt) return;
+  const meta = claimCapture();
+  let flow = loadUnitFlow(bookId, unitId);
+  if (meta && meta.scoreKey) flow = markRushRecorded(flow, meta.scoreKey);
+  flow = stopTimer(flow, Date.now());
+  saveUnitFlow(bookId, unitId, flow);
+  if (stillOnSheet(bookId, unitId)) render();
+  const blob = meta ? await blobFrom(meta) : null;
+  if (meta && blob) void gradeRush(meta, blob);
 }
 
 function weakWords(result) {
@@ -742,11 +1224,10 @@ async function gradeBlob(blob, english) {
   const trimmed = capSpeechWindow(trimSilence(samples, 16000, 0.006, 80), 16000, 4500);
   const trimmedStats = audioStats(trimmed, 16000);
   const input = normalizeForModel(trimmed);
-  const feeds = { input_values: new ort.Tensor('float32', input, [1, input.length]) };
-  const results = await session.run(feeds);
-  const logitsArr = results.logits.data;
-  const T = results.logits.dims[1];
-  const V = results.logits.dims[2];
+  const logitsMsg = await requestLogits(input);
+  const logitsArr = logitsMsg.data;
+  const T = logitsMsg.dims[1];
+  const V = logitsMsg.dims[2];
   const logits = new Array(T);
   for (let t = 0; t < T; t++) logits[t] = logitsArr.subarray(t * V, (t + 1) * V);
   const { phones, words } = expectedPhoneSequence(target);
@@ -826,89 +1307,104 @@ async function playExpectedOnFail(gradeText, audioRel, pass) {
   await playAudioUrl(url, plays);
 }
 
-async function stopAndGrade() {
-  const meta = capture;
-  const blob = await stopCapture();
-  const scoreKey = meta && meta.scoreKey;
-  const gradeText = meta && meta.gradeText;
-  const audioRel = meta && meta.audioRel;
-  const itemId = meta && meta.itemId;
-  if (!scoreKey || !blob || !gradeText) return;
-  gradingScoreKey = scoreKey;
-  render();
-  appEl.querySelectorAll('.mic').forEach((el) => { el.disabled = true; });
-  try {
-    const graded = await gradeBlob(blob, gradeText);
-    const scores = loadScores();
-    scores[scoreKey] = {
-      score: graded.score,
-      scorePct: graded.scorePct,
-      pass: graded.pass,
-      weak: graded.weak,
-      reason: graded.reason,
-      english: graded.english,
-      words: graded.words,
-      at: Date.now(),
-    };
-    saveScores(scores);
-    if (itemId) {
-      noteScoreToAuth(itemId, graded.scorePct);
-      logToOneBook(itemId, graded);
-    }
-    await playExpectedOnFail(gradeText, audioRel, graded.pass);
-  } catch (err) {
-    const scores = loadScores();
-    const reason = (err && err.code === 'too_short')
-      ? 'Too short. Say the whole English line.'
-      : 'Could not check that try. Say it again.';
-    scores[scoreKey] = {
-      score: 0,
-      scorePct: 0,
-      pass: false,
-      weak: [],
-      reason,
-      english: scoringTarget(gradeText),
-      words: [],
-      at: Date.now(),
-    };
-    saveScores(scores);
-    console.error(err);
-    await playExpectedOnFail(gradeText, audioRel, false);
-  }
-  gradingScoreKey = null;
-  render();
-}
+let armingMic = false;
 
 async function onMic(btn) {
-  if (!session || capture) return;
+  if (armingMic || capture) return;
+  const r = route();
+  if (r.name !== 'sheet') return;
+  const book = byId.get(r.bookId);
+  const unit = book && book.units.find((u) => u.id === r.unitId);
+  if (!unit) return;
+  const flow = loadUnitFlow(r.bookId, r.unitId);
   const scoreKey = btn.getAttribute('data-score-key');
   const gradeText = btn.getAttribute('data-grade-text');
   const audioRel = btn.getAttribute('data-audio-rel');
   const itemId = btn.getAttribute('data-item-id');
-  if (!scoreKey || !gradeText) return;
+  if (!scoreKey || !gradeText || !checkerReady) return;
+  if (!canStartMic({
+    phase: flow.phase,
+    recording: !!capture || armingMic,
+    grading: part1Busy || rushInFlight > 0,
+    timerRunning: timerRunning(flow),
+    lineOpen: lineOpenFor(flow, scoreKey),
+  })) return;
+  armingMic = true;
   let stream;
   try {
     stream = await navigator.mediaDevices.getUserMedia({
       audio: { echoCancellation: true, noiseSuppression: true, autoGainControl: true },
     });
   } catch (err) {
+    armingMic = false;
     modelLabel.classList.remove('done');
     modelLabel.textContent = 'The microphone is blocked. Allow the mic and tap again.';
     console.error(err);
     return;
   }
+  if (capture || !canStartMic({
+    phase: flow.phase,
+    recording: false,
+    grading: part1Busy || rushInFlight > 0,
+    timerRunning: timerRunning(loadUnitFlow(r.bookId, r.unitId)),
+    lineOpen: lineOpenFor(loadUnitFlow(r.bookId, r.unitId), scoreKey),
+  })) {
+    stream.getTracks().forEach((t) => t.stop());
+    armingMic = false;
+    return;
+  }
+  const targets = speakTargets(r.bookId, unit);
   capture = startCapture(stream);
   capture.scoreKey = scoreKey;
   capture.gradeText = gradeText;
   capture.audioRel = audioRel;
   capture.itemId = itemId || scoreKey;
+  capture.phase = flow.phase;
+  capture.bookId = r.bookId;
+  capture.unitId = r.unitId;
+  capture.ids = targets.map((target) => target.id);
+  capture.wordCount = sumWords(targets.map((target) => target.english));
+  armingMic = false;
   startSilenceWatch(stream, capture.ctx, () => {
-    if (capture) stopAndGrade();
+    chain(() => finishTake());
   });
   appEl.querySelectorAll('.mic').forEach((el) => {
     el.disabled = el !== btn;
     if (el === btn) { el.textContent = 'Listening…'; el.classList.add('live'); }
   });
+}
+
+function onRushStart() {
+  const r = route();
+  if (r.name !== 'sheet' || !checkerReady || capture || part1Busy) return;
+  const flow = startTimer(loadUnitFlow(r.bookId, r.unitId), Date.now());
+  saveUnitFlow(r.bookId, r.unitId, flow);
+  render();
+}
+
+function onTeacherGate(ev) {
+  ev.preventDefault();
+  const r = route();
+  if (r.name !== 'sheet') return;
+  const book = byId.get(r.bookId);
+  const unit = book && book.units.find((u) => u.id === r.unitId);
+  if (!unit) return;
+  const input = document.getElementById('teacherPassword');
+  const text = input ? input.value : '';
+  const targets = speakTargets(r.bookId, unit);
+  const result = tryTeacherPassword(
+    loadUnitFlow(r.bookId, r.unitId),
+    targets.map((target) => target.id),
+    sumWords(targets.map((target) => target.english)),
+    text,
+  );
+  if (!result.ok) {
+    const bad = document.getElementById('teacherGateBad');
+    if (bad) bad.hidden = false;
+    return;
+  }
+  saveUnitFlow(r.bookId, r.unitId, result.flow);
+  render();
 }
 
 function onHear(btn) {
@@ -922,14 +1418,28 @@ if (appEl) {
   appEl.addEventListener('click', (ev) => {
     const hear = ev.target.closest('.hear');
     if (hear) { onHear(hear); return; }
+    if (ev.target.closest('#rushStart')) { onRushStart(); return; }
+    if (ev.target.closest('#rushStop')) {
+      const r = route();
+      if (r.name === 'sheet') chain(() => endPart2(r.bookId, r.unitId));
+      return;
+    }
     const mic = ev.target.closest('.mic');
     if (mic) onMic(mic);
   });
 
+  appEl.addEventListener('submit', (ev) => {
+    if (ev.target.closest('#teacherGate')) onTeacherGate(ev);
+  });
+
   window.addEventListener('hashchange', () => {
-    if (capture) stopCapture();
-    gradingScoreKey = null;
-    render();
+    chain(async () => {
+      const rec = claimCapture();
+      if (rec) rec.ctx.close().catch(() => {});
+      part1Busy = false;
+      gradingScoreKey = null;
+      render();
+    });
   });
 
   fillLangMenu();
@@ -972,4 +1482,6 @@ export {
   itaQuestion,
   cipoAnswer,
   itemRowPassed,
+  speakTargets,
+  speakWordCount,
 };
