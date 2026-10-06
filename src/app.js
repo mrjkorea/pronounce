@@ -28,7 +28,7 @@ import {
   timerRunning,
   timerSeconds,
   tryTeacherPassword,
-} from './flow.js?v=20261005-words2';
+} from './flow.js?v=20261006-stopmic';
 
 const HEAR_BASE = 'https://mrjkorea.github.io/day4-speak/';
 const LOCAL_HEAR = new Set([
@@ -81,7 +81,7 @@ const SILENCE_MS = 1200;
 const SILENCE_GRACE_MS = 1600;
 const PART2_SILENCE_MS = 400;
 const SILENCE_CHECK_MS = 80;
-const SILENCE_RMS = 0.008;
+const SILENCE_RMS = 0.08;
 const MAX_RECORD_MS = 60000;
 
 const appEl = typeof document !== 'undefined' ? document.getElementById('app') : null;
@@ -98,12 +98,14 @@ let capture = null;
 let silenceTimer = null;
 let silenceNodes = null;
 let gradingScoreKey = null;
+let gradeEpoch = 0;
 let part1Busy = false;
 let rushInFlight = 0;
 const rushChecking = new Map();
 let logitSeq = 0;
 const logitWaiters = new Map();
 let chainTail = Promise.resolve();
+let scoreTail = Promise.resolve();
 let clockTimer = null;
 let teacherMiss = {};
 
@@ -271,6 +273,12 @@ function saveUnitFlow(bookId, unitId, flow) {
 function chain(fn) {
   const next = chainTail.then(fn, fn);
   chainTail = next.then(() => {}, () => {});
+  return next;
+}
+
+function enqueueScore(fn) {
+  const next = scoreTail.then(fn, fn);
+  scoreTail = next.then(() => {}, () => {});
   return next;
 }
 
@@ -592,7 +600,8 @@ function micButtonHtml(skey, itemId, partKey, english, audioRel, allowed, ready,
   const partAttr = partKey ? ` data-part-key="${escapeHtml(partKey)}"` : '';
   const enabled = live || (allowed && ready);
   const cls = live ? 'mic live' : 'mic';
-  return `<button type="button" class="${cls}" data-score-key="${escapeHtml(skey)}"${itemAttr}${partAttr} data-grade-text="${escapeHtml(english)}" data-audio-rel="${escapeHtml(audioRel)}" ${enabled ? '' : 'disabled'}>${text}</button>`;
+  const stop = live ? '<button type="button" class="take-stop">Stop</button>' : '';
+  return `<button type="button" class="${cls}" data-score-key="${escapeHtml(skey)}"${itemAttr}${partAttr} data-grade-text="${escapeHtml(english)}" data-audio-rel="${escapeHtml(audioRel)}" ${enabled ? '' : 'disabled'}>${text}</button>${stop}`;
 }
 
 function askHtml(show) {
@@ -804,8 +813,7 @@ function sheetView(flow, targets) {
     const id = targets[i].id;
     allow[id] = checkerReady && canStartMic({
       phase: flow.phase,
-      recording: flow.phase === 'part2' ? false : !!capture,
-      grading: part1Busy || rushInFlight > 0,
+      recording: false,
       timerRunning: running,
       lineOpen: lineOpenFor(flow, id),
     });
@@ -886,8 +894,7 @@ function teacherBlockHtml(targets, ready, flow) {
     const miss = teacherMiss[target.id] ? '<p class="verdict fail">Not yet</p>' : '';
     const allowed = checkerReady && canStartMic({
       phase: 'teacher',
-      recording: !!capture,
-      grading: part1Busy || rushInFlight > 0,
+      recording: false,
       timerRunning: false,
       lineOpen: true,
     });
@@ -977,6 +984,13 @@ function syncClock(flow) {
     const el = document.getElementById('rushClock');
     if (el) el.textContent = String(clockSeconds(live, Date.now()));
   }, 200);
+}
+
+function paint() {
+  const x = window.scrollX || 0;
+  const y = window.scrollY || 0;
+  render();
+  window.scrollTo(x, y);
 }
 
 function render() {
@@ -1172,7 +1186,7 @@ async function gradeRush(meta, blob) {
   } finally {
     rushInFlight -= 1;
     endRushCheck(meta.scoreKey);
-    if (stillOnSheet(meta.bookId, meta.unitId)) render();
+    if (stillOnSheet(meta.bookId, meta.unitId)) paint();
   }
 }
 
@@ -1183,9 +1197,8 @@ function stopIfLastRushLine(flow, ids, now) {
 }
 
 async function gradeStudentOrTeacher(meta, blob) {
-  part1Busy = true;
   gradingScoreKey = meta.scoreKey;
-  if (stillOnSheet(meta.bookId, meta.unitId)) render();
+  if (stillOnSheet(meta.bookId, meta.unitId)) paint();
   let graded = null;
   let thrown = null;
   try {
@@ -1219,15 +1232,11 @@ async function gradeStudentOrTeacher(meta, blob) {
       logToOneBook(meta.itemId, record);
     }
     if (stillOnSheet(meta.bookId, meta.unitId)) {
-      const gradeText = meta.gradeText;
-      const audioRel = meta.audioRel;
-      if (thrown) await playExpectedOnFail(gradeText, audioRel, false);
-      else await playExpectedOnFail(gradeText, audioRel, graded.pass);
+      void playExpectedOnFail(meta.gradeText, meta.audioRel, thrown ? false : !!(graded && graded.pass));
     }
   }
-  part1Busy = false;
-  gradingScoreKey = null;
-  if (stillOnSheet(meta.bookId, meta.unitId)) render();
+  if (!meta.gradeEpoch || meta.gradeEpoch === gradeEpoch) gradingScoreKey = null;
+  if (stillOnSheet(meta.bookId, meta.unitId)) paint();
 }
 
 function yieldForTap() {
@@ -1270,7 +1279,7 @@ function missPart2Take(meta) {
   endRushCheck(meta.scoreKey);
   const missed = noteRushGrade(loadUnitFlow(meta.bookId, meta.unitId), meta.scoreKey, { pass: false, scorePct: 0 });
   saveUnitFlow(meta.bookId, meta.unitId, missed);
-  if (stillOnSheet(meta.bookId, meta.unitId)) render();
+  if (stillOnSheet(meta.bookId, meta.unitId)) paint();
 }
 
 async function gradePart2OffTap(meta) {
@@ -1292,28 +1301,45 @@ async function gradePart2OffTap(meta) {
 function queuePart2Grade(meta) {
   if (!meta || !meta.scoreKey || !meta.gradeText) return;
   commitPart2Take(meta);
-  if (stillOnSheet(meta.bookId, meta.unitId)) render();
-  void gradePart2OffTap(meta);
+  if (stillOnSheet(meta.bookId, meta.unitId)) paint();
+  enqueueScore(() => gradePart2OffTap(meta));
 }
 
-async function finishTake() {
-  const meta = claimCapture();
-  if (!meta || !meta.scoreKey || !meta.gradeText) return;
+async function gradeStudentOrTeacherOffTap(meta) {
+  await yieldForTap();
+  let blob = null;
+  try {
+    blob = await encodeWavOffTap(meta.chunks, meta.ctx.sampleRate || 48000);
+  } catch (err) {
+    console.error(err);
+  }
+  if (meta.ctx) meta.ctx.close().catch(() => {});
+  await gradeStudentOrTeacher(meta, blob);
+}
+
+function queueTakeGrade(meta) {
+  if (!meta || !meta.scoreKey || !meta.gradeText) {
+    if (meta && meta.ctx) meta.ctx.close().catch(() => {});
+    return;
+  }
   if (meta.phase === 'part2') {
     queuePart2Grade(meta);
     return;
   }
-  part1Busy = true;
+  meta.gradeEpoch = ++gradeEpoch;
   gradingScoreKey = meta.scoreKey;
-  if (stillOnSheet(meta.bookId, meta.unitId)) render();
-  const blob = await blobFrom(meta);
-  if (!blob) {
-    part1Busy = false;
-    gradingScoreKey = null;
-    if (stillOnSheet(meta.bookId, meta.unitId)) render();
-    return;
-  }
-  await gradeStudentOrTeacher(meta, blob);
+  if (stillOnSheet(meta.bookId, meta.unitId)) paint();
+  enqueueScore(() => gradeStudentOrTeacherOffTap(meta));
+}
+
+function stopLiveTake() {
+  const meta = claimCapture();
+  if (!meta) return;
+  queueTakeGrade(meta);
+}
+
+function finishTake() {
+  stopLiveTake();
 }
 
 async function endPart2(bookId, unitId) {
@@ -1327,9 +1353,9 @@ async function endPart2(bookId, unitId) {
   }
   flow = stopTimer(flow, Date.now());
   saveUnitFlow(bookId, unitId, flow);
-  if (stillOnSheet(bookId, unitId)) render();
-  if (meta && meta.scoreKey && meta.gradeText) void gradePart2OffTap(meta);
-  else if (meta && meta.scoreKey) missPart2Take(meta);
+  if (stillOnSheet(bookId, unitId)) paint();
+  if (meta && meta.scoreKey && meta.gradeText) enqueueScore(() => gradePart2OffTap(meta));
+  else if (meta && meta.scoreKey) enqueueScore(() => { missPart2Take(meta); });
   else if (meta) meta.ctx.close().catch(() => {});
 }
 
@@ -1450,19 +1476,19 @@ async function onMic(btn) {
   const audioRel = btn.getAttribute('data-audio-rel');
   const itemId = btn.getAttribute('data-item-id');
   if (!scoreKey || !gradeText || !checkerReady) return;
-  const switching = !!(capture && flowNow.phase === 'part2' && capture.scoreKey !== scoreKey);
-  if (capture && !switching) return;
-  if (armingMic && flowNow.phase !== 'part2') return;
+  if (capture && capture.scoreKey === scoreKey) {
+    stopLiveTake();
+    return;
+  }
   if (!canStartMic({
     phase: flowNow.phase,
     recording: false,
-    grading: part1Busy || rushInFlight > 0,
     timerRunning: timerRunning(flowNow),
     lineOpen: lineOpenFor(flowNow, scoreKey),
   })) return;
-  if (switching) {
+  if (capture && capture.scoreKey !== scoreKey) {
     const prev = claimCapture();
-    if (prev && prev.phase === 'part2') queuePart2Grade(prev);
+    queueTakeGrade(prev);
   }
   const token = ++armToken;
   armingMic = true;
@@ -1482,7 +1508,6 @@ async function onMic(btn) {
   if (token !== armToken || capture || !canStartMic({
     phase: flow.phase,
     recording: false,
-    grading: part1Busy || rushInFlight > 0,
     timerRunning: timerRunning(flow),
     lineOpen: lineOpenFor(flow, scoreKey),
   })) {
@@ -1503,17 +1528,14 @@ async function onMic(btn) {
   capture.wordCount = sumWords(targets.map((target) => target.english));
   armingMic = false;
   const part2 = flow.phase === 'part2';
-  startSilenceWatch(stream, capture.ctx, () => {
-    chain(() => finishTake());
+  const rec = capture;
+  startSilenceWatch(stream, rec.ctx, () => {
+    chain(() => {
+      if (capture !== rec) return;
+      finishTake();
+    });
   }, part2 ? PART2_SILENCE_MS : SILENCE_MS, part2 ? 0 : SILENCE_GRACE_MS);
-  if (part2) {
-    if (stillOnSheet(r.bookId, r.unitId)) render();
-    return;
-  }
-  appEl.querySelectorAll('.mic').forEach((el) => {
-    el.disabled = el !== btn;
-    if (el === btn) { el.textContent = 'Listening…'; el.classList.add('live'); }
-  });
+  if (stillOnSheet(r.bookId, r.unitId)) paint();
 }
 
 function onRushStart() {
@@ -1566,6 +1588,10 @@ if (appEl) {
     if (ev.target.closest('#rushStop')) {
       const r = route();
       if (r.name === 'sheet') chain(() => endPart2(r.bookId, r.unitId));
+      return;
+    }
+    if (ev.target.closest('.take-stop')) {
+      stopLiveTake();
       return;
     }
     const mic = ev.target.closest('.mic');

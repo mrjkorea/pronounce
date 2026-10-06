@@ -56,3 +56,26 @@ Sheet check: Basic A unit 3 shows 9 Korean lines and no English. After a saved t
 Pass only when the GOP score is at least 0.80, the speech window is not too quiet, and the speech is at least 200 ms per English word. A missing dictionary word fails the line. Loud noise does not pass on its own.
 
 After a saved result, pass or fail, the full English sentence and every word chip stay visible (green for a passed word, red for a failed word), with PASS in large text and Not yet on a fail; English stays hidden before the first try.
+
+## Stop mic — 6 Oct 2026
+
+Command:
+
+```
+node --test test/can-start-mic.mjs
+```
+
+Pass output:
+
+```
+✔ canStartMic allows the next mic while a grade is running (0.556625ms)
+✔ canStartMic blocks while a take is recording (0.055375ms)
+ℹ tests 2
+ℹ suites 0
+ℹ pass 2
+ℹ fail 0
+ℹ cancelled 0
+ℹ skipped 0
+ℹ todo 0
+ℹ duration_ms 67.968458
+```

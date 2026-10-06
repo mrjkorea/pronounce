@@ -216,13 +216,14 @@ export function reconcileFlow(flow, now) {
 
 /**
  * Next mic policy.
- * Part 1 and the teacher screen wait while a grade (and the fail sound) is running.
- * Part 2 does not. A recording still blocks, because only one take runs at a time.
+ * A grade, a fail sound, or rushInFlight does not block the next mic.
+ * A recording still blocks, because only one take runs at a time.
+ * Part 2 also needs the timer to be running.
  */
-export function canStartMic({ phase, recording, grading, timerRunning: running, lineOpen }) {
+export function canStartMic({ phase, recording, timerRunning: running, lineOpen }) {
   if (lineOpen === false) return false;
   if (recording) return false;
-  if (phase === 'part1' || phase === 'teacher') return !grading;
+  if (phase === 'part1' || phase === 'teacher') return true;
   if (phase === 'part2') return !!running;
   return false;
 }

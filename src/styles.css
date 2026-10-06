@@ -301,6 +301,22 @@ h1 {
 
 .mic:active { background: var(--blue-down); }
 .mic.live { background: var(--fail); }
+.take-stop {
+  min-width: 112px;
+  min-height: 72px;
+  border: 3px solid var(--fail);
+  border-radius: 16px;
+  background: white;
+  color: var(--fail);
+  font: inherit;
+  font-size: 22px;
+  font-weight: 800;
+  cursor: pointer;
+}
+.take-stop:active {
+  background: var(--fail);
+  color: white;
+}
 .mic:disabled, .hear:disabled {
   background: #d9d3c7;
   color: #6d655b;
@@ -411,6 +427,7 @@ h1 {
 
 .mic-cell {
   display: flex;
+  flex-wrap: wrap;
   align-items: center;
   justify-content: flex-end;
   gap: 8px;
