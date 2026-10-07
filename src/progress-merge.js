@@ -4,6 +4,7 @@ export const LEGACY_SCORE_KEY = 'day4-pronounce-scores-v2';
 export const SCORE_KEY_PREFIX = 'day4-pronounce-scores-v2:';
 export const PROGRAM = 'pronounce';
 export const REMOTE_SAVE_MIN_MS = 17000;
+export const PACK_LOAD_BACKOFF_MS = [0, 1500, 4000];
 
 export function idKey(id) {
   return String(id == null ? '' : id)
@@ -204,6 +205,61 @@ export function progressRowsToScores(rows, program = PROGRAM, passPct = 60) {
 
 export function packLoadAllowsSave(loadResult) {
   return !!(loadResult && loadResult.ok);
+}
+
+export async function loadPackWithRetry(loadPackFn, program, options = {}) {
+  const delays = options.delays || PACK_LOAD_BACKOFF_MS;
+  const sleep = options.sleep || ((ms) => new Promise((resolve) => {
+    setTimeout(resolve, ms);
+  }));
+  let last = null;
+  let attempts = 0;
+  for (let i = 0; i < delays.length; i++) {
+    if (delays[i] > 0) await sleep(delays[i]);
+    attempts += 1;
+    last = await loadPackFn(program);
+    if (packLoadAllowsSave(last)) {
+      return { result: last, attempts, ok: true };
+    }
+  }
+  return { result: last, attempts, ok: false };
+}
+
+/** Apply server pack + progress after network; re-read local so in-sync tries are kept. */
+export function mergeScoresAfterServerFetch(readLocal, packJson, progressRows) {
+  const parsed = parsePackJson(packJson);
+  const packScores = parsed.scores;
+  const progressScores = progressRowsToScores(progressRows || []);
+  const serverMerged = mergeScoreMaps(packScores, progressScores);
+  const freshLocal = typeof readLocal === 'function' ? readLocal() : {};
+  return {
+    merged: mergeScoreMaps(freshLocal, serverMerged),
+    serverMerged,
+    packScores,
+    progressScores,
+  };
+}
+
+export function buildPackSavePayload(localScores, loadedServerScores) {
+  return mergeScoreMaps(localScores || {}, loadedServerScores || {});
+}
+
+export function shouldFlushPackOnPagehide(dirty, packLoadOk) {
+  return !!packLoadOk && !!dirty;
+}
+
+export function scoresNeedSaveAfterSync(merged, serverMerged) {
+  const left = merged && typeof merged === 'object' ? merged : {};
+  const right = serverMerged && typeof serverMerged === 'object' ? serverMerged : {};
+  for (const key of Object.keys(left)) {
+    const local = left[key];
+    const remote = right[key];
+    if (!remote) return true;
+    const lp = Number(local && local.scorePct) || 0;
+    const rp = Number(remote && remote.scorePct) || 0;
+    if (lp > rp) return true;
+  }
+  return false;
 }
 
 export function readScoresFromStorage(storage, key) {

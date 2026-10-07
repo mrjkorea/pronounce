@@ -34,10 +34,12 @@ import {
   PROGRAM,
   REMOTE_SAVE_MIN_MS,
   authStudentId,
-  mergeScoreMaps,
+  buildPackSavePayload,
+  loadPackWithRetry,
+  mergeScoresAfterServerFetch,
   packLoadAllowsSave,
-  parsePackJson,
-  progressRowsToScores,
+  scoresNeedSaveAfterSync,
+  shouldFlushPackOnPagehide,
   studentScoreStorageKey,
 } from './progress-merge.js?v=20261007-authpack';
 
@@ -51,6 +53,9 @@ const MS_PER_WORD = 200;
 let activeStudentKey = '';
 const remoteSync = {
   packLoadOk: false,
+  dirty: false,
+  loadedServerScores: {},
+  syncGen: 0,
   saveTimer: null,
   flushPending: false,
   lastSaveAt: 0,
@@ -265,6 +270,7 @@ function loadScores() {
 function saveScores(scores) {
   if (!activeStudentKey) return;
   localStorage.setItem(activeStudentKey, JSON.stringify(scores));
+  remoteSync.dirty = true;
   schedulePackSave();
 }
 
@@ -290,8 +296,9 @@ function schedulePackSave(delayMs) {
   }, wait);
 }
 
-async function flushPackSave(force) {
+async function flushPackSave(force, opts) {
   if (!remoteSync.packLoadOk) return;
+  if (opts && opts.pagehide && !shouldFlushPackOnPagehide(remoteSync.dirty, remoteSync.packLoadOk)) return;
   const auth = window.MRJ_AUTH;
   if (!auth || typeof auth.savePack !== 'function' || !auth.packReady || !auth.packReady(PROGRAM)) return;
   const now = Date.now();
@@ -299,15 +306,21 @@ async function flushPackSave(force) {
     schedulePackSave();
     return;
   }
+  if (!remoteSync.dirty && !(opts && opts.pagehide)) return;
   if (remoteSync.inFlight) {
     remoteSync.flushPending = true;
     return;
   }
   remoteSync.inFlight = true;
   try {
-    const payload = JSON.stringify(loadScores());
+    const merged = buildPackSavePayload(loadScores(), remoteSync.loadedServerScores);
+    const payload = JSON.stringify(merged);
     const res = await auth.savePack(PROGRAM, payload);
-    if (res && res.ok) remoteSync.lastSaveAt = Date.now();
+    if (res && res.ok) {
+      remoteSync.lastSaveAt = Date.now();
+      remoteSync.loadedServerScores = merged;
+      remoteSync.dirty = false;
+    }
   } catch (err) {
     console.error(err);
   } finally {
@@ -327,35 +340,49 @@ async function syncScoresFromServer(detail) {
   if (!studentId) {
     activeStudentKey = '';
     remoteSync.packLoadOk = false;
+    remoteSync.dirty = false;
+    remoteSync.loadedServerScores = {};
     return;
   }
+  const syncGen = ++remoteSync.syncGen;
   activeStudentKey = nextKey;
   remoteSync.packLoadOk = false;
+  remoteSync.loadedServerScores = {};
   clearRemoteSaveTimer();
-  let local = loadScores();
 
-  let packResult = null;
+  let packJson = '';
   if (typeof auth.loadPack === 'function') {
-    packResult = await auth.loadPack(PROGRAM);
-  }
-  if (packLoadAllowsSave(packResult)) {
-    remoteSync.packLoadOk = true;
-    const parsed = parsePackJson(packResult.progress_json);
-    local = mergeScoreMaps(local, parsed.scores);
+    const loaded = await loadPackWithRetry((program) => auth.loadPack(program), PROGRAM);
+    if (syncGen !== remoteSync.syncGen || activeStudentKey !== nextKey) return;
+    if (loaded.ok && packLoadAllowsSave(loaded.result)) {
+      remoteSync.packLoadOk = true;
+      packJson = loaded.result.progress_json;
+    }
   }
 
   let progressRows = [];
   if (typeof auth.loadProgressForApp === 'function') {
     const prog = await auth.loadProgressForApp(PROGRAM);
+    if (syncGen !== remoteSync.syncGen || activeStudentKey !== nextKey) return;
     if (prog && prog.ok && Array.isArray(prog.progress)) progressRows = prog.progress;
   } else if (detail && Array.isArray(detail.progress)) {
     progressRows = detail.progress;
   }
-  local = mergeScoreMaps(local, progressRowsToScores(progressRows));
+
+  const { merged, serverMerged } = mergeScoresAfterServerFetch(
+    () => loadScores(),
+    remoteSync.packLoadOk ? packJson : '{}',
+    progressRows,
+  );
+
+  if (syncGen !== remoteSync.syncGen || activeStudentKey !== nextKey) return;
 
   if (activeStudentKey) {
-    localStorage.setItem(activeStudentKey, JSON.stringify(local));
-    if (remoteSync.packLoadOk) {
+    localStorage.setItem(activeStudentKey, JSON.stringify(merged));
+    remoteSync.loadedServerScores = serverMerged;
+    const dirtyBefore = remoteSync.dirty;
+    remoteSync.dirty = dirtyBefore || scoresNeedSaveAfterSync(merged, serverMerged);
+    if (remoteSync.packLoadOk && remoteSync.dirty) {
       remoteSync.lastSaveAt = 0;
       schedulePackSave(0);
     }
@@ -1748,7 +1775,7 @@ if (appEl) {
 
   window.addEventListener('mrj-auth-ready', onAuthReady);
   window.addEventListener('pagehide', () => {
-    void flushPackSave(true);
+    void flushPackSave(true, { pagehide: true });
   });
 
   loadContent().then(async () => {

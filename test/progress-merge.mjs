@@ -9,6 +9,10 @@ import {
   progressRowsToScores,
   studentScoreStorageKey,
   loadStudentScoresOnly,
+  loadPackWithRetry,
+  mergeScoresAfterServerFetch,
+  shouldFlushPackOnPagehide,
+  buildPackSavePayload,
   LEGACY_SCORE_KEY,
 } from '../src/progress-merge.js';
 
@@ -62,6 +66,67 @@ test('packLoadAllowsSave gates remote saves', () => {
   assert.equal(packLoadAllowsSave({ ok: true }), true);
   assert.equal(packLoadAllowsSave({ ok: false }), false);
   assert.equal(packLoadAllowsSave(null), false);
+});
+
+test('mergeScoresAfterServerFetch keeps scores recorded while sync requests are in flight', () => {
+  const studentKey = studentScoreStorageKey('sync_student');
+  const storage = new Map();
+  const api = {
+    getItem(k) { return storage.has(k) ? storage.get(k) : null; },
+    setItem(k, v) { storage.set(k, v); },
+  };
+  storage.set(studentKey, JSON.stringify({}));
+
+  const packJson = JSON.stringify({
+    server_line: { scorePct: 40, score: 0.4, pass: false, at: 10 },
+  });
+
+  storage.set(studentKey, JSON.stringify({
+    live_line: { scorePct: 88, score: 0.88, pass: true, at: 200 },
+  }));
+
+  const { merged } = mergeScoresAfterServerFetch(
+    () => {
+      const raw = api.getItem(studentKey);
+      return raw ? JSON.parse(raw) : {};
+    },
+    packJson,
+    [],
+  );
+
+  assert.equal(merged.live_line.scorePct, 88);
+  assert.equal(merged.server_line.scorePct, 40);
+});
+
+test('loadPackWithRetry backs off until load succeeds', async () => {
+  let calls = 0;
+  const loadPack = async () => {
+    calls += 1;
+    if (calls < 3) return { ok: false, error: 'network' };
+    return { ok: true, progress_json: '{}' };
+  };
+  const out = await loadPackWithRetry(loadPack, 'pronounce', {
+    delays: [0, 0, 0],
+    sleep: async () => {},
+  });
+  assert.equal(out.ok, true);
+  assert.equal(calls, 3);
+  assert.equal(out.attempts, 3);
+});
+
+test('pagehide flush only when dirty and pack load succeeded', () => {
+  assert.equal(shouldFlushPackOnPagehide(false, true), false);
+  assert.equal(shouldFlushPackOnPagehide(true, false), false);
+  assert.equal(shouldFlushPackOnPagehide(true, true), true);
+});
+
+test('buildPackSavePayload merges local changes with the loaded server copy', () => {
+  const payload = buildPackSavePayload(
+    { a: { scorePct: 90, score: 0.9, pass: true, at: 5 } },
+    { a: { scorePct: 50, score: 0.5, pass: false, at: 1 }, b: { scorePct: 60, score: 0.6, pass: true, at: 2 } },
+  );
+  assert.equal(payload.a.scorePct, 90);
+  assert.equal(payload.b.scorePct, 60);
 });
 
 test('legacy device-wide scores are never merged into a student key or save payload', () => {
