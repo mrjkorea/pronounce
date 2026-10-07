@@ -28,7 +28,20 @@ import {
   timerRunning,
   timerSeconds,
   tryTeacherPassword,
-} from './flow.js?v=20261006-stopmic';
+} from './flow.js?v=20261007-authpack';
+
+import {
+  PROGRAM,
+  REMOTE_SAVE_MIN_MS,
+  authStudentId,
+  buildPackSavePayload,
+  loadPackWithRetry,
+  mergeScoresAfterServerFetch,
+  packLoadAllowsSave,
+  scoresNeedSaveAfterSync,
+  shouldFlushPackOnPagehide,
+  studentScoreStorageKey,
+} from './progress-merge.js?v=20261007-authpack';
 
 const HEAR_BASE = 'https://mrjkorea.github.io/day4-speak/';
 const LOCAL_HEAR = new Set([
@@ -37,7 +50,17 @@ const LOCAL_HEAR = new Set([
 ]);
 const PASS_SCORE = 0.6;
 const MS_PER_WORD = 200;
-const SCORE_KEY = 'day4-pronounce-scores-v2';
+let activeStudentKey = '';
+const remoteSync = {
+  packLoadOk: false,
+  dirty: false,
+  loadedServerScores: {},
+  syncGen: 0,
+  saveTimer: null,
+  flushPending: false,
+  lastSaveAt: 0,
+  inFlight: false,
+};
 const LANG_KEY = 'day4-ui-lang';
 const UI_LANGS = [
   ['en', 'English'],
@@ -235,8 +258,9 @@ function logToOneBook(itemId, graded) {
 }
 
 function loadScores() {
+  if (!activeStudentKey) return {};
   try {
-    const raw = JSON.parse(localStorage.getItem(SCORE_KEY) || '{}');
+    const raw = JSON.parse(localStorage.getItem(activeStudentKey) || '{}');
     return raw && typeof raw === 'object' ? raw : {};
   } catch (_) {
     return {};
@@ -244,7 +268,134 @@ function loadScores() {
 }
 
 function saveScores(scores) {
-  localStorage.setItem(SCORE_KEY, JSON.stringify(scores));
+  if (!activeStudentKey) return;
+  localStorage.setItem(activeStudentKey, JSON.stringify(scores));
+  remoteSync.dirty = true;
+  schedulePackSave();
+}
+
+function clearRemoteSaveTimer() {
+  if (remoteSync.saveTimer) {
+    clearTimeout(remoteSync.saveTimer);
+    remoteSync.saveTimer = null;
+  }
+}
+
+function schedulePackSave(delayMs) {
+  if (!remoteSync.packLoadOk || remoteSync.inFlight) return;
+  const auth = window.MRJ_AUTH;
+  if (!auth || typeof auth.savePack !== 'function' || !auth.packReady || !auth.packReady(PROGRAM)) return;
+  clearRemoteSaveTimer();
+  const now = Date.now();
+  const wait = delayMs != null
+    ? delayMs
+    : Math.max(0, REMOTE_SAVE_MIN_MS - (now - remoteSync.lastSaveAt));
+  remoteSync.saveTimer = setTimeout(() => {
+    remoteSync.saveTimer = null;
+    void flushPackSave(false);
+  }, wait);
+}
+
+async function flushPackSave(force, opts) {
+  if (!remoteSync.packLoadOk) return;
+  if (opts && opts.pagehide && !shouldFlushPackOnPagehide(remoteSync.dirty, remoteSync.packLoadOk)) return;
+  const auth = window.MRJ_AUTH;
+  if (!auth || typeof auth.savePack !== 'function' || !auth.packReady || !auth.packReady(PROGRAM)) return;
+  const now = Date.now();
+  if (!force && now - remoteSync.lastSaveAt < REMOTE_SAVE_MIN_MS) {
+    schedulePackSave();
+    return;
+  }
+  if (!remoteSync.dirty && !(opts && opts.pagehide)) return;
+  if (remoteSync.inFlight) {
+    remoteSync.flushPending = true;
+    return;
+  }
+  remoteSync.inFlight = true;
+  try {
+    const merged = buildPackSavePayload(loadScores(), remoteSync.loadedServerScores);
+    const payload = JSON.stringify(merged);
+    const res = await auth.savePack(PROGRAM, payload);
+    if (res && res.ok) {
+      remoteSync.lastSaveAt = Date.now();
+      remoteSync.loadedServerScores = merged;
+      remoteSync.dirty = false;
+    }
+  } catch (err) {
+    console.error(err);
+  } finally {
+    remoteSync.inFlight = false;
+    if (remoteSync.flushPending) {
+      remoteSync.flushPending = false;
+      void flushPackSave(true);
+    }
+  }
+}
+
+async function syncScoresFromServer(detail) {
+  const auth = window.MRJ_AUTH;
+  if (!auth) return;
+  const studentId = authStudentId(typeof auth.student === 'function' ? auth.student() : '');
+  const nextKey = studentScoreStorageKey(studentId);
+  if (!studentId) {
+    activeStudentKey = '';
+    remoteSync.packLoadOk = false;
+    remoteSync.dirty = false;
+    remoteSync.loadedServerScores = {};
+    return;
+  }
+  const syncGen = ++remoteSync.syncGen;
+  activeStudentKey = nextKey;
+  remoteSync.packLoadOk = false;
+  remoteSync.loadedServerScores = {};
+  clearRemoteSaveTimer();
+
+  let packJson = '';
+  if (typeof auth.loadPack === 'function') {
+    const loaded = await loadPackWithRetry((program) => auth.loadPack(program), PROGRAM);
+    if (syncGen !== remoteSync.syncGen || activeStudentKey !== nextKey) return;
+    if (loaded.ok && packLoadAllowsSave(loaded.result)) {
+      remoteSync.packLoadOk = true;
+      packJson = loaded.result.progress_json;
+    }
+  }
+
+  let progressRows = [];
+  if (typeof auth.loadProgressForApp === 'function') {
+    const prog = await auth.loadProgressForApp(PROGRAM);
+    if (syncGen !== remoteSync.syncGen || activeStudentKey !== nextKey) return;
+    if (prog && prog.ok && Array.isArray(prog.progress)) progressRows = prog.progress;
+  } else if (detail && Array.isArray(detail.progress)) {
+    progressRows = detail.progress;
+  }
+
+  const { merged, serverMerged } = mergeScoresAfterServerFetch(
+    () => loadScores(),
+    remoteSync.packLoadOk ? packJson : '{}',
+    progressRows,
+  );
+
+  if (syncGen !== remoteSync.syncGen || activeStudentKey !== nextKey) return;
+
+  if (activeStudentKey) {
+    localStorage.setItem(activeStudentKey, JSON.stringify(merged));
+    remoteSync.loadedServerScores = serverMerged;
+    const dirtyBefore = remoteSync.dirty;
+    remoteSync.dirty = dirtyBefore || scoresNeedSaveAfterSync(merged, serverMerged);
+    if (remoteSync.packLoadOk && remoteSync.dirty) {
+      remoteSync.lastSaveAt = 0;
+      schedulePackSave(0);
+    }
+  }
+  if (appEl) render();
+}
+
+function onAuthReady(ev) {
+  const detail = ev && ev.detail ? ev.detail : {};
+  if (typeof window.MRJ_AUTH?.progressError === 'function' && window.MRJ_AUTH.progressError()) {
+    // Progress book failed; keep local data and still try pack sync below.
+  }
+  void syncScoresFromServer(detail);
 }
 
 function flowKey(bookId, unitId) {
@@ -1426,8 +1577,7 @@ async function gradeBlob(blob, english) {
 function noteScoreToAuth(itemId, scorePct) {
   const auth = window.MRJ_AUTH;
   if (!auth || typeof auth.noteScore !== 'function' || typeof auth.student !== 'function') return;
-  const student = auth.student();
-  if (!student || !student.id) return;
+  if (!authStudentId(auth.student())) return;
   auth.noteScore({
     program: 'pronounce',
     itemId,
@@ -1622,6 +1772,11 @@ if (appEl) {
       render();
     });
   }
+
+  window.addEventListener('mrj-auth-ready', onAuthReady);
+  window.addEventListener('pagehide', () => {
+    void flushPackSave(true, { pagehide: true });
+  });
 
   loadContent().then(async () => {
     try {
