@@ -38,7 +38,6 @@ import {
   packLoadAllowsSave,
   parsePackJson,
   progressRowsToScores,
-  migrateLegacyScoresReadOnly,
   studentScoreStorageKey,
 } from './progress-merge.js?v=20261007-authpack';
 
@@ -333,7 +332,6 @@ async function syncScoresFromServer(detail) {
   activeStudentKey = nextKey;
   remoteSync.packLoadOk = false;
   clearRemoteSaveTimer();
-  migrateLegacyScoresReadOnly(localStorage, studentId);
   let local = loadScores();
 
   let packResult = null;

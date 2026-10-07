@@ -215,12 +215,7 @@ export function readScoresFromStorage(storage, key) {
   }
 }
 
-export function migrateLegacyScoresReadOnly(storage, studentId) {
-  const studentKey = studentScoreStorageKey(studentId);
-  const legacy = readScoresFromStorage(storage, LEGACY_SCORE_KEY);
-  if (!Object.keys(legacy).length) return readScoresFromStorage(storage, studentKey);
-  const current = readScoresFromStorage(storage, studentKey);
-  const merged = mergeScoreMaps(current, legacy);
-  storage.setItem(studentKey, JSON.stringify(merged));
-  return merged;
+/** Shared classroom devices: the legacy key may mix many students — never read or merge it. */
+export function loadStudentScoresOnly(storage, studentId) {
+  return readScoresFromStorage(storage, studentScoreStorageKey(studentId));
 }
