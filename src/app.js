@@ -49,6 +49,7 @@ import {
   shouldFlushPackOnPagehide,
   studentScoreStorageKey,
 } from './progress-merge.js?v=20261007-authpack';
+import { reportScoredActivity } from './score-reporting.js?v=20261011-savefix';
 
 const HEAR_BASE = 'https://mrjkorea.github.io/day4-speak/';
 const LOCAL_HEAR = new Set([
@@ -247,26 +248,6 @@ function itemRowPassed(item, unit, scores) {
   });
 }
 
-
-// Jay 28SEP2026: ONE score book — pronounce grades log here too.
-function logToOneBook(itemId, graded) {
-  const auth = window.MRJ_AUTH;
-  const who = auth && typeof auth.student === 'function' ? String(auth.student() || '').trim() : '';
-  if (!window.MRJ_SCORES || !graded || !who || !itemId) return;
-  window.MRJ_SCORES.post({
-    student: who,
-    program: 'pronounce',
-    appName: 'MRJ Pronounce Day 4',
-    source: 'pronounce',
-    itemId: 'pronounce:' + itemId,
-    itemType: 'pronunciation',
-    scoreValue: Number(graded.scorePct || 0),
-    scoreMax: 100,
-    scorePct: Number(graded.scorePct || 0),
-    correctness: graded.pass ? 'correct' : 'incorrect',
-    metadata: { english: graded.english || '', weak: graded.weak || [] },
-  });
-}
 
 function loadScores() {
   if (!activeStudentKey) return {};
@@ -1447,8 +1428,17 @@ async function gradeStudentOrTeacher(meta, blob) {
     scores[meta.scoreKey] = record;
     saveScores(scores);
     if (meta.itemId) {
-      noteScoreToAuth(meta.itemId, record.scorePct);
-      logToOneBook(meta.itemId, record);
+      reportScoredActivity({
+        itemId: meta.itemId,
+        record,
+        thrown,
+        meta,
+        auth: window.MRJ_AUTH,
+        mrjScores: window.MRJ_SCORES,
+        localDateFn: () => (window.MRJ_SCORES && window.MRJ_SCORES.localDate
+          ? window.MRJ_SCORES.localDate()
+          : ''),
+      });
     }
     if (stillOnSheet(meta.bookId, meta.unitId)) {
       void playExpectedOnFail(meta.gradeText, meta.audioRel, thrown ? false : !!(graded && graded.pass));
@@ -1647,19 +1637,6 @@ async function gradeBlob(blob, english, hooks) {
     english: target,
     words: result.words || [],
   };
-}
-
-function noteScoreToAuth(itemId, scorePct) {
-  const auth = window.MRJ_AUTH;
-  if (!auth || typeof auth.noteScore !== 'function' || typeof auth.student !== 'function') return;
-  if (!authStudentId(auth.student())) return;
-  auth.noteScore({
-    program: 'pronounce',
-    itemId,
-    scoreValue: Math.round(scorePct),
-    scoreMax: 100,
-    scorePct: Math.round(scorePct),
-  });
 }
 
 function playAudioUrl(url, times = 1) {
