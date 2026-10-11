@@ -126,7 +126,9 @@ function storedRushWords(graded) {
     const row = list[i];
     if (!row || !row.word) continue;
     const score = Number(row.score);
-    out.push({ word: String(row.word), score: Number.isFinite(score) ? score : 0 });
+    const item = { word: String(row.word), score: Number.isFinite(score) ? score : 0 };
+    if (row.hint) item.hint = String(row.hint);
+    out.push(item);
   }
   return out;
 }
@@ -137,6 +139,9 @@ export function noteRushGrade(flow, id, graded) {
       pass: !!(graded && graded.pass),
       scorePct: graded && graded.scorePct ? graded.scorePct : 0,
       words: storedRushWords(graded),
+      doorFail: !!(graded && graded.doorFail),
+      reason: graded && graded.doorFail ? (graded.reason || '') : '',
+      grader: graded && graded.grader ? graded.grader : '',
     },
   });
   return Object.assign({}, flow, { rushGrades });

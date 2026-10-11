@@ -28,7 +28,14 @@ import {
   timerRunning,
   timerSeconds,
   tryTeacherPassword,
-} from './flow.js?v=20261007-authpack';
+} from './flow.js?v=20261010-kids';
+import {
+  DOOR_CHECKING_TEXT,
+  DOOR_FAIL_TEXT,
+  bootAssetPaths,
+  bootTrialInPage,
+  gradeTrialSamples,
+} from './trial.js?v=20261010-kids';
 
 import {
   PROGRAM,
@@ -49,6 +56,9 @@ const LOCAL_HEAR = new Set([
   'audio/hear/it-is-there.mp3',
 ]);
 const PASS_SCORE = 0.6;
+// Set GRADER to 'wav2vec2' to load the old wav2vec2 checker again.
+const GRADER = 'citrinet-trial';
+const CITRINET_PASS = 60;
 const MS_PER_WORD = 200;
 let activeStudentKey = '';
 const remoteSync = {
@@ -122,6 +132,7 @@ let silenceTimer = null;
 let silenceNodes = null;
 let gradingScoreKey = null;
 let gradeEpoch = 0;
+let pronounceChecking = false;
 let part1Busy = false;
 let rushInFlight = 0;
 const rushChecking = new Map();
@@ -444,6 +455,11 @@ function markModelReady() {
   modelTrack.classList.add('done');
 }
 
+function pathsBootWillFetch() {
+  if (GRADER === 'citrinet-trial') return bootAssetPaths();
+  return ['models/wav2vec2/model_int8.onnx'];
+}
+
 async function readBody(res, onChunk) {
   const reader = res.body.getReader();
   const chunks = [];
@@ -570,6 +586,25 @@ function startGradeWorker(modelBuffer) {
 }
 
 async function bootModel() {
+  if (GRADER === 'citrinet-trial') {
+    try {
+      setProgress(0.02, 'Loading the sound checker…');
+      const wasmPaths = new URL('../vendor/ort/', import.meta.url).href;
+      const loaded = await bootTrialInPage({ wasmPaths, paths: pathsBootWillFetch() });
+      checkerReady = true;
+      if (loaded.zipaError) console.warn('ZIPA hint skipped', loaded.zipaError);
+      setProgress(1, 'Ready');
+      markModelReady();
+      render();
+    } catch (err) {
+      modelError = err && err.message ? err.message : String(err);
+      modelLabel.textContent = 'Sound checker did not start. ' + modelError;
+      console.error(err);
+      render();
+    }
+    return;
+  }
+  // Old checker. Set GRADER = 'wav2vec2' above to use this path.
   try {
     setProgress(0.02, 'Loading the sound checker…');
     const g2p = loadG2P('');
@@ -705,12 +740,17 @@ function noteCue() {
   return lang === 'ko' ? '이 질문을 한 번만 말하세요.' : 'Say this question one time.';
 }
 
-function wordChipsHtml(words) {
+function wordChipsHtml(words, record) {
   if (!words || !words.length) return '';
+  const citrinet = !!(record && record.grader === 'citrinet-trial');
   const chips = words.map((w) => {
-    const pct = Math.round((w.score || 0) * 100);
-    const cls = (w.score || 0) >= PASS_SCORE ? 'good' : 'bad';
-    return `<span class="word-chip ${cls}" title="${pct}%">${escapeHtml(w.word)}</span>`;
+    const pct = citrinet ? Math.round(w.score || 0) : Math.round((w.score || 0) * 100);
+    const good = citrinet ? (w.score || 0) >= CITRINET_PASS : (w.score || 0) >= PASS_SCORE;
+    const cls = good ? 'good' : 'bad';
+    const hint = citrinet && !good && w.hint
+      ? `<span class="word-hint">${escapeHtml(w.hint)}</span>`
+      : '';
+    return `<span class="word-chip-wrap"><span class="word-chip ${cls}" title="${pct}%">${escapeHtml(w.word)}</span>${hint}</span>`;
   }).join('');
   return `<div class="chips">${chips}</div>`;
 }
@@ -732,11 +772,14 @@ function englishCueHtml(english, className) {
 
 function partResultHtml(saved) {
   if (!saved) return '';
+  if (saved.doorFail) {
+    return `<div class="after show"><p class="meta">${escapeHtml(saved.reason || DOOR_FAIL_TEXT)}</p></div>`;
+  }
   const verdict = saved.pass ? 'Pass' : 'Not yet';
   const cls = saved.pass ? 'pass' : 'fail';
   const pct = saved.scorePct != null ? saved.scorePct : Math.round((saved.score || 0) * 100);
   const reason = saved.reason ? `<p class="meta">${escapeHtml(saved.reason)}</p>` : '';
-  const chips = englishRevealed(saved) ? wordChipsHtml(saved.words) : '';
+  const chips = englishRevealed(saved) ? wordChipsHtml(saved.words, saved) : '';
   return `<div class="after show">
     <p class="verdict ${cls}">${verdict} · ${pct}</p>
     ${chips}
@@ -775,14 +818,27 @@ function rushMark(flow, id) {
   if (rushChecking.get(id)) return 'checking';
   const grade = flow.rushGrades && flow.rushGrades[id];
   if (!grade) return '';
+  if (grade.doorFail) return 'door';
   return grade.pass ? 'pass' : 'fail';
 }
 
 function checkHtml(mark) {
+  if (mark === 'door') return '';
   if (mark === 'pass') return '<span class="got-it" aria-label="Pass">✓</span>';
   if (mark === 'fail') return '<span class="not-yet" aria-label="Not yet"><span class="rush-x" aria-hidden="true">✗</span> Not yet</span>';
   if (mark === 'checking') return '<span class="rush-checking">Checking</span>';
   return '';
+}
+
+function rushFeedbackHtml(shown) {
+  if (!shown) return '';
+  if (shown.doorFail) return `<p class="meta">${escapeHtml(shown.reason || DOOR_FAIL_TEXT)}</p>`;
+  return wordChipsHtml(shown.words, shown);
+}
+
+function checkingLineHtml(active) {
+  if (!active || !pronounceChecking) return '';
+  return `<p class="checking-line">${DOOR_CHECKING_TEXT}</p>`;
 }
 
 function renderSharedQuestion(bookId, unit, scores, ready, view) {
@@ -795,12 +851,12 @@ function renderSharedQuestion(bookId, unit, scores, ready, view) {
   const shown = shownGrade(view, sk, saved);
   const revealed = englishRevealed(shown);
   const prompt = revealed ? englishCueHtml(plan.question, 'en-prompt') : '';
-  const rushMarks = view.rush && revealed ? wordChipsHtml(shown.words) : '';
+  const rushMarks = view.rush && revealed ? rushFeedbackHtml(shown) : '';
   const meaning = questionCue(plan.question);
   const meaningHtml = meaning ? `<p class="l1-prompt">${escapeHtml(meaning)}</p>` : '';
   const result = view.hideVerdict ? '' : partResultHtml(saved);
   const gradingShared = gradingScoreKey === sk && !view.hideVerdict;
-  const gradeBar = gradingShared ? '<div class="grade-bar shared-grade show"><div class="grade-fill"></div></div>' : '';
+  const gradeBar = gradingShared ? `${checkingLineHtml(true)}<div class="grade-bar shared-grade show"><div class="grade-fill"></div></div>` : '';
   const doneCls = saved && saved.pass ? 'done' : '';
   const mic = micButtonHtml(sk, '', '', plan.question, questionAudioRel(plan.question), allowed, ready, view.micLabel);
   return `<section class="shared-q ${doneCls}" data-shared="${escapeHtml(sk)}">
@@ -861,7 +917,7 @@ function lineArticleHtml(line, unit, index, scores, ready, view) {
     const shown = shownGrade(view, skey, saved);
     const revealed = englishRevealed(shown);
     const cue = revealed ? englishCueHtml(p.english, 'part-text') : '';
-    const rushMarks = view.rush && revealed ? wordChipsHtml(shown.words) : '';
+    const rushMarks = view.rush && revealed ? rushFeedbackHtml(shown) : '';
     const audioRel = p.audio || questionAudioRel(p.english);
     const micBtn = micButtonHtml(skey, item.id, p.key, p.english, audioRel, allowed, ready, view.micLabel);
     const recorded = checkHtml(view.marks && view.marks[skey]);
@@ -896,7 +952,7 @@ function lineArticleHtml(line, unit, index, scores, ready, view) {
     body = `<div class="row-main">${single.main}</div><div class="mic-cell">${single.micBtn}</div>`;
     tail = single.result;
   }
-  const gradeBar = grading ? '<div class="grade-bar show"><div class="grade-fill"></div></div>' : '';
+  const gradeBar = grading ? `${checkingLineHtml(true)}<div class="grade-bar show"><div class="grade-fill"></div></div>` : '';
   return `<article class="row" data-id="${escapeHtml(item.id)}">
     <div class="num">${index + 1}</div>
     ${body}
@@ -1319,15 +1375,26 @@ function studentRecord(graded, gradeText, reason) {
     weak: graded ? graded.weak : [],
     reason: graded ? graded.reason : reason,
     english: graded ? graded.english : scoringTarget(gradeText),
-    words: graded ? graded.words : [],
+    words: graded && !graded.doorFail ? graded.words : [],
+    doorFail: graded ? !!graded.doorFail : false,
+    grader: graded && graded.grader ? graded.grader : '',
     at: Date.now(),
+  };
+}
+
+function doorPassHook(meta) {
+  return {
+    onDoorPass: () => {
+      pronounceChecking = true;
+      if (stillOnSheet(meta.bookId, meta.unitId)) paint();
+    },
   };
 }
 
 async function gradeRush(meta, blob) {
   rushInFlight += 1;
   try {
-    const graded = await gradeBlob(blob, meta.gradeText);
+    const graded = await gradeBlob(blob, meta.gradeText, doorPassHook(meta));
     const flow = noteRushGrade(loadUnitFlow(meta.bookId, meta.unitId), meta.scoreKey, graded);
     saveUnitFlow(meta.bookId, meta.unitId, flow);
   } catch (err) {
@@ -1335,6 +1402,7 @@ async function gradeRush(meta, blob) {
     saveUnitFlow(meta.bookId, meta.unitId, flow);
     console.error(err);
   } finally {
+    pronounceChecking = false;
     rushInFlight -= 1;
     endRushCheck(meta.scoreKey);
     if (stillOnSheet(meta.bookId, meta.unitId)) paint();
@@ -1353,7 +1421,7 @@ async function gradeStudentOrTeacher(meta, blob) {
   let graded = null;
   let thrown = null;
   try {
-    graded = await gradeBlob(blob, meta.gradeText);
+    graded = await gradeBlob(blob, meta.gradeText, doorPassHook(meta));
   } catch (err) {
     thrown = err;
     console.error(err);
@@ -1386,6 +1454,7 @@ async function gradeStudentOrTeacher(meta, blob) {
       void playExpectedOnFail(meta.gradeText, meta.audioRel, thrown ? false : !!(graded && graded.pass));
     }
   }
+  pronounceChecking = false;
   if (!meta.gradeEpoch || meta.gradeEpoch === gradeEpoch) gradingScoreKey = null;
   if (stillOnSheet(meta.bookId, meta.unitId)) paint();
 }
@@ -1514,7 +1583,13 @@ function weakWords(result) {
   return (result.words || []).filter((w) => (w.score || 0) < PASS_SCORE).map((w) => w.word);
 }
 
-async function gradeBlob(blob, english) {
+async function gradeBlob(blob, english, hooks) {
+  if (GRADER === 'citrinet-trial') {
+    const target = scoringTarget(english);
+    const samples = await decodeAudioToMono(blob, 16000);
+    const graded = await gradeTrialSamples(samples, target, CITRINET_PASS, hooks);
+    return graded.result;
+  }
   const target = scoringTarget(english);
   const t0 = performance.now();
   const samples = await decodeAudioToMono(blob, 16000);

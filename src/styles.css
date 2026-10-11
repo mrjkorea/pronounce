@@ -383,6 +383,30 @@ h1 {
   flex-wrap: wrap;
   gap: 8px;
   margin: 8px 0 10px;
+  align-items: flex-start;
+}
+
+.word-chip-wrap {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 4px;
+  max-width: 12rem;
+}
+
+.word-hint {
+  font-size: 0.82rem;
+  font-weight: 700;
+  line-height: 1.25;
+  text-align: center;
+  color: var(--chip-bad);
+}
+
+.checking-line {
+  margin: 8px 0 6px 78px;
+  font-size: 1.05rem;
+  font-weight: 800;
+  color: var(--blue);
 }
 
 .word-chip {
