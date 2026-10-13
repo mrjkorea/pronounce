@@ -1,4 +1,5 @@
 // Citrinet trial: Whistle is the door, Citrinet colors words, ZIPA only hints.
+// `?trial=citrinet-only` skips Whistle, ZIPA, and espeak; Citrinet grades and gates takes.
 // Models are loaded once. A take does not reload them.
 
 import { tokenizeWords } from './engine.js';
@@ -13,6 +14,20 @@ export const FRAME_MS = 10;
 export const HINT_PAD_MS = 80;
 const BLANK_ID = 1024;
 const NEG = -1e30;
+
+/** @returns {'full' | 'citrinet-only'} */
+export function getTrialMode(search) {
+  const q = search || (typeof globalThis.location !== 'undefined' ? globalThis.location.search : '');
+  const param = new URLSearchParams(q).get('trial');
+  return param === 'citrinet-only' ? 'citrinet-only' : 'full';
+}
+
+export function bootCitrinetOnlyPaths() {
+  return [
+    'models/citrinet/model.int8.onnx',
+    'models/citrinet/sp_pieces.json',
+  ];
+}
 
 export function bootCorePaths() {
   return [
@@ -34,15 +49,52 @@ export function bootAssetPaths() {
 }
 
 let runtime = {
+  mode: 'full',
   needle: null,
   citrinet: null,
   pieces: null,
+  tokenById: null,
   zipa: null,
   zipaTokens: null,
   phonemize: null,
   zipaError: '',
   ready: false,
 };
+
+function loadCitrinetTokenMap(table) {
+  const pieces = table.pieces || table;
+  const map = new Map();
+  for (let i = 0; i < pieces.length; i++) {
+    const row = pieces[i];
+    if (row && row.id != null) map.set(row.id, row.piece || '');
+  }
+  return map;
+}
+
+/** Greedy CTC decode for Citrinet log-probs (door transcript in citrinet-only mode). */
+export function greedyCitrinetTranscript(flat, timeSteps, vocab, tokenById) {
+  const parts = [];
+  let prev = -1;
+  for (let t = 0; t < timeSteps; t++) {
+    const base = t * vocab;
+    let best = flat[base];
+    let arg = 0;
+    for (let v = 1; v < vocab; v++) {
+      const p = flat[base + v];
+      if (p > best) {
+        best = p;
+        arg = v;
+      }
+    }
+    if (arg !== BLANK_ID && arg !== prev) {
+      const piece = tokenById.get(arg) || '';
+      if (piece && piece !== '<blk>' && piece !== '<unk>' && piece !== '<sos/eos>') parts.push(piece);
+    }
+    prev = arg;
+  }
+  const SPI = '\u2581';
+  return parts.join('').replace(new RegExp(SPI, 'g'), ' ').replace(/\s+/g, ' ').trim();
+}
 
 export function trialRuntime() {
   return runtime;
@@ -255,7 +307,7 @@ function tokenProbability(align, tokenIndex, tokenId) {
   return sum / frames.length;
 }
 
-export async function runCitrinetSession(session, piecesModel, samples, targetText, passAt) {
+export async function forwardCitrinet(session, samples) {
   const feats = citrinetFeatures(samples);
   if (!feats.length) throw new Error('Citrinet got no feature frames');
   const channels = framesAsChannelsFirst(feats);
@@ -266,10 +318,16 @@ export async function runCitrinetSession(session, piecesModel, samples, targetTe
   const out = await session.run({ audio_signal: audio, length });
   const logp = out.logprobs;
   const dims = logp.dims;
-  const timeSteps = dims[1];
-  const vocab = dims[2];
+  return {
+    data: logp.data,
+    timeSteps: dims[1],
+    vocab: dims[2],
+  };
+}
+
+export function gradeCitrinetFromLogp(logpData, timeSteps, vocab, piecesModel, targetText, passAt) {
   const encoded = encodeCitrinet(targetText, piecesModel);
-  const align = forceAlign(logp.data, timeSteps, vocab, encoded.ids);
+  const align = forceAlign(logpData, timeSteps, vocab, encoded.ids);
   const msPer = SUBSAMPLE * FRAME_MS;
   const target = normalizeWords(targetText);
   const display = tokenizeWords(targetText).map((row) => row.display);
@@ -318,6 +376,11 @@ export async function runCitrinetSession(session, piecesModel, samples, targetTe
     doorFail: false,
     grader: 'citrinet-trial',
   };
+}
+
+export async function runCitrinetSession(session, piecesModel, samples, targetText, passAt) {
+  const fwd = await forwardCitrinet(session, samples);
+  return gradeCitrinetFromLogp(fwd.data, fwd.timeSteps, fwd.vocab, piecesModel, targetText, passAt);
 }
 
 const SPELL_RULES = [
@@ -463,9 +526,11 @@ export async function openDoor(mod, samples, targetText) {
 
 export async function initTrialEngine(parts) {
   runtime = {
+    mode: parts.mode || 'full',
     needle: parts.needle,
     citrinet: parts.citrinet,
     pieces: parts.pieces,
+    tokenById: parts.tokenById || null,
     zipa: parts.zipa || null,
     zipaTokens: parts.zipaTokens || null,
     phonemize: parts.phonemize || null,
@@ -530,23 +595,74 @@ async function ensureHintRuntime(fetchImpl) {
   }
 }
 
+function emptyPerf() {
+  return { whistleMs: 0, citrinetMs: 0, zipaMs: 0, featuresMs: 0, totalMs: 0 };
+}
+
 export async function gradeTrialSamples(samples, targetText, passAt, hooks, opts) {
   const options = opts || {};
-  const wantHints = options.hints !== false;
+  const wantHints = options.hints !== false && runtime.mode !== 'citrinet-only';
   const rt = runtime;
-  if (!rt.ready || !rt.needle || !rt.citrinet || !rt.pieces) throw new Error('Citrinet trial is not loaded');
+  if (!rt.ready || !rt.citrinet || !rt.pieces) throw new Error('Citrinet trial is not loaded');
+  const perf = emptyPerf();
+  const tAll = typeof performance !== 'undefined' ? performance.now() : 0;
+
+  if (rt.mode === 'citrinet-only') {
+    if (isSilence(samples)) {
+      perf.totalMs = typeof performance !== 'undefined' ? performance.now() - tAll : 0;
+      return {
+        result: doorFailResult(targetText),
+        door: { ok: false, overlap: 0, text: '' },
+        perf,
+      };
+    }
+    const tCit = typeof performance !== 'undefined' ? performance.now() : 0;
+    const fwd = await forwardCitrinet(rt.citrinet, samples);
+    perf.citrinetMs = typeof performance !== 'undefined' ? performance.now() - tCit : 0;
+    const transcript = rt.tokenById
+      ? greedyCitrinetTranscript(fwd.data, fwd.timeSteps, fwd.vocab, rt.tokenById)
+      : '';
+    const door = doorFromTranscript(samples, targetText, transcript);
+    if (!door.ok) {
+      perf.totalMs = typeof performance !== 'undefined' ? performance.now() - tAll : 0;
+      return { result: doorFailResult(targetText), door, perf };
+    }
+    if (hooks && hooks.onDoorPass) hooks.onDoorPass();
+    const result = gradeCitrinetFromLogp(
+      fwd.data,
+      fwd.timeSteps,
+      fwd.vocab,
+      rt.pieces,
+      targetText,
+      passAt,
+    );
+    perf.totalMs = typeof performance !== 'undefined' ? performance.now() - tAll : 0;
+    return { result, door, perf };
+  }
+
+  if (!rt.needle) throw new Error('Citrinet trial is not loaded');
+  const tWhistle = typeof performance !== 'undefined' ? performance.now() : 0;
   const door = await openDoor(rt.needle, samples, targetText);
-  if (!door.ok) return { result: doorFailResult(targetText), door };
+  perf.whistleMs = typeof performance !== 'undefined' ? performance.now() - tWhistle : 0;
+  if (!door.ok) {
+    perf.totalMs = typeof performance !== 'undefined' ? performance.now() - tAll : 0;
+    return { result: doorFailResult(targetText), door, perf };
+  }
   if (hooks && hooks.onDoorPass) hooks.onDoorPass();
+  const tCit = typeof performance !== 'undefined' ? performance.now() : 0;
   const result = await runCitrinetSession(rt.citrinet, rt.pieces, samples, targetText, passAt);
+  perf.citrinetMs = typeof performance !== 'undefined' ? performance.now() - tCit : 0;
   if (wantHints && result.words.some((w) => w.score < passAt)) {
+    const tZipa = typeof performance !== 'undefined' ? performance.now() : 0;
     const hintRt = await ensureHintRuntime(options.fetchImpl);
     await Promise.all(result.words.map(async (w) => {
       if (w.score >= passAt) return;
       w.hint = await redWordHint(hintRt, samples, w.word, w.startMs, w.endMs);
     }));
+    perf.zipaMs = typeof performance !== 'undefined' ? performance.now() - tZipa : 0;
   }
-  return { result, door };
+  perf.totalMs = typeof performance !== 'undefined' ? performance.now() - tAll : 0;
+  return { result, door, perf };
 }
 
 function parseZipaTokens(text) {
@@ -564,37 +680,52 @@ function parseZipaTokens(text) {
 export async function bootTrialInPage(opts) {
   const fetchImpl = opts.fetchImpl || fetch;
   const ort = opts.ort || globalThis.ort;
-  const createNeedle = opts.createNeedle || globalThis.createNeedle;
+  const mode = opts.mode || getTrialMode();
   if (!ort || !ort.InferenceSession) throw new Error('onnxruntime-web is not on the page');
-  if (typeof createNeedle !== 'function') throw new Error('Needle WASM engine is not on the page');
   ort.env.wasm.numThreads = 1;
   ort.env.wasm.proxy = false;
   if (opts.wasmPaths) ort.env.wasm.wasmPaths = opts.wasmPaths;
-  const paths = opts.paths || (opts.loadHints ? bootAssetPaths() : bootCorePaths());
+  const loadHints = mode !== 'citrinet-only' && opts.loadHints;
+  const paths = opts.paths || (loadHints ? bootAssetPaths() : (mode === 'citrinet-only' ? bootCitrinetOnlyPaths() : bootCorePaths()));
   const responses = await Promise.all(paths.map(async (path) => {
     const res = await fetchImpl(path);
     if (!res.ok) throw new Error('missing ' + path);
     return res;
   }));
-  const cact = new Uint8Array(await responses[0].arrayBuffer());
-  const citrinetBuf = await responses[1].arrayBuffer();
-  const pieces = loadCitrinetPieces(await responses[2].json());
-  const needle = await createNeedle();
-  await loadWhistle(needle, cact);
+  let needle = null;
+  let citrinetBuf;
+  let piecesJson;
+  if (mode === 'citrinet-only') {
+    citrinetBuf = await responses[0].arrayBuffer();
+    piecesJson = await responses[1].json();
+  } else {
+    const createNeedle = opts.createNeedle || globalThis.createNeedle;
+    if (typeof createNeedle !== 'function') throw new Error('Needle WASM engine is not on the page');
+    const cact = new Uint8Array(await responses[0].arrayBuffer());
+    citrinetBuf = await responses[1].arrayBuffer();
+    piecesJson = await responses[2].json();
+    needle = await createNeedle();
+    await loadWhistle(needle, cact);
+  }
+  const piecesTable = piecesJson;
+  const pieces = loadCitrinetPieces(piecesTable);
+  const tokenById = loadCitrinetTokenMap(piecesTable);
   const citrinet = await ort.InferenceSession.create(citrinetBuf, { executionProviders: ['wasm'] });
   citrinet.ort = ort;
   hintLoadPromise = null;
   await initTrialEngine({
+    mode,
     needle,
     citrinet,
     pieces,
+    tokenById,
     zipa: null,
     zipaTokens: null,
     phonemize: null,
     zipaError: '',
   });
-  if (opts.loadHints) await ensureHintRuntime(fetchImpl);
-  else prefetchHintRuntime(fetchImpl);
+  if (loadHints) await ensureHintRuntime(fetchImpl);
+  else if (mode !== 'citrinet-only') prefetchHintRuntime(fetchImpl);
   return runtime;
 }
 

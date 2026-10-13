@@ -28,14 +28,16 @@ import {
   timerRunning,
   timerSeconds,
   tryTeacherPassword,
-} from './flow.js?v=20261014-da52';
+} from './flow.js?v=20261014-bench';
 import {
   DOOR_CHECKING_TEXT,
   DOOR_FAIL_TEXT,
+  bootCitrinetOnlyPaths,
   bootCorePaths,
   bootTrialInPage,
+  getTrialMode,
   gradeTrialSamples,
-} from './trial.js?v=20261014-da52';
+} from './trial.js?v=20261014-bench';
 
 import {
   PROGRAM,
@@ -59,6 +61,7 @@ const LOCAL_HEAR = new Set([
 const PASS_SCORE = 0.6;
 // Set GRADER to 'wav2vec2' to load the old wav2vec2 checker again.
 const GRADER = 'citrinet-trial';
+const TRIAL_MODE = getTrialMode();
 const CITRINET_PASS = 60;
 const MS_PER_WORD = 200;
 let activeStudentKey = '';
@@ -438,23 +441,43 @@ function markModelReady() {
   exposeBenchHook();
 }
 
-function exposeBenchHook() {
-  if (!checkerReady) return;
+function benchModeEnabled() {
   try {
+    if (new URLSearchParams(location.search).get('bench') === '1') return true;
     const auth = window.MRJ_AUTH;
     const id = authStudentId(typeof auth?.student === 'function' ? auth.student() : auth);
-    if (!String(id).toLowerCase().startsWith('zz_test')) return;
-    window.__mrjPronounceBench = (blob, english, gradeOpts) => gradeBlob(
-      blob,
-      english,
-      null,
-      Object.assign({ hints: false }, gradeOpts || {}),
-    );
-  } catch (_) {}
+    return String(id).toLowerCase().startsWith('zz_test');
+  } catch (_) {
+    return false;
+  }
+}
+
+function exposeBenchHook() {
+  if (!checkerReady) return;
+  if (!benchModeEnabled()) return;
+  window.__mrjPronounceBench = async (blob, english, gradeOpts) => {
+    const opts = Object.assign({ hints: TRIAL_MODE !== 'citrinet-only' }, gradeOpts || {});
+    const passAt = typeof opts.passAt === 'number' ? opts.passAt : CITRINET_PASS;
+    if (GRADER === 'citrinet-trial') {
+      const target = scoringTarget(english);
+      const samples = await decodeAudioToMono(blob, 16000);
+      const graded = await gradeTrialSamples(samples, target, passAt, null, opts);
+      return { result: graded.result, door: graded.door, perf: graded.perf, trialMode: TRIAL_MODE };
+    }
+    const result = await gradeBlob(blob, english, null, opts);
+    return { result, perf: null, trialMode: TRIAL_MODE };
+  };
+  window.__mrjTrialBoot = () => ({
+    trialMode: TRIAL_MODE,
+    grader: GRADER,
+    ready: checkerReady,
+  });
 }
 
 function pathsBootWillFetch() {
-  if (GRADER === 'citrinet-trial') return bootCorePaths();
+  if (GRADER === 'citrinet-trial') {
+    return TRIAL_MODE === 'citrinet-only' ? bootCitrinetOnlyPaths() : bootCorePaths();
+  }
   return ['models/wav2vec2/model_int8.onnx'];
 }
 
@@ -588,7 +611,12 @@ async function bootModel() {
     try {
       setProgress(0.02, 'Loading the sound checker…');
       const wasmPaths = new URL('../vendor/ort/', import.meta.url).href;
-      const loaded = await bootTrialInPage({ wasmPaths, paths: pathsBootWillFetch() });
+      const loaded = await bootTrialInPage({
+        wasmPaths,
+        paths: pathsBootWillFetch(),
+        mode: TRIAL_MODE,
+        loadHints: TRIAL_MODE !== 'citrinet-only',
+      });
       checkerReady = true;
       if (loaded.zipaError) console.warn('ZIPA hint skipped', loaded.zipaError);
       setProgress(1, 'Ready');
