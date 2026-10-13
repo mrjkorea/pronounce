@@ -28,14 +28,14 @@ import {
   timerRunning,
   timerSeconds,
   tryTeacherPassword,
-} from './flow.js?v=20261013-da52';
+} from './flow.js?v=20261014-da52';
 import {
   DOOR_CHECKING_TEXT,
   DOOR_FAIL_TEXT,
   bootCorePaths,
   bootTrialInPage,
   gradeTrialSamples,
-} from './trial.js?v=20261013-da52';
+} from './trial.js?v=20261014-da52';
 
 import {
   PROGRAM,
@@ -441,9 +441,15 @@ function markModelReady() {
 function exposeBenchHook() {
   if (!checkerReady) return;
   try {
-    const id = authStudentId(window.MRJ_AUTH);
+    const auth = window.MRJ_AUTH;
+    const id = authStudentId(typeof auth?.student === 'function' ? auth.student() : auth);
     if (!String(id).toLowerCase().startsWith('zz_test')) return;
-    window.__mrjPronounceBench = (blob, english) => gradeBlob(blob, english, null, { hints: false });
+    window.__mrjPronounceBench = (blob, english, gradeOpts) => gradeBlob(
+      blob,
+      english,
+      null,
+      Object.assign({ hints: false }, gradeOpts || {}),
+    );
   } catch (_) {}
 }
 
