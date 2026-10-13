@@ -1,6 +1,5 @@
 #!/usr/bin/env python3
-"""Day 4 content, dictionary, and model-part checks."""
-import hashlib
+"""Day 4 content, dictionary, and Citrinet model checks."""
 import json
 import re
 from pathlib import Path
@@ -13,7 +12,9 @@ FILES = [
     "int2a.json", "int2b.json", "int2c.json",
     "int3a.json", "int3b.json", "int3c.json",
 ]
-EXPECT = 317712780
+CITRINET = ROOT / "models" / "citrinet" / "model.int8.onnx"
+CITRINET_MIN = 35_000_000
+CITRINET_MAX = 45_000_000
 
 
 def main():
@@ -52,22 +53,11 @@ def main():
     assert missing == listed, (missing, listed)
     print(f"dictionary ok: words={len(words)} in_dict={len(words)-len(missing)} missing={len(missing)}")
 
-    man = json.loads((ROOT / "models" / "wav2vec2" / "manifest.json").read_text())
-    total = 0
-    hasher = hashlib.sha256()
-    for part in man["parts"]:
-        path = ROOT / "models" / "wav2vec2" / part["name"]
-        size = path.stat().st_size
-        assert size == part["bytes"], (part["name"], size, part["bytes"])
-        assert size < 45000000, (part["name"], size)
-        total += size
-        hasher.update(path.read_bytes())
-    assert total == EXPECT, total
-    assert man["total"] == EXPECT
-    src = Path("/Users/andreclouthier/.hermes/projects/mrj-pronounce/packages/pronounce-web/models/wav2vec2/model_int8.onnx")
-    src_hash = hashlib.sha256(src.read_bytes()).hexdigest()
-    assert hasher.hexdigest() == src_hash
-    print(f"model ok: parts={len(man['parts'])} bytes={total} sha256={src_hash}")
+    size = CITRINET.stat().st_size
+    assert CITRINET_MIN < size < CITRINET_MAX, size
+    pieces = ROOT / "models" / "citrinet" / "sp_pieces.json"
+    assert pieces.is_file()
+    print(f"model ok: citrinet_bytes={size} sp_pieces={pieces.stat().st_size}")
 
 
 if __name__ == "__main__":

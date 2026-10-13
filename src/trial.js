@@ -1,8 +1,8 @@
-// Citrinet trial: Whistle is the door, Citrinet colors words, ZIPA only hints.
-// Models are loaded once. A take does not reload them.
+// Citrinet pronunciation checker: greedy transcript door + forced-align word scores.
+// Models load once per page; a take does not reload them.
 
 import { tokenizeWords } from './engine.js';
-import { citrinetFeatures, framesAsChannelsFirst, framesAsTimeMajor, zipaFeatures } from './nemo-fbank.js';
+import { citrinetFeatures, framesAsChannelsFirst } from './nemo-fbank.js';
 import { encodeCitrinet, loadCitrinetPieces } from './citrinet-encode.js';
 
 export const DOOR_FAIL_TEXT = 'Say the sentence again, please. Say each word clearly.';
@@ -10,39 +10,57 @@ export const DOOR_CHECKING_TEXT = 'Now checking pronunciation.';
 export const DOOR_OVERLAP = 0.5;
 export const SUBSAMPLE = 8;
 export const FRAME_MS = 10;
-export const HINT_PAD_MS = 80;
 const BLANK_ID = 1024;
 const NEG = -1e30;
 
-export function bootCorePaths() {
+export function bootModelPaths() {
   return [
-    'models/whistle/whistle.cact',
     'models/citrinet/model.int8.onnx',
     'models/citrinet/sp_pieces.json',
   ];
 }
 
-export function bootHintPaths() {
-  return [
-    'models/zipa/model.int8.onnx',
-    'models/zipa/tokens.txt',
-  ];
-}
-
-export function bootAssetPaths() {
-  return bootCorePaths().concat(bootHintPaths());
-}
-
 let runtime = {
-  needle: null,
   citrinet: null,
   pieces: null,
-  zipa: null,
-  zipaTokens: null,
-  phonemize: null,
-  zipaError: '',
+  tokenById: null,
   ready: false,
 };
+
+function loadCitrinetTokenMap(table) {
+  const pieces = table.pieces || table;
+  const map = new Map();
+  for (let i = 0; i < pieces.length; i++) {
+    const row = pieces[i];
+    if (row && row.id != null) map.set(row.id, row.piece || '');
+  }
+  return map;
+}
+
+/** Greedy CTC decode for Citrinet log-probs (door transcript). */
+export function greedyCitrinetTranscript(flat, timeSteps, vocab, tokenById) {
+  const parts = [];
+  let prev = -1;
+  for (let t = 0; t < timeSteps; t++) {
+    const base = t * vocab;
+    let best = flat[base];
+    let arg = 0;
+    for (let v = 1; v < vocab; v++) {
+      const p = flat[base + v];
+      if (p > best) {
+        best = p;
+        arg = v;
+      }
+    }
+    if (arg !== BLANK_ID && arg !== prev) {
+      const piece = tokenById.get(arg) || '';
+      if (piece && piece !== '<blk>' && piece !== '<unk>' && piece !== '<sos/eos>') parts.push(piece);
+    }
+    prev = arg;
+  }
+  const SPI = '\u2581';
+  return parts.join('').replace(new RegExp(SPI, 'g'), ' ').replace(/\s+/g, ' ').trim();
+}
 
 export function trialRuntime() {
   return runtime;
@@ -130,53 +148,6 @@ export function overlapRatio(targetWords, heardWords) {
   return dp[ix(t, h)] / t;
 }
 
-function mallocBytes(mod, bytes) {
-  const ptr = mod._malloc(bytes.length);
-  mod.HEAPU8.set(bytes, ptr);
-  return ptr;
-}
-
-function writeFloats(mod, samples) {
-  const ptr = mod._malloc(samples.length * 4);
-  new Float32Array(mod.HEAPU8.buffer, ptr, samples.length).set(samples);
-  return ptr;
-}
-
-export async function loadWhistle(mod, cactBytes) {
-  const ptr = mallocBytes(mod, cactBytes);
-  const rc = mod._needle_load(ptr, BigInt(cactBytes.length));
-  if (rc < 0) {
-    const err = mod.UTF8ToString(mod._needle_last_error());
-    throw new Error(err || ('needle_load ' + rc));
-  }
-  if ((mod._needle_models() & 2) === 0) throw new Error('Whistle speech model did not load');
-  return rc;
-}
-
-export function transcribeWhistle(mod, samples, keywords) {
-  const pcmPtr = writeFloats(mod, samples);
-  const outCap = 65536;
-  const outPtr = mod._malloc(outCap);
-  try {
-    const rc = mod.ccall(
-      'needle_transcribe',
-      'number',
-      ['number', 'number', 'string', 'string', 'number', 'number', 'number'],
-      [pcmPtr, samples.length, 'en', keywords || '', 0, outPtr, outCap],
-    );
-    const json = mod.UTF8ToString(outPtr);
-    if (rc < 0) {
-      const err = mod.UTF8ToString(mod._needle_last_error());
-      throw new Error(err || json || ('needle_transcribe ' + rc));
-    }
-    const parsed = JSON.parse(json);
-    return { text: parsed.text || '', language: parsed.language || '', raw: parsed };
-  } finally {
-    mod._free(pcmPtr);
-    mod._free(outPtr);
-  }
-}
-
 export function doorFromTranscript(samples, targetText, transcript) {
   if (isSilence(samples) || !String(transcript || '').trim()) {
     return { ok: false, overlap: 0, heard: [] };
@@ -255,7 +226,7 @@ function tokenProbability(align, tokenIndex, tokenId) {
   return sum / frames.length;
 }
 
-export async function runCitrinetSession(session, piecesModel, samples, targetText, passAt) {
+export async function forwardCitrinet(session, samples) {
   const feats = citrinetFeatures(samples);
   if (!feats.length) throw new Error('Citrinet got no feature frames');
   const channels = framesAsChannelsFirst(feats);
@@ -266,10 +237,16 @@ export async function runCitrinetSession(session, piecesModel, samples, targetTe
   const out = await session.run({ audio_signal: audio, length });
   const logp = out.logprobs;
   const dims = logp.dims;
-  const timeSteps = dims[1];
-  const vocab = dims[2];
+  return {
+    data: logp.data,
+    timeSteps: dims[1],
+    vocab: dims[2],
+  };
+}
+
+export function gradeCitrinetFromLogp(logpData, timeSteps, vocab, piecesModel, targetText, passAt) {
   const encoded = encodeCitrinet(targetText, piecesModel);
-  const align = forceAlign(logp.data, timeSteps, vocab, encoded.ids);
+  const align = forceAlign(logpData, timeSteps, vocab, encoded.ids);
   const msPer = SUBSAMPLE * FRAME_MS;
   const target = normalizeWords(targetText);
   const display = tokenizeWords(targetText).map((row) => row.display);
@@ -298,11 +275,10 @@ export async function runCitrinetSession(session, piecesModel, samples, targetTe
       score,
       startMs: first < 0 ? 0 : first * msPer,
       endMs: last < 0 ? 0 : (last + 1) * msPer,
-      hint: '',
     });
   }
   while (words.length < target.length) {
-    words.push({ word: target[words.length], score: 0, startMs: 0, endMs: 0, hint: '' });
+    words.push({ word: target[words.length], score: 0, startMs: 0, endMs: 0 });
   }
   const avg = words.length ? words.reduce((s, w) => s + w.score, 0) / words.length : 0;
   const passCut = passAt;
@@ -316,127 +292,8 @@ export async function runCitrinetSession(session, piecesModel, samples, targetTe
     english: targetText,
     words,
     doorFail: false,
-    grader: 'citrinet-trial',
+    grader: 'citrinet',
   };
-}
-
-const SPELL_RULES = [
-  [/[θð]/u, 'th'],
-  [/ʃ/u, 'sh'],
-  [/tʃ/u, 'ch'],
-  [/dʒ/u, 'j'],
-  [/[sz]/u, 's'],
-  [/[ɹɻɾr]/u, 'r'],
-  [/[lɫɭ]/u, 'l'],
-  [/[vʋ]/u, 'v'],
-  [/f/u, 'f'],
-  [/b/u, 'b'],
-  [/p/u, 'p'],
-  [/d/u, 'd'],
-  [/t/u, 't'],
-  [/[kɡg]/u, 'k'],
-  [/ŋ/u, 'ng'],
-  [/m/u, 'm'],
-  [/n/u, 'n'],
-  [/w/u, 'w'],
-  [/h/u, 'h'],
-  [/j/u, 'y'],
-  [/[iɪ]/u, 'ee'],
-  [/ɛ/u, 'e'],
-  [/[æa]/u, 'a'],
-  [/[uʊ]/u, 'oo'],
-  [/[ʌəɔɑɒ]/u, 'u'],
-  [/o/u, 'o'],
-];
-
-export function spellPhone(phone) {
-  const raw = String(phone || '').replace(/[ˈˌː.˞̴̥̩̪̺̃̚ʰʲʷʼ]/gu, '');
-  if (!raw || raw === '▁' || raw === '<blk>' || raw === '<unk>' || raw === '<sos/eos>') return '';
-  for (let i = 0; i < SPELL_RULES.length; i++) {
-    if (SPELL_RULES[i][0].test(raw)) return SPELL_RULES[i][1];
-  }
-  if (/^[a-z]{1,3}$/.test(raw)) return raw;
-  return '';
-}
-
-function spellSequence(phones) {
-  const out = [];
-  for (let i = 0; i < phones.length; i++) {
-    const s = spellPhone(phones[i]);
-    if (s && out[out.length - 1] !== s) out.push(s);
-  }
-  return out;
-}
-
-function greedyPhones(flat, timeSteps, vocab, tokens, length) {
-  const limit = length || timeSteps;
-  const phones = [];
-  let prev = -1;
-  for (let t = 0; t < limit; t++) {
-    const base = t * vocab;
-    let best = flat[base];
-    let arg = 0;
-    for (let v = 1; v < vocab; v++) {
-      const p = flat[base + v];
-      if (p > best) {
-        best = p;
-        arg = v;
-      }
-    }
-    if (arg !== 0 && arg !== prev) {
-      const piece = tokens.get(arg) || '';
-      if (piece && piece !== '<blk>' && piece !== '<sos/eos>' && piece !== '<unk>' && piece !== '▁') phones.push(piece);
-    }
-    prev = arg;
-  }
-  return phones;
-}
-
-export function hintLine(expectedPhones, heardPhones) {
-  const exp = spellSequence(expectedPhones);
-  const heard = spellSequence(heardPhones);
-  const n = Math.max(exp.length, heard.length);
-  for (let i = 0; i < n; i++) {
-    const want = exp[i] || '';
-    const got = heard[i] || '';
-    if (want && got && want !== got) return 'This sounded like ' + got + '. Try ' + want + '.';
-  }
-  return '';
-}
-
-export async function redWordHint(rt, samples, word, startMs, endMs) {
-  try {
-    if (!rt || !rt.zipa || !rt.phonemize || !word) return '';
-    const sr = 16000;
-    const pad = Math.floor(sr * HINT_PAD_MS / 1000);
-    let a = Math.max(0, Math.floor(startMs * sr / 1000) - pad);
-    let b = Math.min(samples.length, Math.ceil(endMs * sr / 1000) + pad);
-    if (b - a < 160) {
-      a = 0;
-      b = Math.min(samples.length, 16000);
-    }
-    const slice = samples.subarray(a, b);
-    if (!slice.length || isSilence(slice)) return '';
-    const feats = zipaFeatures(slice);
-    if (!feats.length) return '';
-    const packed = framesAsTimeMajor(feats);
-    const ort = rt.zipa.ort || globalThis.ort;
-    const x = new ort.Tensor('float32', packed, [1, feats.length, 80]);
-    const xLens = new ort.Tensor('int64', BigInt64Array.from([BigInt(feats.length)]), [1]);
-    const out = await rt.zipa.run({ x, x_lens: xLens });
-    const logp = out.log_probs;
-    const steps = logp.dims[1];
-    const vocab = logp.dims[2];
-    const lenTensor = out.log_probs_len;
-    const limit = lenTensor && lenTensor.data && lenTensor.data.length ? Number(lenTensor.data[0]) : steps;
-    const heard = greedyPhones(logp.data, steps, vocab, rt.zipaTokens, limit);
-    const ipa = await rt.phonemize(word, 'en-us');
-    const expected = String((ipa && ipa[0]) || '').split('').filter(Boolean);
-    return hintLine(expected, heard);
-  } catch (err) {
-    console.warn('ZIPA hint skipped', err);
-    return '';
-  }
 }
 
 export function doorFailResult(targetText) {
@@ -449,152 +306,85 @@ export function doorFailResult(targetText) {
     english: targetText,
     words: [],
     doorFail: true,
-    grader: 'citrinet-trial',
+    grader: 'citrinet',
   };
-}
-
-export async function openDoor(mod, samples, targetText) {
-  if (isSilence(samples)) return { ok: false, overlap: 0, text: '' };
-  const keywords = normalizeWords(targetText).join('\n');
-  const heard = transcribeWhistle(mod, samples, keywords);
-  const door = doorFromTranscript(samples, targetText, heard.text);
-  return { ok: door.ok, overlap: door.overlap, text: heard.text };
 }
 
 export async function initTrialEngine(parts) {
   runtime = {
-    needle: parts.needle,
     citrinet: parts.citrinet,
     pieces: parts.pieces,
-    zipa: parts.zipa || null,
-    zipaTokens: parts.zipaTokens || null,
-    phonemize: parts.phonemize || null,
-    zipaError: parts.zipaError || '',
+    tokenById: parts.tokenById || null,
     ready: true,
   };
   return runtime;
 }
 
-let hintLoadPromise = null;
-
-/** Idle warm-up after core models load; shares `hintLoadPromise` with grading. */
-export function prefetchHintRuntime(fetchImpl) {
-  if (!runtime.ready || (runtime.zipa && runtime.phonemize)) return;
-  void ensureHintRuntime(fetchImpl).catch((err) => {
-    console.warn('ZIPA hint prefetch skipped', err);
-  });
-}
-
-async function ensureHintRuntime(fetchImpl) {
-  const rt = runtime;
-  if (!rt.ready) throw new Error('Citrinet trial is not loaded');
-  if (rt.zipa && rt.phonemize) return rt;
-  if (hintLoadPromise) return hintLoadPromise;
-  hintLoadPromise = (async () => {
-    const fetcher = fetchImpl || fetch;
-    const paths = bootHintPaths();
-    const responses = await Promise.all(paths.map(async (path) => {
-      const res = await fetcher(path);
-      if (!res.ok) throw new Error('missing ' + path);
-      return res;
-    }));
-    const ort = rt.citrinet.ort || globalThis.ort;
-    let zipa = null;
-    let zipaTokens = null;
-    let zipaError = '';
-    try {
-      const zipaBuf = await responses[0].arrayBuffer();
-      zipaTokens = parseZipaTokens(await responses[1].text());
-      zipa = await ort.InferenceSession.create(zipaBuf, { executionProviders: ['wasm'] });
-      zipa.ort = ort;
-    } catch (err) {
-      zipa = null;
-      zipaError = err && err.message ? err.message : String(err);
-    }
-    let phonemize = null;
-    try {
-      const espeak = await import('../vendor/espeak/dist/phonemizer.js');
-      phonemize = espeak.phonemize;
-    } catch (err) {
-      phonemize = null;
-      if (!zipaError) zipaError = err && err.message ? err.message : String(err);
-    }
-    runtime = Object.assign({}, rt, { zipa, zipaTokens, phonemize, zipaError });
-    return runtime;
-  })();
-  try {
-    return await hintLoadPromise;
-  } catch (err) {
-    hintLoadPromise = null;
-    throw err;
-  }
+function emptyPerf() {
+  return { citrinetMs: 0, totalMs: 0 };
 }
 
 export async function gradeTrialSamples(samples, targetText, passAt, hooks, opts) {
-  const options = opts || {};
-  const wantHints = options.hints !== false;
   const rt = runtime;
-  if (!rt.ready || !rt.needle || !rt.citrinet || !rt.pieces) throw new Error('Citrinet trial is not loaded');
-  const door = await openDoor(rt.needle, samples, targetText);
-  if (!door.ok) return { result: doorFailResult(targetText), door };
-  if (hooks && hooks.onDoorPass) hooks.onDoorPass();
-  const result = await runCitrinetSession(rt.citrinet, rt.pieces, samples, targetText, passAt);
-  if (wantHints && result.words.some((w) => w.score < passAt)) {
-    const hintRt = await ensureHintRuntime(options.fetchImpl);
-    await Promise.all(result.words.map(async (w) => {
-      if (w.score >= passAt) return;
-      w.hint = await redWordHint(hintRt, samples, w.word, w.startMs, w.endMs);
-    }));
-  }
-  return { result, door };
-}
+  if (!rt.ready || !rt.citrinet || !rt.pieces) throw new Error('Sound checker is not loaded');
+  const perf = emptyPerf();
+  const tAll = typeof performance !== 'undefined' ? performance.now() : 0;
 
-function parseZipaTokens(text) {
-  const map = new Map();
-  const lines = String(text || '').split('\n');
-  for (let i = 0; i < lines.length; i++) {
-    const line = lines[i];
-    if (!line.trim()) continue;
-    const cut = line.lastIndexOf(' ');
-    map.set(Number(line.slice(cut + 1)), line.slice(0, cut));
+  if (isSilence(samples)) {
+    perf.totalMs = typeof performance !== 'undefined' ? performance.now() - tAll : 0;
+    return {
+      result: doorFailResult(targetText),
+      door: { ok: false, overlap: 0, text: '' },
+      perf,
+    };
   }
-  return map;
+  const tCit = typeof performance !== 'undefined' ? performance.now() : 0;
+  const fwd = await forwardCitrinet(rt.citrinet, samples);
+  perf.citrinetMs = typeof performance !== 'undefined' ? performance.now() - tCit : 0;
+  const transcript = rt.tokenById
+    ? greedyCitrinetTranscript(fwd.data, fwd.timeSteps, fwd.vocab, rt.tokenById)
+    : '';
+  const door = doorFromTranscript(samples, targetText, transcript);
+  if (!door.ok) {
+    perf.totalMs = typeof performance !== 'undefined' ? performance.now() - tAll : 0;
+    return { result: doorFailResult(targetText), door, perf };
+  }
+  if (hooks && hooks.onDoorPass) hooks.onDoorPass();
+  const result = gradeCitrinetFromLogp(
+    fwd.data,
+    fwd.timeSteps,
+    fwd.vocab,
+    rt.pieces,
+    targetText,
+    passAt,
+  );
+  perf.totalMs = typeof performance !== 'undefined' ? performance.now() - tAll : 0;
+  return { result, door, perf };
 }
 
 export async function bootTrialInPage(opts) {
   const fetchImpl = opts.fetchImpl || fetch;
   const ort = opts.ort || globalThis.ort;
-  const createNeedle = opts.createNeedle || globalThis.createNeedle;
   if (!ort || !ort.InferenceSession) throw new Error('onnxruntime-web is not on the page');
-  if (typeof createNeedle !== 'function') throw new Error('Needle WASM engine is not on the page');
   ort.env.wasm.numThreads = 1;
   ort.env.wasm.proxy = false;
   if (opts.wasmPaths) ort.env.wasm.wasmPaths = opts.wasmPaths;
-  const paths = opts.paths || (opts.loadHints ? bootAssetPaths() : bootCorePaths());
+  const paths = opts.paths || bootModelPaths();
   const responses = await Promise.all(paths.map(async (path) => {
     const res = await fetchImpl(path);
     if (!res.ok) throw new Error('missing ' + path);
     return res;
   }));
-  const cact = new Uint8Array(await responses[0].arrayBuffer());
-  const citrinetBuf = await responses[1].arrayBuffer();
-  const pieces = loadCitrinetPieces(await responses[2].json());
-  const needle = await createNeedle();
-  await loadWhistle(needle, cact);
+  const citrinetBuf = await responses[0].arrayBuffer();
+  const piecesJson = await responses[1].json();
+  const pieces = loadCitrinetPieces(piecesJson);
+  const tokenById = loadCitrinetTokenMap(piecesJson);
   const citrinet = await ort.InferenceSession.create(citrinetBuf, { executionProviders: ['wasm'] });
   citrinet.ort = ort;
-  hintLoadPromise = null;
   await initTrialEngine({
-    needle,
     citrinet,
     pieces,
-    zipa: null,
-    zipaTokens: null,
-    phonemize: null,
-    zipaError: '',
+    tokenById,
   });
-  if (opts.loadHints) await ensureHintRuntime(fetchImpl);
-  else prefetchHintRuntime(fetchImpl);
   return runtime;
 }
-

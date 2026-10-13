@@ -1,6 +1,4 @@
-// 80-dim log-mel features.
-// Citrinet uses the sherpa-onnx NeMo CTC settings (librosa/Slaney mel, Hann, no DC).
-// ZIPA uses the lhotse/Kaldi fbank settings from the ZIPA ONNX inference script.
+// 80-dim log-mel features for Citrinet (sherpa-onnx NeMo CTC: Slaney mel, Hann, no DC).
 
 const F32_EPS = 1.1920928955078125e-7;
 
@@ -213,11 +211,6 @@ export function citrinetFeatures(samples) {
   return normalizePerFeature(logMelFrames(samples, 'nemo'));
 }
 
-/** ZIPA / lhotse fbank, shape [T, 80], not per-feature normalized. */
-export function zipaFeatures(samples) {
-  return logMelFrames(samples, 'zipa');
-}
-
 /** Pack [T, 80] frames into a channel-first [1, 80, T] buffer. */
 export function framesAsChannelsFirst(frames) {
   const t = frames.length;
@@ -229,10 +222,3 @@ export function framesAsChannelsFirst(frames) {
   return out;
 }
 
-/** Pack [T, 80] frames into a time-major [1, T, 80] buffer. */
-export function framesAsTimeMajor(frames) {
-  const t = frames.length;
-  const out = new Float32Array(t * 80);
-  for (let i = 0; i < t; i++) out.set(frames[i], i * 80);
-  return out;
-}
