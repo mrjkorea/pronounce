@@ -1,15 +1,15 @@
 #!/usr/bin/env node
 /**
- * Headless Chrome benchmark: full trial vs ?trial=citrinet-only.
+ * Headless Chrome benchmark for the Citrinet checker.
  * Run from repo root: node tools/bench-trial.mjs
  */
 import { spawn } from 'node:child_process';
 import { mkdir, readFile, writeFile, stat } from 'node:fs/promises';
-import { bootCorePaths, bootCitrinetOnlyPaths, bootHintPaths } from '../src/trial.js';
 import { createServer } from 'node:http';
 import { dirname, join } from 'node:path';
 import { fileURLToPath } from 'node:url';
 import { chromium } from 'playwright';
+import { bootModelPaths } from '../src/trial.js';
 
 const root = join(dirname(fileURLToPath(import.meta.url)), '..');
 const wavDir = join(root, 'test', 'bench-wavs');
@@ -68,7 +68,6 @@ function startStaticServer() {
           json: 'application/json',
           onnx: 'application/octet-stream',
           wasm: 'application/wasm',
-          cact: 'application/octet-stream',
           wav: 'audio/wav',
           mp3: 'audio/mpeg',
           txt: 'text/plain',
@@ -87,72 +86,55 @@ function startStaticServer() {
   });
 }
 
-async function diskBytesForMode(mode) {
-  const paths = mode === 'citrinet-only'
-    ? bootCitrinetOnlyPaths()
-    : bootCorePaths().concat(bootHintPaths());
+async function diskBootBytes() {
   const extras = [
     'vendor/ort/ort.wasm.min.js',
     'vendor/ort/ort-wasm-simd-threaded.asyncify.mjs',
     'vendor/ort/ort-wasm-simd-threaded.asyncify.wasm',
-    'vendor/needle/needle.js',
-    'vendor/needle/needle.wasm',
-    'vendor/espeak/dist/phonemizer.js',
   ];
-  const all = [...new Set(paths.concat(mode === 'citrinet-only' ? extras.filter((p) => !p.includes('needle') && !p.includes('zipa') && !p.includes('espeak')) : extras))];
+  const all = [...new Set(bootModelPaths().concat(extras))];
   let sum = 0;
   for (const rel of all) {
-    try {
-      const st = await stat(join(root, rel));
-      sum += st.size;
-    } catch (_) {}
+    const st = await stat(join(root, rel));
+    sum += st.size;
   }
   return sum;
 }
 
 function trackablePath(url) {
   const u = String(url);
-  return (
-    u.includes('/models/')
-    || u.includes('/vendor/ort/')
-    || u.includes('/vendor/needle/')
-    || u.includes('/vendor/espeak/')
-  );
+  return u.includes('/models/') || u.includes('/vendor/ort/');
 }
 
-async function benchMode(baseUrl, mode) {
-  const query = mode === 'citrinet-only' ? '?bench=1&trial=citrinet-only' : '?bench=1';
+async function bench(baseUrl) {
   const browser = await chromium.launch({ headless: true });
   const context = await browser.newContext();
   const page = await context.newPage();
   page.setDefaultTimeout(300000);
-  const bytesByUrl = new Map();
   let bootBytes = 0;
   page.on('response', async (res) => {
     const url = res.url();
     if (!trackablePath(url)) return;
     try {
       const body = await res.body();
-      const prev = bytesByUrl.get(url) || 0;
-      if (prev === 0) bootBytes += body.length;
-      bytesByUrl.set(url, prev + body.length);
+      bootBytes += body.length;
     } catch (_) {}
   });
   const t0 = Date.now();
-  await page.goto(baseUrl + query, { waitUntil: 'domcontentloaded' });
+  await page.goto(baseUrl + '?bench=1', { waitUntil: 'domcontentloaded' });
   await page.waitForFunction(() => window.__mrjPronounceBench && document.getElementById('modelLabel')?.classList.contains('done'), {
     timeout: 300000,
   });
   const readyMs = Date.now() - t0;
   const boot = await page.evaluate(() => window.__mrjTrialBoot());
 
-  const checkTimes = [];
   const correctUrl = `${baseUrl}test/bench-wavs/correct-it-is-here.wav`;
+  const checkTimes = [];
   for (let i = 0; i < 3; i++) {
     const ms = await page.evaluate(async ({ url, sentence }) => {
       const blob = await fetch(url).then((r) => r.blob());
       const t = performance.now();
-      await window.__mrjPronounceBench(blob, sentence, { hints: true });
+      await window.__mrjPronounceBench(blob, sentence, {});
       return performance.now() - t;
     }, { url: correctUrl, sentence: CHECK_SENTENCE });
     checkTimes.push(Math.round(ms));
@@ -165,7 +147,7 @@ async function benchMode(baseUrl, mode) {
       const clipUrl = `${baseUrl}test/bench-wavs/${clip.file}`;
       const out = await page.evaluate(async ({ url, target, passAt }) => {
         const blob = await fetch(url).then((r) => r.blob());
-        const graded = await window.__mrjPronounceBench(blob, target, { hints: true, passAt });
+        const graded = await window.__mrjPronounceBench(blob, target, { passAt });
         const words = (graded.result.words || []).map((w) => ({
           word: w.word,
           score: Math.round(w.score || 0),
@@ -182,21 +164,17 @@ async function benchMode(baseUrl, mode) {
     }
   }
 
-  const samplePerf = accuracy[60].correct.perf || {};
-  const diskBootBytes = await diskBytesForMode(mode);
+  const diskBootBytesVal = await diskBootBytes();
   await browser.close();
   return {
-    mode,
-    trialMode: boot.trialMode,
     readyMs,
     checkTimes,
-    downloadBytes: bootBytes,
-    downloadMb: Math.round((bootBytes / (1024 * 1024)) * 10) / 10,
-    diskBootBytes,
-    diskBootMb: Math.round((diskBootBytes / (1024 * 1024)) * 10) / 10,
-    perfSample: samplePerf,
+    networkBootBytes: bootBytes,
+    diskBootBytes: diskBootBytesVal,
+    diskBootMb: Math.round((diskBootBytesVal / (1024 * 1024)) * 10) / 10,
+    perfSample: accuracy[60].correct.perf,
     accuracy,
-    assets: [...bytesByUrl.entries()].map(([url, n]) => ({ url: url.replace(baseUrl, ''), bytes: n })),
+    boot,
   };
 }
 
@@ -204,13 +182,10 @@ async function main() {
   await ensureWavs();
   const { server, url } = await startStaticServer();
   try {
-    const full = await benchMode(url, 'full');
-    const only = await benchMode(url, 'citrinet-only');
     const report = {
       generatedAt: new Date().toISOString(),
       checkSentence: CHECK_SENTENCE,
-      full,
-      citrinetOnly: only,
+      citrinet: await bench(url),
     };
     const outPath = join(root, 'test', 'bench-trial-report.json');
     await writeFile(outPath, JSON.stringify(report, null, 2));

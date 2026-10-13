@@ -1,18 +1,19 @@
 import test from 'node:test';
 import assert from 'node:assert/strict';
 import {
-  getTrialMode,
   greedyCitrinetTranscript,
   doorFromTranscript,
   overlapRatio,
   normalizeWords,
   isSilence,
+  bootModelPaths,
 } from '../src/trial.js';
 
-test('getTrialMode defaults to full', () => {
-  assert.equal(getTrialMode(''), 'full');
-  assert.equal(getTrialMode('?trial=full'), 'full');
-  assert.equal(getTrialMode('?trial=citrinet-only'), 'citrinet-only');
+test('bootModelPaths lists citrinet assets only', () => {
+  assert.deepEqual(bootModelPaths(), [
+    'models/citrinet/model.int8.onnx',
+    'models/citrinet/sp_pieces.json',
+  ]);
 });
 
 test('doorFromTranscript rejects silence and empty transcript', () => {

@@ -1,12 +1,5 @@
-import {
-  loadG2P,
-  expectedPhoneSequence,
-  forcedAlignGop,
-  aggregate,
-  tokenizeWords,
-  unknownWords,
-} from './engine.js?v=20260930-words';
-import { decodeAudioToMono, audioStats, normalizeForModel, trimSilence, capSpeechWindow } from './audio.js';
+import { tokenizeWords } from './engine.js?v=20260930-words';
+import { decodeAudioToMono } from './audio.js';
 import { sheetLines } from './sheet.js';
 import {
   FLOW_STORAGE_KEY,
@@ -28,16 +21,14 @@ import {
   timerRunning,
   timerSeconds,
   tryTeacherPassword,
-} from './flow.js?v=20261014-bench';
+} from './flow.js?v=20261014-citrinet';
 import {
   DOOR_CHECKING_TEXT,
   DOOR_FAIL_TEXT,
-  bootCitrinetOnlyPaths,
-  bootCorePaths,
+  bootModelPaths,
   bootTrialInPage,
-  getTrialMode,
   gradeTrialSamples,
-} from './trial.js?v=20261014-bench';
+} from './trial.js?v=20261014-citrinet';
 
 import {
   PROGRAM,
@@ -58,12 +49,7 @@ const LOCAL_HEAR = new Set([
   'audio/hear/it-is-here.mp3',
   'audio/hear/it-is-there.mp3',
 ]);
-const PASS_SCORE = 0.6;
-// Set GRADER to 'wav2vec2' to load the old wav2vec2 checker again.
-const GRADER = 'citrinet-trial';
-const TRIAL_MODE = getTrialMode();
 const CITRINET_PASS = 60;
-const MS_PER_WORD = 200;
 let activeStudentKey = '';
 const remoteSync = {
   packLoadOk: false,
@@ -94,8 +80,6 @@ const UI_LANGS = [
   ['pl', 'Polski'],
 ];
 let l1Pack = null;
-const WASM_THREADS = 1;
-const CACHE_NAME = 'day4-wav2vec2-int8-v1';
 const BOOK_ORDER = ['basic_a', 'basic_b', 'basic_c', 'int3a', 'int3b', 'int3c', 'int2a', 'int2b', 'int2c'];
 
 const QUESTION_CODES = {
@@ -128,7 +112,6 @@ const modelTrack = typeof document !== 'undefined' ? document.getElementById('mo
 
 let books = [];
 let byId = new Map();
-let gradeWorker = null;
 let checkerReady = false;
 let modelError = '';
 let capture = null;
@@ -140,8 +123,6 @@ let pronounceChecking = false;
 let part1Busy = false;
 let rushInFlight = 0;
 const rushChecking = new Map();
-let logitSeq = 0;
-const logitWaiters = new Map();
 let chainTail = Promise.resolve();
 let scoreTail = Promise.resolve();
 let clockTimer = null;
@@ -456,195 +437,24 @@ function exposeBenchHook() {
   if (!checkerReady) return;
   if (!benchModeEnabled()) return;
   window.__mrjPronounceBench = async (blob, english, gradeOpts) => {
-    const opts = Object.assign({ hints: TRIAL_MODE !== 'citrinet-only' }, gradeOpts || {});
-    const passAt = typeof opts.passAt === 'number' ? opts.passAt : CITRINET_PASS;
-    if (GRADER === 'citrinet-trial') {
-      const target = scoringTarget(english);
-      const samples = await decodeAudioToMono(blob, 16000);
-      const graded = await gradeTrialSamples(samples, target, passAt, null, opts);
-      return { result: graded.result, door: graded.door, perf: graded.perf, trialMode: TRIAL_MODE };
-    }
-    const result = await gradeBlob(blob, english, null, opts);
-    return { result, perf: null, trialMode: TRIAL_MODE };
+    const passAt = typeof gradeOpts?.passAt === 'number' ? gradeOpts.passAt : CITRINET_PASS;
+    const target = scoringTarget(english);
+    const samples = await decodeAudioToMono(blob, 16000);
+    const graded = await gradeTrialSamples(samples, target, passAt, null, gradeOpts);
+    return { result: graded.result, door: graded.door, perf: graded.perf };
   };
   window.__mrjTrialBoot = () => ({
-    trialMode: TRIAL_MODE,
-    grader: GRADER,
+    grader: 'citrinet',
     ready: checkerReady,
   });
 }
 
-function pathsBootWillFetch() {
-  if (GRADER === 'citrinet-trial') {
-    return TRIAL_MODE === 'citrinet-only' ? bootCitrinetOnlyPaths() : bootCorePaths();
-  }
-  return ['models/wav2vec2/model_int8.onnx'];
-}
-
-async function readBody(res, onChunk) {
-  const reader = res.body.getReader();
-  const chunks = [];
-  let got = 0;
-  while (true) {
-    const { done, value } = await reader.read();
-    if (done) break;
-    chunks.push(value);
-    got += value.byteLength;
-    onChunk(value.byteLength);
-  }
-  const out = new Uint8Array(got);
-  let offset = 0;
-  for (const chunk of chunks) {
-    out.set(chunk, offset);
-    offset += chunk.byteLength;
-  }
-  return out;
-}
-
-async function assembleModel(onProgress) {
-  const cache = await caches.open(CACHE_NAME);
-  const key = new Request(new URL('models/wav2vec2/model_int8.onnx', window.location.href).href);
-  const hit = await cache.match(key);
-  if (hit) {
-    const buf = await hit.arrayBuffer();
-    if (buf.byteLength === 317712780) {
-      onProgress(1);
-      return buf;
-    }
-    await cache.delete(key);
-  }
-  const manifest = await fetch('models/wav2vec2/manifest.json').then((r) => {
-    if (!r.ok) throw new Error('model manifest missing');
-    return r.json();
-  });
-  const total = manifest.total;
-  const parts = new Uint8Array(total);
-  let offset = 0;
-  let got = 0;
-  for (const part of manifest.parts) {
-    const res = await fetch('models/wav2vec2/' + part.name);
-    if (!res.ok) throw new Error('missing ' + part.name);
-    const bytes = await readBody(res, (n) => {
-      got += n;
-      onProgress(got / total);
-    });
-    if (bytes.byteLength !== part.bytes) throw new Error('bad size ' + part.name);
-    parts.set(bytes, offset);
-    offset += bytes.byteLength;
-  }
-  if (offset !== total || offset !== 317712780) throw new Error('model size mismatch');
-  const buf = parts.buffer;
-  await cache.put(key, new Response(buf.slice(0), {
-    headers: { 'Content-Type': 'application/octet-stream', 'Content-Length': String(total) },
-  }));
-  onProgress(1);
-  return buf;
-}
-
-function onWorkerMessage(ev) {
-  const msg = ev.data || {};
-  if (msg.type === 'ready') {
-    if (msg.numThreads !== WASM_THREADS) {
-      modelError = 'Sound checker started with the wrong thread count.';
-      modelLabel.textContent = modelError;
-      return;
-    }
-    checkerReady = true;
-    return;
-  }
-  if (msg.type === 'logits') {
-    const waiter = logitWaiters.get(msg.id);
-    if (!waiter) return;
-    logitWaiters.delete(msg.id);
-    waiter.resolve(msg);
-    return;
-  }
-  if (msg.type === 'error') {
-    const waiter = msg.id && logitWaiters.get(msg.id);
-    if (waiter) {
-      logitWaiters.delete(msg.id);
-      waiter.reject(new Error(msg.message || 'sound checker failed'));
-      return;
-    }
-    modelError = msg.message || 'Sound checker did not start.';
-  }
-}
-
-function requestLogits(samples) {
-  const id = ++logitSeq;
-  const input = new Float32Array(samples);
-  return new Promise((resolve, reject) => {
-    logitWaiters.set(id, { resolve, reject });
-    gradeWorker.postMessage({ type: 'run', id, input }, [input.buffer]);
-  });
-}
-
-function startGradeWorker(modelBuffer) {
-  gradeWorker = new Worker(new URL('./grade-worker.js', import.meta.url));
-  return new Promise((resolve, reject) => {
-    const onReady = (ev) => {
-      onWorkerMessage(ev);
-      if (checkerReady) {
-        gradeWorker.removeEventListener('message', onReady);
-        gradeWorker.addEventListener('message', onWorkerMessage);
-        resolve();
-      } else if (modelError) {
-        reject(new Error(modelError));
-      }
-    };
-    gradeWorker.addEventListener('message', onReady);
-    gradeWorker.addEventListener('error', () => {
-      reject(new Error('sound checker worker failed'));
-    });
-    const wasmPaths = new URL('../vendor/ort/', import.meta.url).href;
-    gradeWorker.postMessage({
-      type: 'init',
-      model: modelBuffer,
-      wasmPaths,
-      numThreads: WASM_THREADS,
-    }, [modelBuffer]);
-  });
-}
-
 async function bootModel() {
-  if (GRADER === 'citrinet-trial') {
-    try {
-      setProgress(0.02, 'Loading the sound checker…');
-      const wasmPaths = new URL('../vendor/ort/', import.meta.url).href;
-      const loaded = await bootTrialInPage({
-        wasmPaths,
-        paths: pathsBootWillFetch(),
-        mode: TRIAL_MODE,
-        loadHints: TRIAL_MODE !== 'citrinet-only',
-      });
-      checkerReady = true;
-      if (loaded.zipaError) console.warn('ZIPA hint skipped', loaded.zipaError);
-      setProgress(1, 'Ready');
-      markModelReady();
-      render();
-    } catch (err) {
-      modelError = err && err.message ? err.message : String(err);
-      modelLabel.textContent = 'Sound checker did not start. ' + modelError;
-      console.error(err);
-      render();
-    }
-    return;
-  }
-  // Old checker. Set GRADER = 'wav2vec2' above to use this path.
   try {
     setProgress(0.02, 'Loading the sound checker…');
-    const g2p = loadG2P('');
-    const buf = await assembleModel((frac) => {
-      setProgress(frac * 0.9, 'Downloading the sound checker… ' + Math.round(frac * 100) + '%');
-    });
-    setProgress(0.92, 'Starting the sound checker…');
-    await startGradeWorker(buf);
-    if (new URLSearchParams(location.search).get('probe') === '1') {
-      const silence = new Float32Array(1600);
-      const out = await requestLogits(silence);
-      document.documentElement.dataset.probe = out.dims.join('x');
-    }
-    await g2p;
+    const wasmPaths = new URL('../vendor/ort/', import.meta.url).href;
+    await bootTrialInPage({ wasmPaths, paths: bootModelPaths() });
+    checkerReady = true;
     setProgress(1, 'Ready');
     markModelReady();
     render();
@@ -768,15 +578,11 @@ function noteCue() {
 
 function wordChipsHtml(words, record) {
   if (!words || !words.length) return '';
-  const citrinet = !!(record && record.grader === 'citrinet-trial');
   const chips = words.map((w) => {
-    const pct = citrinet ? Math.round(w.score || 0) : Math.round((w.score || 0) * 100);
-    const good = citrinet ? (w.score || 0) >= CITRINET_PASS : (w.score || 0) >= PASS_SCORE;
+    const pct = Math.round(w.score || 0);
+    const good = (w.score || 0) >= CITRINET_PASS;
     const cls = good ? 'good' : 'bad';
-    const hint = citrinet && !good && w.hint
-      ? `<span class="word-hint">${escapeHtml(w.hint)}</span>`
-      : '';
-    return `<span class="word-chip-wrap"><span class="word-chip ${cls}" title="${pct}%">${escapeHtml(w.word)}</span>${hint}</span>`;
+    return `<span class="word-chip-wrap"><span class="word-chip ${cls}" title="${pct}%">${escapeHtml(w.word)}</span></span>`;
   }).join('');
   return `<div class="chips">${chips}</div>`;
 }
@@ -1614,74 +1420,11 @@ async function endPart2(bookId, unitId) {
   else if (meta) meta.ctx.close().catch(() => {});
 }
 
-function weakWords(result) {
-  return (result.words || []).filter((w) => (w.score || 0) < PASS_SCORE).map((w) => w.word);
-}
-
 async function gradeBlob(blob, english, hooks, gradeOpts) {
-  if (GRADER === 'citrinet-trial') {
-    const target = scoringTarget(english);
-    const samples = await decodeAudioToMono(blob, 16000);
-    const graded = await gradeTrialSamples(samples, target, CITRINET_PASS, hooks, gradeOpts);
-    return graded.result;
-  }
   const target = scoringTarget(english);
-  const t0 = performance.now();
   const samples = await decodeAudioToMono(blob, 16000);
-  const stats = audioStats(samples, 16000);
-  if (stats.durationMs < 80) {
-    const err = new Error('too_short');
-    err.code = 'too_short';
-    throw err;
-  }
-  const trimmed = capSpeechWindow(trimSilence(samples, 16000, 0.006, 80), 16000, 4500);
-  const trimmedStats = audioStats(trimmed, 16000);
-  const input = normalizeForModel(trimmed);
-  const logitsMsg = await requestLogits(input);
-  const logitsArr = logitsMsg.data;
-  const T = logitsMsg.dims[1];
-  const V = logitsMsg.dims[2];
-  const logits = new Array(T);
-  for (let t = 0; t < T; t++) logits[t] = logitsArr.subarray(t * V, (t + 1) * V);
-  const { phones, words } = expectedPhoneSequence(target);
-  const phoneScores = forcedAlignGop(logits, phones, 0);
-  const latencyMs = performance.now() - t0;
-  const result = aggregate(
-    target,
-    words,
-    phoneScores,
-    trimmedStats.durationMs,
-    16000,
-    'wav2vec2-lv-60-espeak-cv-ft-onnx-int8',
-    latencyMs,
-    {
-      clipping: stats.clipping,
-      too_quiet: trimmedStats.tooQuiet,
-      snr_est: trimmedStats.snrEst,
-      warnings: trimmedStats.tooQuiet ? ['audio_too_quiet'] : [],
-    },
-  );
-  const missing = unknownWords(target);
-  const wordCount = tokenizeWords(target).length;
-  const longEnough = trimmedStats.durationMs >= wordCount * MS_PER_WORD;
-  const realSpeech = !trimmedStats.tooQuiet && longEnough && missing.length === 0;
-  const score = result.overall.score || 0;
-  let reason = '';
-  if (missing.length) reason = 'Missing from the word list: ' + missing.join(', ');
-  else if (trimmedStats.tooQuiet) reason = 'Too quiet. Say it again in a clear voice.';
-  else if (!longEnough) reason = 'Too short. Say the whole English line.';
-  else if (score < PASS_SCORE) reason = 'The sounds did not match. Loud noise does not pass.';
-  const pass = score >= PASS_SCORE && realSpeech;
-  const scorePct = Math.round(score * 100);
-  return {
-    score,
-    scorePct,
-    pass,
-    weak: weakWords(result),
-    reason: pass ? '' : reason,
-    english: target,
-    words: result.words || [],
-  };
+  const graded = await gradeTrialSamples(samples, target, CITRINET_PASS, hooks, gradeOpts);
+  return graded.result;
 }
 
 function playAudioUrl(url, times = 1) {
@@ -1891,7 +1634,7 @@ if (appEl) {
 }
 
 export {
-  PASS_SCORE,
+  CITRINET_PASS,
   QUESTION_CODES,
   analyzeUnit,
   scoringTarget,
