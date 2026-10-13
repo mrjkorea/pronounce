@@ -44,11 +44,6 @@ import {
 } from './progress-merge.js?v=20261007-authpack';
 import { reportScoredActivity } from './score-reporting.js?v=20261011-savefix';
 
-const HEAR_BASE = 'https://mrjkorea.github.io/day4-speak/';
-const LOCAL_HEAR = new Set([
-  'audio/hear/it-is-here.mp3',
-  'audio/hear/it-is-there.mp3',
-]);
 const CITRINET_PASS = 60;
 let activeStudentKey = '';
 const remoteSync = {
@@ -704,13 +699,11 @@ function renderSharedQuestion(bookId, unit, scores, ready, view) {
 }
 
 function hearSrc(rel) {
-  if (!rel) return '';
-  if (LOCAL_HEAR.has(rel)) return rel;
-  return HEAR_BASE + rel;
+  return rel || '';
 }
 
 function koHtml(korean, imageRel, local, extraHtml) {
-  const src = imageRel ? (local ? imageRel : HEAR_BASE + imageRel) : '';
+  const src = imageRel || '';
   const pic = src ? `<img class="row-pic" alt="" src="${escapeHtml(src)}">` : '';
   return `<div class="ko-wrap">${pic}<div class="ko-text"><div class="ko">${escapeHtml(korean)}</div>${extraHtml || ''}</div></div>`;
 }
