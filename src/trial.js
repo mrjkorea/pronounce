@@ -14,14 +14,23 @@ export const HINT_PAD_MS = 80;
 const BLANK_ID = 1024;
 const NEG = -1e30;
 
-export function bootAssetPaths() {
+export function bootCorePaths() {
   return [
     'models/whistle/whistle.cact',
     'models/citrinet/model.int8.onnx',
     'models/citrinet/sp_pieces.json',
+  ];
+}
+
+export function bootHintPaths() {
+  return [
     'models/zipa/model.int8.onnx',
     'models/zipa/tokens.txt',
   ];
+}
+
+export function bootAssetPaths() {
+  return bootCorePaths().concat(bootHintPaths());
 }
 
 let runtime = {
@@ -466,17 +475,68 @@ export async function initTrialEngine(parts) {
   return runtime;
 }
 
-export async function gradeTrialSamples(samples, targetText, passAt, hooks) {
+let hintLoadPromise = null;
+
+async function ensureHintRuntime(fetchImpl) {
+  const rt = runtime;
+  if (!rt.ready) throw new Error('Citrinet trial is not loaded');
+  if (rt.zipa && rt.phonemize) return rt;
+  if (hintLoadPromise) return hintLoadPromise;
+  hintLoadPromise = (async () => {
+    const fetcher = fetchImpl || fetch;
+    const paths = bootHintPaths();
+    const responses = await Promise.all(paths.map(async (path) => {
+      const res = await fetcher(path);
+      if (!res.ok) throw new Error('missing ' + path);
+      return res;
+    }));
+    const ort = rt.citrinet.ort || globalThis.ort;
+    let zipa = null;
+    let zipaTokens = null;
+    let zipaError = '';
+    try {
+      const zipaBuf = await responses[0].arrayBuffer();
+      zipaTokens = parseZipaTokens(await responses[1].text());
+      zipa = await ort.InferenceSession.create(zipaBuf, { executionProviders: ['wasm'] });
+      zipa.ort = ort;
+    } catch (err) {
+      zipa = null;
+      zipaError = err && err.message ? err.message : String(err);
+    }
+    let phonemize = null;
+    try {
+      const espeak = await import('../vendor/espeak/dist/phonemizer.js');
+      phonemize = espeak.phonemize;
+    } catch (err) {
+      phonemize = null;
+      if (!zipaError) zipaError = err && err.message ? err.message : String(err);
+    }
+    runtime = Object.assign({}, rt, { zipa, zipaTokens, phonemize, zipaError });
+    return runtime;
+  })();
+  try {
+    return await hintLoadPromise;
+  } catch (err) {
+    hintLoadPromise = null;
+    throw err;
+  }
+}
+
+export async function gradeTrialSamples(samples, targetText, passAt, hooks, opts) {
+  const options = opts || {};
+  const wantHints = options.hints !== false;
   const rt = runtime;
   if (!rt.ready || !rt.needle || !rt.citrinet || !rt.pieces) throw new Error('Citrinet trial is not loaded');
   const door = await openDoor(rt.needle, samples, targetText);
   if (!door.ok) return { result: doorFailResult(targetText), door };
-  if (hooks && hooks.onDoorPass) await hooks.onDoorPass();
+  if (hooks && hooks.onDoorPass) hooks.onDoorPass();
   const result = await runCitrinetSession(rt.citrinet, rt.pieces, samples, targetText, passAt);
-  for (let i = 0; i < result.words.length; i++) {
-    const w = result.words[i];
-    if (w.score >= passAt) continue;
-    w.hint = await redWordHint(rt, samples, w.word, w.startMs, w.endMs);
+  if (wantHints && result.words.some((w) => w.score < passAt)) {
+    const hintRt = await ensureHintRuntime(options.fetchImpl);
+    await Promise.all(result.words.map(async (w) => {
+      if (w.score >= passAt) return;
+      w.hint = await redWordHint(hintRt, samples, w.word, w.startMs, w.endMs);
+    }));
   }
   return { result, door };
 }
@@ -502,7 +562,7 @@ export async function bootTrialInPage(opts) {
   ort.env.wasm.numThreads = 1;
   ort.env.wasm.proxy = false;
   if (opts.wasmPaths) ort.env.wasm.wasmPaths = opts.wasmPaths;
-  const paths = opts.paths || bootAssetPaths();
+  const paths = opts.paths || (opts.loadHints ? bootAssetPaths() : bootCorePaths());
   const responses = await Promise.all(paths.map(async (path) => {
     const res = await fetchImpl(path);
     if (!res.ok) throw new Error('missing ' + path);
@@ -515,25 +575,17 @@ export async function bootTrialInPage(opts) {
   await loadWhistle(needle, cact);
   const citrinet = await ort.InferenceSession.create(citrinetBuf, { executionProviders: ['wasm'] });
   citrinet.ort = ort;
-  let zipa = null;
-  let zipaTokens = null;
-  let zipaError = '';
-  try {
-    const zipaBuf = await responses[3].arrayBuffer();
-    zipaTokens = parseZipaTokens(await responses[4].text());
-    zipa = await ort.InferenceSession.create(zipaBuf, { executionProviders: ['wasm'] });
-    zipa.ort = ort;
-  } catch (err) {
-    zipa = null;
-    zipaError = err && err.message ? err.message : String(err);
-  }
-  let phonemize = null;
-  try {
-    const espeak = await import('../vendor/espeak/dist/phonemizer.js');
-    phonemize = espeak.phonemize;
-  } catch (err) {
-    phonemize = null;
-    if (!zipaError) zipaError = err && err.message ? err.message : String(err);
-  }
-  return initTrialEngine({ needle, citrinet, pieces, zipa, zipaTokens, phonemize, zipaError });
+  hintLoadPromise = null;
+  await initTrialEngine({
+    needle,
+    citrinet,
+    pieces,
+    zipa: null,
+    zipaTokens: null,
+    phonemize: null,
+    zipaError: '',
+  });
+  if (opts.loadHints) await ensureHintRuntime(fetchImpl);
+  return runtime;
 }
+
