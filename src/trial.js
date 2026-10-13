@@ -477,6 +477,14 @@ export async function initTrialEngine(parts) {
 
 let hintLoadPromise = null;
 
+/** Idle warm-up after core models load; shares `hintLoadPromise` with grading. */
+export function prefetchHintRuntime(fetchImpl) {
+  if (!runtime.ready || (runtime.zipa && runtime.phonemize)) return;
+  void ensureHintRuntime(fetchImpl).catch((err) => {
+    console.warn('ZIPA hint prefetch skipped', err);
+  });
+}
+
 async function ensureHintRuntime(fetchImpl) {
   const rt = runtime;
   if (!rt.ready) throw new Error('Citrinet trial is not loaded');
@@ -586,6 +594,7 @@ export async function bootTrialInPage(opts) {
     zipaError: '',
   });
   if (opts.loadHints) await ensureHintRuntime(fetchImpl);
+  else prefetchHintRuntime(fetchImpl);
   return runtime;
 }
 
