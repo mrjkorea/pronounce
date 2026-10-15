@@ -1,0 +1,40 @@
+<!DOCTYPE html>
+<html lang="ko" data-book="green">
+<head>
+  <meta charset="utf-8">
+  <meta name="robots" content="noindex">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Pronounce · Day 4</title>
+  <link rel="stylesheet" href="https://mrjkorea.github.io/mrj-signin/mrj-auth.css">
+  <meta name="mrj-build" content="20261016-hubert-harper">
+  <link rel="stylesheet" href="src/styles.css?v=20261016-hubert-harper">
+  <link rel="stylesheet" href="preview-assets/mrj-theme.css?v=p1">
+  <link rel="stylesheet" href="preview-assets/pronounce-preview.css?v=p1">
+  <script src="https://mrjkorea.github.io/mrj-signin/mrj-auth.js"></script>
+  <script src="https://mrjkorea.github.io/mrj-signin/mrj-auth-boot.js" data-mrj-app="pronounce"></script>
+</head>
+<body class="auth-wait">
+  <header class="top">
+    <div class="top-row">
+      <a class="brand" href="#/">Pronounce · Day 4</a>
+      <label class="lang-label"><select id="langMenu" aria-label="Language"></select></label>
+    </div>
+    <div class="voice-toggle" role="group" aria-label="Voice · 목소리">
+      <button type="button" class="voice-btn" data-voice="ray" aria-pressed="true">👨‍🏫 Coach Ray</button>
+      <button type="button" class="voice-btn" data-voice="harper" aria-pressed="false">👩‍🏫 Miss Harper</button>
+    </div>
+    <p id="modelLabel" class="model-label">Loading the sound checker…</p>
+    <div class="track" id="modelTrack" aria-hidden="true"><div id="modelFill"></div></div>
+  </header>
+  <main id="app"></main>
+  <script src="vendor/ort/ort.wasm.min.js"></script>
+  <script src="mrj-scores.js?v=20261016-hubert-harper"></script>
+  <script type="module" src="src/app.js?v=20261016-hubert-harper"></script>
+  <script src="preview-assets/preview-ui.js?v=p1"></script>
+  <script>
+    window.addEventListener('mrj-auth-ready', function () {
+      document.body.classList.remove('auth-wait');
+    });
+  </script>
+</body>
+</html>
