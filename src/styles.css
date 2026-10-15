@@ -620,3 +620,9 @@ body.phase-part2 .rush-clock {
 .part-results b {
   color: var(--fail);
 }
+
+/* Voice toggle (Coach Ray / Miss Harper) */
+.voice-toggle { display: flex; gap: 8px; justify-content: center; margin: 6px 0; }
+.voice-btn { font: inherit; font-size: 1rem; font-weight: 700; padding: 8px 14px; border-radius: 999px;
+  border: 2px solid #c9d3e6; background: #fff; color: #334; cursor: pointer; }
+.voice-btn.on { background: #ffd43b; border-color: #f59f00; color: #222; }

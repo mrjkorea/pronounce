@@ -698,9 +698,53 @@ function renderSharedQuestion(bookId, unit, scores, ready, view) {
   </section>`;
 }
 
+// Voice choice: Coach Ray (default, audio/) or Miss Harper (audio_harper/).
+// Remembered in the URL (?voice=harper) and sessionStorage only. Clips load on tap.
+const VOICE_SESSION_KEY = 'mrj_pronounce_voice';
+let voice = (() => {
+  try {
+    const q = new URLSearchParams(location.search).get('voice');
+    if (q === 'harper' || q === 'ray') return q;
+    const s = sessionStorage.getItem(VOICE_SESSION_KEY);
+    if (s === 'harper' || s === 'ray') return s;
+  } catch (_) { /* ignore */ }
+  return 'ray';
+})();
+
+function setVoice(v) {
+  if (v !== 'ray' && v !== 'harper') return;
+  voice = v;
+  try { sessionStorage.setItem(VOICE_SESSION_KEY, v); } catch (_) { /* ignore */ }
+  try {
+    const u = new URL(location.href);
+    if (v === 'harper') u.searchParams.set('voice', 'harper'); else u.searchParams.delete('voice');
+    history.replaceState(history.state, '', u.toString());
+  } catch (_) { /* ignore */ }
+  document.querySelectorAll('.voice-btn').forEach((b) => {
+    const on = b.dataset.voice === v;
+    b.classList.toggle('on', on);
+    b.setAttribute('aria-pressed', on ? 'true' : 'false');
+  });
+}
+
+// Only top-level line clips (audio/<id>.mp3) have a Harper twin; hear/ clips stay Coach Ray.
+function harperRel(rel) {
+  const m = /^audio\/([^/]+\.mp3)$/.exec(rel || '');
+  return m ? `audio_harper/${m[1]}` : '';
+}
+
 function hearSrc(rel) {
+  if (voice === 'harper') {
+    const h = harperRel(rel);
+    if (h) return h;
+  }
   return rel || '';
 }
+
+document.querySelectorAll('.voice-btn').forEach((b) => {
+  b.addEventListener('click', () => setVoice(b.dataset.voice));
+});
+setVoice(voice);
 
 function koHtml(korean, imageRel, local, extraHtml) {
   const src = imageRel || '';
@@ -1559,7 +1603,9 @@ function onHear(btn) {
   if (here.name === 'sheet' && loadUnitFlow(here.bookId, here.unitId).phase === 'part2') return;
   const rel = btn.getAttribute('data-audio');
   if (!rel) return;
-  const audio = new Audio(hearSrc(rel));
+  const src = hearSrc(rel);
+  const audio = new Audio(src);
+  if (src !== rel) audio.addEventListener('error', () => { new Audio(rel).play().catch(() => {}); }, { once: true });
   audio.play().catch((err) => console.error(err));
 }
 
