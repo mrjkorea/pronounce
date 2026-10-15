@@ -72,3 +72,5 @@ a.back { font: 800 1.05rem var(--font-ui); color: var(--accent-dark); min-height
 }
 a.book { padding-top: 3.2rem; }
 .row-pic { object-fit: contain; background: #fff; }
+/* Jay 2026-10-16: never show the English answer on the preview (live reveals it after a try). */
+.part-text, .en-prompt, .part-label { display: none !important; }
