@@ -1,6 +1,6 @@
 #!/usr/bin/env node
 /**
- * Headless Chrome benchmark for the Citrinet checker.
+ * Headless Chrome benchmark for the HuBERT phoneme CTC pronunciation engine.
  * Run from repo root: node tools/bench-trial.mjs
  */
 import { spawn } from 'node:child_process';
@@ -37,6 +37,7 @@ async function ensureWavs() {
   await mkdir(wavDir, { recursive: true });
   const jobs = [
     ['ffmpeg', ['-y', '-i', join(root, 'audio/hear/it-is-here.mp3'), '-ar', '16000', '-ac', '1', join(wavDir, 'correct-it-is-here.wav')]],
+    ['ffmpeg', ['-y', '-i', join(root, 'audio/basic_a__unit01__05__five.mp3'), '-ar', '16000', '-ac', '1', join(wavDir, 'word-five.wav')]],
     ['ffmpeg', ['-y', '-f', 'lavfi', '-i', 'flite=text=\'What time is it\':voice=slt', '-ar', '16000', '-ac', '1', join(wavDir, 'wrong-what-time.wav')]],
     ['ffmpeg', ['-y', '-f', 'lavfi', '-i', 'anullsrc=r=16000:cl=mono', '-t', '2', join(wavDir, 'silence.wav')]],
     ['ffmpeg', ['-y', '-i', join(wavDir, 'correct-it-is-here.wav'), '-af', 'volume=0.12,lowpass=f=450,highpass=f=180', join(wavDir, 'mumbled-it-is-here.wav')]],
@@ -67,6 +68,7 @@ function startStaticServer() {
           css: 'text/css',
           json: 'application/json',
           onnx: 'application/octet-stream',
+          bin: 'application/octet-stream',
           wasm: 'application/wasm',
           wav: 'audio/wav',
           mp3: 'audio/mpeg',
@@ -125,11 +127,12 @@ async function bench(baseUrl) {
   await page.waitForFunction(() => window.__mrjPronounceBench && document.getElementById('modelLabel')?.classList.contains('done'), {
     timeout: 300000,
   });
-  const readyMs = Date.now() - t0;
-  const boot = await page.evaluate(() => window.__mrjTrialBoot());
+  const coldReadyMs = Date.now() - t0;
+  const coldBoot = await page.evaluate(() => window.__mrjTrialBoot());
 
+  // Measure sentence latency on 3 runs
   const correctUrl = `${baseUrl}test/bench-wavs/correct-it-is-here.wav`;
-  const checkTimes = [];
+  const sentenceTimes = [];
   for (let i = 0; i < 3; i++) {
     const ms = await page.evaluate(async ({ url, sentence }) => {
       const blob = await fetch(url).then((r) => r.blob());
@@ -137,7 +140,20 @@ async function bench(baseUrl) {
       await window.__mrjPronounceBench(blob, sentence, {});
       return performance.now() - t;
     }, { url: correctUrl, sentence: CHECK_SENTENCE });
-    checkTimes.push(Math.round(ms));
+    sentenceTimes.push(Math.round(ms));
+  }
+
+  // Measure single-word latency on 3 runs ("Five")
+  const wordUrl = `${baseUrl}test/bench-wavs/word-five.wav`;
+  const wordTimes = [];
+  for (let i = 0; i < 3; i++) {
+    const ms = await page.evaluate(async ({ url, word }) => {
+      const blob = await fetch(url).then((r) => r.blob());
+      const t = performance.now();
+      await window.__mrjPronounceBench(blob, word, {});
+      return performance.now() - t;
+    }, { url: wordUrl, word: 'Five' });
+    wordTimes.push(Math.round(ms));
   }
 
   const accuracy = {};
@@ -151,11 +167,14 @@ async function bench(baseUrl) {
         const words = (graded.result.words || []).map((w) => ({
           word: w.word,
           score: Math.round(w.score || 0),
+          band: w.band,
           pass: (w.score || 0) >= passAt,
         }));
         return {
           doorFail: !!graded.result.doorFail,
           pass: !!graded.result.pass,
+          band: graded.result.band,
+          scorePct: graded.result.scorePct,
           words,
           perf: graded.perf,
         };
@@ -164,17 +183,44 @@ async function bench(baseUrl) {
     }
   }
 
+  // Verify reload uses Cache Storage / IndexedDB without re-downloading model parts
+  let reloadModelNetworkBytes = 0;
+  page.on('response', async (res) => {
+    const url = res.url();
+    if (url.includes('/models/hubert/part-')) {
+      try {
+        const body = await res.body();
+        reloadModelNetworkBytes += body.length;
+      } catch (_) {}
+    }
+  });
+  const tReload0 = Date.now();
+  await page.reload({ waitUntil: 'domcontentloaded' });
+  await page.waitForFunction(() => window.__mrjPronounceBench && document.getElementById('modelLabel')?.classList.contains('done'), {
+    timeout: 300000,
+  });
+  const warmReadyMs = Date.now() - tReload0;
+  const warmBoot = await page.evaluate(() => window.__mrjTrialBoot());
+
   const diskBootBytesVal = await diskBootBytes();
   await browser.close();
   return {
-    readyMs,
-    checkTimes,
+    modelId: coldBoot.modelId,
+    coldReadyMs,
+    warmReadyMs,
+    reloadModelNetworkBytes,
+    wordLatencyMs: wordTimes,
+    sentenceLatencyMs: sentenceTimes,
+    checkTimes: sentenceTimes,
     networkBootBytes: bootBytes,
+    cachedModelBytes: coldBoot.cachedBytes,
+    cachedModelMb: Math.round((coldBoot.cachedBytes / (1024 * 1024)) * 100) / 100,
     diskBootBytes: diskBootBytesVal,
     diskBootMb: Math.round((diskBootBytesVal / (1024 * 1024)) * 10) / 10,
     perfSample: accuracy[60].correct.perf,
     accuracy,
-    boot,
+    coldBoot,
+    warmBoot,
   };
 }
 
@@ -182,10 +228,11 @@ async function main() {
   await ensureWavs();
   const { server, url } = await startStaticServer();
   try {
+    const hubertResult = await bench(url);
     const report = {
       generatedAt: new Date().toISOString(),
       checkSentence: CHECK_SENTENCE,
-      citrinet: await bench(url),
+      hubert: hubertResult,
     };
     const outPath = join(root, 'test', 'bench-trial-report.json');
     await writeFile(outPath, JSON.stringify(report, null, 2));

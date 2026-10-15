@@ -1,0 +1,30 @@
+{
+  "modelId": "ron-jo/hubert-base-phoneme-en-onnx",
+  "upstreamModel": "Peacockery/hubert-base-phoneme-en",
+  "quantization": "int8",
+  "license": "Apache-2.0",
+  "cacheKey": "mrj-hubert-phoneme-en-int8-v1",
+  "totalBytes": 121951866,
+  "sha256": "af7a194be47549c8cfe0055220e52498b270773ad3d77483e0e0c9dd101a0dbb",
+  "sampleRate": 16000,
+  "frameMs": 20,
+  "blankId": 40,
+  "vocabSize": 43,
+  "parts": [
+    {
+      "file": "models/hubert/part-00.bin",
+      "bytes": 41943040,
+      "sha256": "0a2d9c9b3f077a84b0e3f3f063a0e7b1484578333d733aafe711eac8f73e57ae"
+    },
+    {
+      "file": "models/hubert/part-01.bin",
+      "bytes": 41943040,
+      "sha256": "d018a89fd45b5e3724c3f098803afe62684907185a57640960c3289ab7b45477"
+    },
+    {
+      "file": "models/hubert/part-02.bin",
+      "bytes": 38065786,
+      "sha256": "e7ef5f3e38074bccdfdd1c21cdcf7b15fe08cca62a6a6b172bfbd2532d5cc398"
+    }
+  ]
+}

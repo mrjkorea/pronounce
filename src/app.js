@@ -1,5 +1,14 @@
-import { tokenizeWords } from './engine.js?v=20260930-words';
-import { decodeAudioToMono } from './audio.js';
+import {
+  APP_THRESHOLDS,
+  MODEL_ID,
+  bandForScore,
+  getAppThresholds,
+  tokenizeWords,
+} from './engine.js';
+import {
+  RAW_MIC_CONSTRAINTS,
+  decodeAudioToMono,
+} from './audio.js';
 import { sheetLines } from './sheet.js';
 import {
   FLOW_STORAGE_KEY,
@@ -21,14 +30,15 @@ import {
   timerRunning,
   timerSeconds,
   tryTeacherPassword,
-} from './flow.js?v=20261014-citrinet';
+} from './flow.js';
 import {
   DOOR_CHECKING_TEXT,
   DOOR_FAIL_TEXT,
   bootModelPaths,
   bootTrialInPage,
   gradeTrialSamples,
-} from './trial.js?v=20261014-citrinet';
+  trialRuntime,
+} from './trial.js';
 
 import {
   PROGRAM,
@@ -41,10 +51,10 @@ import {
   scoresNeedSaveAfterSync,
   shouldFlushPackOnPagehide,
   studentScoreStorageKey,
-} from './progress-merge.js?v=20261007-authpack';
-import { reportScoredActivity } from './score-reporting.js?v=20261011-savefix';
+} from './progress-merge.js';
+import { reportScoredActivity } from './score-reporting.js';
 
-const CITRINET_PASS = 60;
+export const CITRINET_PASS = 60;
 let activeStudentKey = '';
 const remoteSync = {
   packLoadOk: false,
@@ -93,11 +103,12 @@ const QUESTION_CODES = {
   WDYH: 'What do you have?',
 };
 
-const SILENCE_MS = 1200;
-const SILENCE_GRACE_MS = 1600;
-const PART2_SILENCE_MS = 400;
-const SILENCE_CHECK_MS = 80;
-const SILENCE_RMS = 0.08;
+// Auto-stop ~500 ms after speech ends
+export const SILENCE_MS = 500;
+export const SILENCE_GRACE_MS = 900;
+export const PART2_SILENCE_MS = 400;
+const SILENCE_CHECK_MS = 50;
+const SILENCE_RMS = 0.018;
 const MAX_RECORD_MS = 60000;
 
 const appEl = typeof document !== 'undefined' ? document.getElementById('app') : null;
@@ -116,12 +127,25 @@ let gradingScoreKey = null;
 let gradeEpoch = 0;
 let pronounceChecking = false;
 let part1Busy = false;
+let playingMandatoryAudio = false;
+let mandatoryAudioScoreKey = null;
 let rushInFlight = 0;
 const rushChecking = new Map();
 let chainTail = Promise.resolve();
 let scoreTail = Promise.resolve();
 let clockTimer = null;
 let teacherMiss = {};
+
+export function currentAppId() {
+  try {
+    if (typeof window !== 'undefined') {
+      if (window.MRJ_APP_TYPE) return String(window.MRJ_APP_TYPE).toLowerCase();
+      const q = new URLSearchParams(window.location?.search || '').get('app');
+      if (q) return q.toLowerCase();
+    }
+  } catch (_) {}
+  return 'day4';
+}
 
 function koreanCode(korean) {
   const m = String(korean || '').match(/^([A-Z0-9()]+)\?\s*/);
@@ -197,17 +221,15 @@ function scoreStorageKey(itemId, partKey) {
   return partKey === 'line' ? itemId : `${itemId}::${partKey}`;
 }
 
+/**
+ * Single words are spoken ONCE (no 3x repeat hack).
+ */
 function scoringTarget(english) {
-  const toks = tokenizeWords(english);
-  if (toks.length === 1) {
-    const w = toks[0].display;
-    return `${w} ${w} ${w}`;
-  }
-  return english;
+  return String(english || '').trim();
 }
 
-function needsTripleHint(english) {
-  return tokenizeWords(english).length === 1;
+function needsTripleHint(_english) {
+  return false;
 }
 
 function questionAudioRel(text) {
@@ -226,7 +248,6 @@ function itemRowPassed(item, unit, scores) {
     return scores[key] && scores[key].pass;
   });
 }
-
 
 function loadScores() {
   if (!activeStudentKey) return {};
@@ -406,14 +427,15 @@ function enqueueScore(fn) {
 }
 
 function setProgress(frac, text) {
+  if (!modelFill || !modelLabel) return;
   const pct = Math.max(0, Math.min(100, Math.round(frac * 100)));
   modelFill.style.width = pct + '%';
   modelLabel.textContent = text;
 }
 
 function markModelReady() {
-  modelLabel.classList.add('done');
-  modelTrack.classList.add('done');
+  if (modelLabel) modelLabel.classList.add('done');
+  if (modelTrack) modelTrack.classList.add('done');
   exposeBenchHook();
 }
 
@@ -431,31 +453,47 @@ function benchModeEnabled() {
 function exposeBenchHook() {
   if (!checkerReady) return;
   if (!benchModeEnabled()) return;
-  window.__mrjPronounceBench = async (blob, english, gradeOpts) => {
-    const passAt = typeof gradeOpts?.passAt === 'number' ? gradeOpts.passAt : CITRINET_PASS;
+  const appId = currentAppId();
+  const thresholds = getAppThresholds(appId);
+  window.__mrjPronounceBench = async (blob, english, gradeOpts = {}) => {
+    const passAt = typeof gradeOpts?.passAt === 'number' ? gradeOpts.passAt : thresholds.yellow;
     const target = scoringTarget(english);
     const samples = await decodeAudioToMono(blob, 16000);
-    const graded = await gradeTrialSamples(samples, target, passAt, null, gradeOpts);
+    const graded = await gradeTrialSamples(samples, target, passAt, null, {
+      ...gradeOpts,
+      appId: gradeOpts?.appId || appId,
+    });
     return { result: graded.result, door: graded.door, perf: graded.perf };
   };
-  window.__mrjTrialBoot = () => ({
-    grader: 'citrinet',
-    ready: checkerReady,
-  });
+  window.__mrjTrialBoot = () => {
+    const rt = trialRuntime();
+    return {
+      grader: 'hubert-phoneme',
+      modelId: MODEL_ID,
+      ready: checkerReady,
+      fromCache: !!rt.fromCache,
+      cacheSource: rt.cacheSource || 'none',
+      cachedBytes: rt.cachedBytes || 0,
+    };
+  };
 }
 
 async function bootModel() {
   try {
     setProgress(0.02, 'Loading the sound checker…');
     const wasmPaths = new URL('../vendor/ort/', import.meta.url).href;
-    await bootTrialInPage({ wasmPaths, paths: bootModelPaths() });
+    await bootTrialInPage({
+      wasmPaths,
+      paths: bootModelPaths(),
+      onProgress: (frac, label) => setProgress(frac, label),
+    });
     checkerReady = true;
     setProgress(1, 'Ready');
     markModelReady();
     render();
   } catch (err) {
     modelError = err && err.message ? err.message : String(err);
-    modelLabel.textContent = 'Sound checker did not start. ' + modelError;
+    if (modelLabel) modelLabel.textContent = 'Sound checker did not start. ' + modelError;
     console.error(err);
     render();
   }
@@ -571,13 +609,20 @@ function noteCue() {
   return lang === 'ko' ? '이 질문을 한 번만 말하세요.' : 'Say this question one time.';
 }
 
-function wordChipsHtml(words, record) {
+/**
+ * Red / Yellow / Green word chips with per-sound Korean-L1 diagnostic hints.
+ */
+function wordChipsHtml(words, _record) {
   if (!words || !words.length) return '';
+  const appId = currentAppId();
   const chips = words.map((w) => {
     const pct = Math.round(w.score || 0);
-    const good = (w.score || 0) >= CITRINET_PASS;
-    const cls = good ? 'good' : 'bad';
-    return `<span class="word-chip-wrap"><span class="word-chip ${cls}" title="${pct}%">${escapeHtml(w.word)}</span></span>`;
+    const band = w.band || bandForScore(pct, appId);
+    const cls = band === 'green' ? 'good green' : (band === 'yellow' ? 'yellow' : 'bad red');
+    const hintHtml = w.hint && band !== 'green'
+      ? `<span class="word-hint">${escapeHtml(w.hint)}</span>`
+      : '';
+    return `<span class="word-chip-wrap"><span class="word-chip ${cls}" data-band="${escapeHtml(band)}" title="${pct}%">${escapeHtml(w.word)}</span>${hintHtml}</span>`;
   }).join('');
   return `<div class="chips">${chips}</div>`;
 }
@@ -593,8 +638,25 @@ function shownGrade(view, key, saved) {
 }
 
 function englishCueHtml(english, className) {
-  const triple = needsTripleHint(english) ? '<p class="triple-hint">Say it 3 times.</p>' : '';
-  return `<p class="${className}">${escapeHtml(english)}</p>${triple}`;
+  return `<p class="${className}">${escapeHtml(english)}</p>`;
+}
+
+/**
+ * Extract missed (red) words from a previous attempt when some words already passed,
+ * so the student retries ONLY the missed words.
+ */
+export function pendingRetryWords(saved) {
+  if (!saved || saved.pass || saved.doorFail || !Array.isArray(saved.words) || saved.words.length <= 1) {
+    return [];
+  }
+  const appId = currentAppId();
+  const missed = saved.words
+    .filter((w) => (w.band || bandForScore(w.score || 0, appId)) === 'red')
+    .map((w) => w.word);
+  if (missed.length > 0 && missed.length < saved.words.length) {
+    return missed;
+  }
+  return [];
 }
 
 function partResultHtml(saved) {
@@ -602,24 +664,48 @@ function partResultHtml(saved) {
   if (saved.doorFail) {
     return `<div class="after show"><p class="meta">${escapeHtml(saved.reason || DOOR_FAIL_TEXT)}</p></div>`;
   }
-  const verdict = saved.pass ? 'Pass' : 'Not yet';
-  const cls = saved.pass ? 'pass' : 'fail';
+  const appId = currentAppId();
   const pct = saved.scorePct != null ? saved.scorePct : Math.round((saved.score || 0) * 100);
-  const reason = saved.reason ? `<p class="meta">${escapeHtml(saved.reason)}</p>` : '';
+  const band = saved.band || (saved.pass ? bandForScore(pct, appId) : 'red');
+  let verdict = 'Not yet';
+  let cls = 'fail red';
+  if (saved.pass) {
+    if (band === 'yellow' || saved.assistedPass) {
+      verdict = 'Almost (Move on)';
+      cls = 'pass yellow';
+    } else {
+      verdict = 'Pass';
+      cls = 'pass green';
+    }
+  }
+  const retryList = pendingRetryWords(saved);
+  const retryBanner = retryList.length
+    ? `<p class="meta retry-missed">Now retry only the missed word${retryList.length > 1 ? 's' : ''}: <b>${escapeHtml(retryList.join(' '))}</b></p>`
+    : '';
+  const reason = !retryList.length && saved.reason
+    ? `<p class="meta">${escapeHtml(saved.reason)}</p>`
+    : '';
   const chips = englishRevealed(saved) ? wordChipsHtml(saved.words, saved) : '';
-  return `<div class="after show">
+  return `<div class="after show" data-band="${escapeHtml(band)}">
     <p class="verdict ${cls}">${verdict} · ${pct}</p>
     ${chips}
+    ${retryBanner}
     ${reason}
   </div>`;
 }
 
 function micButtonHtml(skey, itemId, partKey, english, audioRel, allowed, ready, label) {
   const live = !!(capture && capture.scoreKey === skey);
-  const text = live ? 'Listening…' : (label && label !== 'Mic' ? label : (ready ? 'Mic' : 'Wait'));
+  const playingHere = playingMandatoryAudio && mandatoryAudioScoreKey === skey;
+  let text = 'Wait';
+  if (live) text = 'Listening…';
+  else if (playingHere || playingMandatoryAudio) text = 'Listen…';
+  else if (label && label !== 'Mic') text = label;
+  else if (ready) text = 'Mic';
+
   const itemAttr = itemId ? ` data-item-id="${escapeHtml(itemId)}"` : '';
   const partAttr = partKey ? ` data-part-key="${escapeHtml(partKey)}"` : '';
-  const enabled = live || (allowed && ready);
+  const enabled = live || (allowed && ready && !playingMandatoryAudio);
   const cls = live ? 'mic live' : 'mic';
   const stop = live ? '<button type="button" class="take-stop">Stop</button>' : '';
   return `<button type="button" class="${cls}" data-score-key="${escapeHtml(skey)}"${itemAttr}${partAttr} data-grade-text="${escapeHtml(english)}" data-audio-rel="${escapeHtml(audioRel)}" ${enabled ? '' : 'disabled'}>${text}</button>${stop}`;
@@ -848,6 +934,7 @@ function sheetView(flow, targets) {
       recording: false,
       timerRunning: running,
       lineOpen: lineOpenFor(flow, id),
+      playingMandatoryAudio,
     });
     if (flow.phase === 'part1' && isLocked(flow, id)) locked[id] = true;
     if (flow.phase === 'part2' || flow.phase === 'results') marks[id] = rushMark(flow, id);
@@ -929,6 +1016,7 @@ function teacherBlockHtml(targets, ready, flow) {
       recording: false,
       timerRunning: false,
       lineOpen: true,
+      playingMandatoryAudio,
     });
     const mic = micButtonHtml(target.id, target.itemId, target.partKey, target.english, target.audio, allowed, ready, 'Teacher mic');
     return `<article class="row teacher-row" data-id="${escapeHtml(target.id)}">
@@ -1019,6 +1107,7 @@ function syncClock(flow) {
 }
 
 function paint() {
+  if (!appEl) return;
   const x = window.scrollX || 0;
   const y = window.scrollY || 0;
   render();
@@ -1026,6 +1115,7 @@ function paint() {
 }
 
 function render() {
+  if (!appEl) return;
   if (!books.length) {
     document.body.classList.remove('phase-part2');
     appEl.innerHTML = '<p class="lead">Loading the sheets…</p>';
@@ -1040,16 +1130,6 @@ function render() {
     document.body.classList.remove('phase-part2');
     renderHome();
   }
-}
-
-function findItem(id) {
-  for (const book of books) {
-    for (const unit of book.units) {
-      const item = unit.items.find((it) => it.id === id);
-      if (item) return { item, unit, book };
-    }
-  }
-  return null;
 }
 
 function encodeWav(floatChunks, sampleRate) {
@@ -1105,7 +1185,7 @@ function startSilenceWatch(stream, ctx, onDone, silenceMs, graceMs) {
     const src = ctx.createMediaStreamSource(stream);
     const analyser = ctx.createAnalyser();
     analyser.fftSize = 1024;
-    analyser.smoothingTimeConstant = 0.4;
+    analyser.smoothingTimeConstant = 0.25;
     src.connect(analyser);
     const sink = ctx.createGain();
     sink.gain.value = 0;
@@ -1130,10 +1210,10 @@ function startSilenceWatch(stream, ctx, onDone, silenceMs, graceMs) {
       if (rms >= SILENCE_RMS) {
         spoke = true;
         quietMs = 0;
-      } else if (totalMs > grace && spoke) {
+      } else if (totalMs >= grace && spoke) {
         quietMs += SILENCE_CHECK_MS;
       }
-      if (quietMs >= endSilence || totalMs >= MAX_RECORD_MS || (!spoke && totalMs >= 12000)) {
+      if (quietMs >= endSilence || totalMs >= MAX_RECORD_MS || (!spoke && totalMs >= 8000)) {
         finish();
         return;
       }
@@ -1142,7 +1222,7 @@ function startSilenceWatch(stream, ctx, onDone, silenceMs, graceMs) {
     silenceTimer = setTimeout(tick, SILENCE_CHECK_MS);
   } catch (e) {
     console.warn('startSilenceWatch failed', e);
-    silenceTimer = setTimeout(finish, 5000);
+    silenceTimer = setTimeout(finish, 4000);
   }
 }
 
@@ -1174,35 +1254,31 @@ function claimCapture() {
   return rec;
 }
 
-async function blobFrom(rec) {
-  if (!rec) return null;
-  const rate = rec.ctx.sampleRate || 48000;
-  const blob = encodeWav(rec.chunks, rate);
-  rec.ctx.close().catch(() => {});
-  return blob;
-}
-
-async function stopCapture() {
-  const rec = claimCapture();
-  return blobFrom(rec);
-}
-
 function stillOnSheet(bookId, unitId) {
   const r = route();
   return r.name === 'sheet' && r.bookId === bookId && r.unitId === unitId;
 }
 
 function studentRecord(graded, gradeText, reason) {
+  const appId = currentAppId();
+  const pct = graded ? graded.scorePct : 0;
+  const pass = graded ? !!graded.pass : false;
+  const band = graded && graded.band ? graded.band : (pass ? bandForScore(pct, appId) : 'red');
   return {
     score: graded ? graded.score : 0,
-    scorePct: graded ? graded.scorePct : 0,
-    pass: graded ? !!graded.pass : false,
+    scorePct: pct,
+    band,
+    color: band,
+    pass,
+    assistedPass: !!(graded && (graded.assistedPass || (pass && band === 'yellow'))),
     weak: graded ? graded.weak : [],
+    missedWords: graded ? (graded.missedWords || graded.weak || []) : [],
+    yellowWords: graded ? (graded.yellowWords || []) : [],
     reason: graded ? graded.reason : reason,
     english: graded ? graded.english : scoringTarget(gradeText),
     words: graded && !graded.doorFail ? graded.words : [],
     doorFail: graded ? !!graded.doorFail : false,
-    grader: graded && graded.grader ? graded.grader : '',
+    grader: graded && graded.grader ? graded.grader : 'hubert-phoneme',
     at: Date.now(),
   };
 }
@@ -1240,13 +1316,42 @@ function stopIfLastRushLine(flow, ids, now) {
   return stopTimer(flow, now);
 }
 
+/**
+ * Determine whether the pre-recorded voice file must be played after an attempt.
+ * Requirement 7: "On any red or yellow word, automatically play the existing pre-recorded
+ * voice file for that word or line before the next try is allowed (the child cannot skip it)."
+ */
+export function shouldPlayMandatoryAudio(record, thrown) {
+  if (thrown || !record) return true;
+  if (!record.pass || record.band === 'red' || record.band === 'yellow') return true;
+  if (Array.isArray(record.yellowWords) && record.yellowWords.length > 0) return true;
+  if (Array.isArray(record.missedWords) && record.missedWords.length > 0) return true;
+  if (Array.isArray(record.words) && record.words.some((w) => w.band === 'red' || w.band === 'yellow')) {
+    return true;
+  }
+  return false;
+}
+
 async function gradeStudentOrTeacher(meta, blob) {
   gradingScoreKey = meta.scoreKey;
   if (stillOnSheet(meta.bookId, meta.unitId)) paint();
   let graded = null;
   let thrown = null;
+
+  // Check if the student is retrying only the missed words from their previous attempt
+  const existingFlow = loadUnitFlow(meta.bookId, meta.unitId);
+  const prevAttempt = meta.phase === 'part1' && existingFlow.attempts
+    ? existingFlow.attempts[meta.scoreKey]
+    : null;
+  const retryList = pendingRetryWords(prevAttempt);
+
   try {
-    graded = await gradeBlob(blob, meta.gradeText, doorPassHook(meta), { hints: meta.phase !== 'part2' });
+    graded = await gradeBlob(blob, meta.gradeText, doorPassHook(meta), {
+      hints: meta.phase !== 'part2',
+      retryTargetText: retryList.length ? retryList.join(' ') : null,
+      previousResult: retryList.length ? prevAttempt : null,
+      fullTargetText: meta.gradeText,
+    });
   } catch (err) {
     thrown = err;
     console.error(err);
@@ -1284,9 +1389,14 @@ async function gradeStudentOrTeacher(meta, blob) {
           : ''),
       });
     }
-    if (stillOnSheet(meta.bookId, meta.unitId)) {
-      void playExpectedOnFail(meta.gradeText, meta.audioRel, thrown ? false : !!(graded && graded.pass));
+    pronounceChecking = false;
+    if (!meta.gradeEpoch || meta.gradeEpoch === gradeEpoch) gradingScoreKey = null;
+    if (stillOnSheet(meta.bookId, meta.unitId)) paint();
+
+    if (stillOnSheet(meta.bookId, meta.unitId) && shouldPlayMandatoryAudio(record, thrown)) {
+      await playMandatoryExpectedAudio(meta.scoreKey, meta.audioRel);
     }
+    return;
   }
   pronounceChecking = false;
   if (!meta.gradeEpoch || meta.gradeEpoch === gradeEpoch) gradingScoreKey = null;
@@ -1301,7 +1411,7 @@ function encodeWavOffTap(floatChunks, sampleRate) {
   return new Promise((resolve, reject) => {
     let worker;
     try {
-      worker = new Worker(new URL('./wav-worker.js?v=20261005-nextmic', import.meta.url));
+      worker = new Worker(new URL('./wav-worker.js', import.meta.url));
     } catch (err) {
       reject(err);
       return;
@@ -1365,6 +1475,7 @@ async function gradeStudentOrTeacherOffTap(meta) {
   try {
     blob = await encodeWavOffTap(meta.chunks, meta.ctx.sampleRate || 48000);
   } catch (err) {
+    blob = encodeWav(meta.chunks, meta.ctx ? meta.ctx.sampleRate || 48000 : 48000);
     console.error(err);
   }
   if (meta.ctx) meta.ctx.close().catch(() => {});
@@ -1413,41 +1524,63 @@ async function endPart2(bookId, unitId) {
   else if (meta) meta.ctx.close().catch(() => {});
 }
 
-async function gradeBlob(blob, english, hooks, gradeOpts) {
+async function gradeBlob(blob, english, hooks, gradeOpts = {}) {
+  const appId = currentAppId();
+  const thresholds = getAppThresholds(appId);
   const target = scoringTarget(english);
   const samples = await decodeAudioToMono(blob, 16000);
-  const graded = await gradeTrialSamples(samples, target, CITRINET_PASS, hooks, gradeOpts);
+  const graded = await gradeTrialSamples(samples, target, thresholds.yellow, hooks, {
+    ...gradeOpts,
+    appId,
+  });
   return graded.result;
 }
 
-function playAudioUrl(url, times = 1) {
+function playAudioUrl(url) {
   return new Promise((resolve) => {
-    let left = times;
-    const playOnce = () => {
-      if (left <= 0) { resolve(); return; }
-      left -= 1;
-      const audio = new Audio(url);
-      audio.addEventListener('ended', () => playOnce());
-      audio.addEventListener('error', () => playOnce());
-      audio.play().catch(() => playOnce());
+    if (typeof Audio === 'undefined' || !url) {
+      resolve();
+      return;
+    }
+    let settled = false;
+    const done = () => {
+      if (settled) return;
+      settled = true;
+      resolve();
     };
-    playOnce();
+    const timer = setTimeout(done, 8000);
+    const audio = new Audio(url);
+    audio.addEventListener('ended', () => { clearTimeout(timer); done(); });
+    audio.addEventListener('error', () => { clearTimeout(timer); done(); });
+    audio.play().catch(() => { clearTimeout(timer); done(); });
   });
 }
 
-async function playExpectedOnFail(gradeText, audioRel, pass) {
-  if (pass || !audioRel) return;
+/**
+ * Play pre-recorded voice file on any red or yellow word while locking the mic
+ * so the child cannot skip listening before their next try.
+ */
+async function playMandatoryExpectedAudio(scoreKey, audioRel) {
+  if (!audioRel) return;
   const here = route();
   if (here.name === 'sheet' && loadUnitFlow(here.bookId, here.unitId).phase === 'part2') return;
-  const url = hearSrc(audioRel);
-  const plays = needsTripleHint(gradeText) ? 3 : 1;
-  await playAudioUrl(url, plays);
+  playingMandatoryAudio = true;
+  mandatoryAudioScoreKey = scoreKey;
+  if (here.name === 'sheet') paint();
+  try {
+    await playAudioUrl(hearSrc(audioRel));
+  } finally {
+    playingMandatoryAudio = false;
+    mandatoryAudioScoreKey = null;
+    if (route().name === 'sheet') paint();
+  }
 }
 
 let armingMic = false;
 let armToken = 0;
 
 async function onMic(btn) {
+  if (playingMandatoryAudio) return;
   const r = route();
   if (r.name !== 'sheet') return;
   const book = byId.get(r.bookId);
@@ -1468,6 +1601,7 @@ async function onMic(btn) {
     recording: false,
     timerRunning: timerRunning(flowNow),
     lineOpen: lineOpenFor(flowNow, scoreKey),
+    playingMandatoryAudio,
   })) return;
   if (capture && capture.scoreKey !== scoreKey) {
     const prev = claimCapture();
@@ -1477,13 +1611,16 @@ async function onMic(btn) {
   armingMic = true;
   let stream;
   try {
+    // Requirement 4: Turn off browser noiseSuppression, echoCancellation, autoGainControl
     stream = await navigator.mediaDevices.getUserMedia({
-      audio: { echoCancellation: true, noiseSuppression: true, autoGainControl: true },
+      audio: RAW_MIC_CONSTRAINTS,
     });
   } catch (err) {
     if (token === armToken) armingMic = false;
-    modelLabel.classList.remove('done');
-    modelLabel.textContent = 'The microphone is blocked. Allow the mic and tap again.';
+    if (modelLabel) {
+      modelLabel.classList.remove('done');
+      modelLabel.textContent = 'The microphone is blocked. Allow the mic and tap again.';
+    }
     console.error(err);
     return;
   }
@@ -1493,6 +1630,7 @@ async function onMic(btn) {
     recording: false,
     timerRunning: timerRunning(flow),
     lineOpen: lineOpenFor(flow, scoreKey),
+    playingMandatoryAudio,
   })) {
     stream.getTracks().forEach((t) => t.stop());
     if (token === armToken) armingMic = false;
@@ -1627,10 +1765,12 @@ if (appEl) {
 }
 
 export {
-  CITRINET_PASS,
+  APP_THRESHOLDS,
   QUESTION_CODES,
+  RAW_MIC_CONSTRAINTS,
   analyzeUnit,
   scoringTarget,
+  needsTripleHint,
   rowParts,
   lineParts,
   lineArticleHtml,
