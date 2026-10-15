@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-"""Day 4 content, dictionary, and Citrinet model checks."""
+"""Day 4 content, dictionary, and HuBERT model checks."""
 import json
 import re
 from pathlib import Path
@@ -12,9 +12,7 @@ FILES = [
     "int2a.json", "int2b.json", "int2c.json",
     "int3a.json", "int3b.json", "int3c.json",
 ]
-CITRINET = ROOT / "models" / "citrinet" / "model.int8.onnx"
-CITRINET_MIN = 35_000_000
-CITRINET_MAX = 45_000_000
+HUBERT_MANIFEST = ROOT / "models" / "hubert" / "manifest.json"
 
 
 def main():
@@ -46,19 +44,18 @@ def main():
     assert items == 716, items
     print(f"content ok: books={len(books)} units={units} items={items}")
 
-    subset = json.loads((ROOT / "models" / "cmudict.day4.json").read_text())
-    missing_path = ROOT / "MISSING_WORDS.txt"
-    listed = [ln.strip() for ln in missing_path.read_text().splitlines() if ln.strip()]
-    missing = sorted(w for w in words if w not in subset)
-    assert missing == listed, (missing, listed)
-    print(f"dictionary ok: words={len(words)} in_dict={len(words)-len(missing)} missing={len(missing)}")
+    full = json.loads((ROOT / "models" / "cmudict.full.json").read_text())["entries"]
+    missing = sorted(w for w in words if w not in full)
+    print(f"dictionary ok: words={len(words)} in_full_cmudict={len(words)-len(missing)} (others use letter-to-sound)")
 
-    size = CITRINET.stat().st_size
-    assert CITRINET_MIN < size < CITRINET_MAX, size
-    pieces = ROOT / "models" / "citrinet" / "sp_pieces.json"
-    assert pieces.is_file()
-    print(f"model ok: citrinet_bytes={size} sp_pieces={pieces.stat().st_size}")
-
+    man = json.loads(HUBERT_MANIFEST.read_text())
+    total = 0
+    for part in man["parts"]:
+        size = (ROOT / part["file"]).stat().st_size
+        assert size == part["bytes"], (part["file"], size)
+        total += size
+    assert total == man["totalBytes"], total
+    print(f"model ok: hubert_bytes={total} parts={len(man['parts'])}")
 
 if __name__ == "__main__":
     main()

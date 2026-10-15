@@ -102,8 +102,18 @@ export function stuckIds(flow, ids) {
 export function noteAttempt(flow, id, graded) {
   const attempts = Object.assign({}, flow.attempts, { [id]: graded });
   if (graded && graded.pass) {
+    const studentEntry = {
+      pass: true,
+      score: graded.score,
+      scorePct: graded.scorePct,
+    };
+    if (graded.band) studentEntry.band = graded.band;
+    if (graded.assistedPass) studentEntry.assistedPass = true;
+    if (Array.isArray(graded.yellowWords) && graded.yellowWords.length) {
+      studentEntry.yellowWords = graded.yellowWords;
+    }
     const student = Object.assign({}, flow.student, {
-      [id]: { pass: true, score: graded.score, scorePct: graded.scorePct },
+      [id]: studentEntry,
     });
     return Object.assign({}, flow, { attempts, student });
   }
@@ -227,9 +237,17 @@ export function reconcileFlow(flow, now) {
  * A recording still blocks, because only one take runs at a time.
  * Part 2 also needs the timer to be running.
  */
-export function canStartMic({ phase, recording, timerRunning: running, lineOpen, grading: _grading }) {
+export function canStartMic({
+  phase,
+  recording,
+  timerRunning: running,
+  lineOpen,
+  grading: _grading,
+  playingMandatoryAudio,
+}) {
   if (lineOpen === false) return false;
   if (recording) return false;
+  if (playingMandatoryAudio) return false;
   if (phase === 'part1' || phase === 'teacher') return true;
   if (phase === 'part2') return !!running;
   return false;

@@ -11,6 +11,8 @@
   --hear: #8a5a12;
   --chip-good: #146c43;
   --chip-good-bg: rgba(61, 220, 151, 0.22);
+  --chip-yellow: #8a5a12;
+  --chip-yellow-bg: rgba(255, 193, 7, 0.26);
   --chip-bad: #a32018;
   --chip-bad-bg: rgba(255, 107, 122, 0.18);
 }
@@ -369,7 +371,13 @@ h1 {
 }
 
 .verdict.pass { color: var(--pass); }
+.verdict.pass.yellow { color: var(--chip-yellow); }
 .verdict.fail { color: var(--fail); }
+
+.retry-missed {
+  color: var(--blue);
+  font-weight: 800;
+}
 
 .meta, .english {
   margin: 0 0 8px;
@@ -418,13 +426,21 @@ h1 {
   background: white;
 }
 
-.word-chip.good {
+.word-chip.good,
+.word-chip.green {
   background: var(--chip-good-bg);
   border-color: var(--chip-good);
   color: var(--chip-good);
 }
 
-.word-chip.bad {
+.word-chip.yellow {
+  background: var(--chip-yellow-bg);
+  border-color: var(--chip-yellow);
+  color: var(--chip-yellow);
+}
+
+.word-chip.bad,
+.word-chip.red {
   background: var(--chip-bad-bg);
   border-color: var(--chip-bad);
   color: var(--chip-bad);

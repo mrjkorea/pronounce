@@ -24,6 +24,15 @@ export function buildNoteScoreArgs(itemId, scorePct, localDate) {
 
 export function buildCmSuccessPost(itemId, graded, meta, student) {
   const pct = Math.round(graded.scorePct);
+  const metadata = {
+    english: graded.english || '',
+    weak: graded.weak || [],
+  };
+  if (graded.band) metadata.band = graded.band;
+  if (graded.assistedPass != null) metadata.assistedPass = !!graded.assistedPass;
+  if (Array.isArray(graded.yellowWords) && graded.yellowWords.length) {
+    metadata.yellowWords = graded.yellowWords;
+  }
   return {
     student,
     program: PROGRAM,
@@ -37,7 +46,7 @@ export function buildCmSuccessPost(itemId, graded, meta, student) {
     scoreMax: 100,
     scorePct: pct,
     correctness: graded.pass ? 'correct' : 'incorrect',
-    metadata: { english: graded.english || '', weak: graded.weak || [] },
+    metadata,
   };
 }
 
