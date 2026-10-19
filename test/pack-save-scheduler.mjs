@@ -37,7 +37,7 @@ function makeScheduler(overrides = {}) {
     }),
     buildPackSavePayload,
     scoresNeedSaveAfterSync,
-    shouldFlushPackOnPagehide,
+    shouldFlushOnPagehide: shouldFlushPackOnPagehide,
     now: overrides.now || (() => Date.now()),
     setTimer: (fn, ms) => {
       const id = setTimeout(fn, ms);
@@ -104,6 +104,20 @@ test('dirty while pack load failed retries ensurePackLoaded', async () => {
   assert.equal(ctx.getLoadCalls(), 1);
   await new Promise((r) => setTimeout(r, 150));
   assert.equal(ctx.saves.length, 1);
+  ctx.clearTimers();
+});
+
+test('pagehide flush saves only when the predicate allows it', async () => {
+  const ctx = makeScheduler({
+    localScores: { a: { scorePct: 10, score: 0.1, pass: false, at: 1 } },
+  });
+  await ctx.scheduler.flush(true, { pagehide: true });
+  assert.equal(ctx.saves.length, 0);
+  ctx.scheduler.setDirty(true);
+  await ctx.scheduler.flush(true, { pagehide: true });
+  assert.equal(ctx.saves.length, 1);
+  const saved = JSON.parse(ctx.saves[0]);
+  assert.equal(saved.a.scorePct, 10);
   ctx.clearTimers();
 });
 

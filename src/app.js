@@ -85,7 +85,7 @@ function packSaveScheduler() {
       ensurePackLoaded: () => ensurePackLoadedForSave(),
       buildPackSavePayload,
       scoresNeedSaveAfterSync,
-      shouldFlushOnPagehide,
+      shouldFlushOnPagehide: shouldFlushPackOnPagehide,
     });
   }
   return remoteSync.packSave;
