@@ -1,4 +1,4 @@
-/** Part 1 lock / teacher skip / part 2 timer. Pure: no DOM, no ONNX. */
+/** Part 1 move-on after five tries / part 2 timer. Pure: no DOM, no ONNX. */
 
 export const FLOW_STORAGE_KEY = 'day4-pronounce-two-parts-v1';
 export const LEGACY_SCORE_KEY = 'day4-pronounce-scores-v2';
@@ -75,16 +75,18 @@ export function timerSeconds(_wordCount) {
   return PART2_LIMIT_SEC;
 }
 
-export function isLocked(flow, id) {
-  return (flow.fails[id] || 0) >= LOCK_AT;
+/** A fifth miss does not lock the line or block the next item. */
+export function isLocked(_flow, _id) {
+  return false;
 }
 
 export function studentPassed(flow, id) {
   return !!(flow.student[id] && flow.student[id].pass);
 }
 
+/** Passed, or five tries used. Five tries moves on and stays not passed. */
 export function isFinished(flow, id) {
-  return studentPassed(flow, id) || isLocked(flow, id);
+  return studentPassed(flow, id) || (flow.fails[id] || 0) >= LOCK_AT;
 }
 
 export function part1Complete(flow, ids) {

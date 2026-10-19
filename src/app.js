@@ -31,7 +31,7 @@ import {
   timerRunning,
   timerSeconds,
   tryTeacherPassword,
-} from './flow.js';
+} from './flow.js?v=20261019-move-on';
 import {
   DOOR_CHECKING_TEXT,
   DOOR_FAIL_TEXT,
