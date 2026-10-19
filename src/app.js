@@ -55,7 +55,7 @@ import {
   shouldFlushPackOnPagehide,
   studentScoreStorageKey,
 } from './progress-merge.js';
-import { createPackSaveScheduler } from './pack-save-scheduler.js';
+import { createPackSaveScheduler } from './pack-save-scheduler.js?v=20261019-packsave';
 import { reportScoredActivity } from './score-reporting.js';
 
 export const PASS_PCT = ENGINE_PASS_PCT; // pass = line average >= 60
