@@ -22,11 +22,11 @@ html[data-book] body { padding: 0 16px 48px; font-family: var(--font-ui); }
 #app .lead { font-size: 1.1rem; color: var(--muted); }
 .books { grid-template-columns: repeat(auto-fill, minmax(190px, 1fr)); gap: .9rem; }
 a.book { --c1:#2fb866; --c2:#138042; position: relative; overflow: hidden; flex-direction: column; align-items: flex-start; justify-content: flex-end; min-height: 140px; padding: 1rem 1.1rem; border-radius: 24px; color: #fff; font: 900 1.7rem var(--font-en); background: linear-gradient(150deg, var(--c1), var(--c2)); box-shadow: 0 7px 0 color-mix(in srgb, var(--c2) 70%, #000), 0 16px 26px rgba(0,0,0,.12); transition: transform .12s; }
-a.book[href*="int2"] { --c1:#4b95ff; --c2:#1d55c8; }
-a.book[href*="int3"] { --c1:#ff6b5c; --c2:#c72e24; }
+a.book[href*="int3"] { --c1:#4b95ff; --c2:#1d55c8; }
+a.book[href*="int2"] { --c1:#ff6b5c; --c2:#c72e24; }
 a.book::before { content: "🌿"; position: absolute; top: .7rem; left: .9rem; font-size: 1.9rem; }
-a.book[href*="int2"]::before { content: "💎"; }
-a.book[href*="int3"]::before { content: "🍎"; }
+a.book[href*="int3"]::before { content: "💎"; }
+a.book[href*="int2"]::before { content: "🍎"; }
 a.book::after { content: ""; position: absolute; width: 130px; height: 130px; right: -35px; top: -35px; border-radius: 50%; background: rgba(255,255,255,.16); }
 a.book small { color: #fff; background: rgba(0,0,0,.18); padding: .2rem .6rem; border-radius: 999px; font: 800 .85rem var(--font-ui); }
 a.book:hover { transform: translateY(-3px); }
@@ -74,4 +74,4 @@ a.book { padding-top: 3.2rem; }
 .row-pic { object-fit: contain; background: #fff; }
 /* Jay 2026-10-16: never show the English answer on the preview (live reveals it after a try). */
 .part-text, .en-prompt, .part-label { display: none !important; }
-a.book[href*="int2"] { order: 2; } a.book[href*="int3"] { order: 3; } /* easiest -> hardest: green, blue, red */
+a.book[href*="int3"] { order: 2; } a.book[href*="int2"] { order: 3; } /* easiest -> hardest: green, blue, red */

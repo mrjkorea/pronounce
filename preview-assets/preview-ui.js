@@ -1,11 +1,11 @@
 /* Preview-only UI layer for Pronounce. No engine, mic, scoring or auth changes.
-   - sets html[data-book] from the route (Basic=green, Int 2=blue, Int 3=red)
+   - sets html[data-book] from the route (Basic=green, Int 3=blue, Int 2=red)
    - replaces the language <select> with a chip picker (select stays, hidden, driven by "change") */
 (function () {
   "use strict";
   function fam() {
     var h = location.hash;
-    return /int3/.test(h) ? "red" : /int2/.test(h) ? "blue" : "green";
+    return /int2/.test(h) ? "red" : /int3/.test(h) ? "blue" : "green";
   }
   function setTheme() {
     document.documentElement.setAttribute("data-book", fam());
