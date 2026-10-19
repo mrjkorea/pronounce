@@ -130,6 +130,7 @@ let pronounceChecking = false;
 let part1Busy = false;
 let playingMandatoryAudio = false;
 let mandatoryAudioScoreKey = null;
+let mandatoryAudioEl = null;
 let rushInFlight = 0;
 const rushChecking = new Map();
 let chainTail = Promise.resolve();
@@ -610,15 +611,24 @@ function noteCue() {
   return lang === 'ko' ? '이 질문을 한 번만 말하세요.' : 'Say this question one time.';
 }
 
-/**
- * Red / Yellow / Green word chips with per-sound Korean-L1 diagnostic hints.
- */
+/** Word and line colours use the same 0–100 number the student sees. A 0–1 value is scaled up. */
+function shownPct(value, fallback) {
+  const primary = Number(value);
+  if (Number.isFinite(primary)) {
+    if (primary > 0 && primary < 1) return Math.round(primary * 100);
+    return Math.round(primary);
+  }
+  const raw = Number(fallback) || 0;
+  if (raw > 0 && raw < 1) return Math.round(raw * 100);
+  return Math.round(raw);
+}
+
 function wordChipsHtml(words, _record) {
   if (!words || !words.length) return '';
   const appId = currentAppId();
   const chips = words.map((w) => {
-    const pct = Math.round(w.score || 0);
-    const band = w.band || bandForScore(pct, appId);
+    const pct = shownPct(w.scorePct, w.score);
+    const band = bandForScore(pct, appId);
     const cls = band === 'green' ? 'good green' : (band === 'yellow' ? 'yellow' : 'bad red');
     const hintHtml = w.hint && band !== 'green'
       ? `<span class="word-hint">${escapeHtml(w.hint)}</span>`
@@ -642,71 +652,44 @@ function englishCueHtml(english, className) {
   return `<p class="${className}">${escapeHtml(english)}</p>`;
 }
 
-/**
- * Extract missed (red) words from a previous attempt when some words already passed,
- * so the student retries ONLY the missed words.
- */
-export function pendingRetryWords(saved) {
-  if (!saved || saved.pass || saved.doorFail || !Array.isArray(saved.words) || saved.words.length <= 1) {
-    return [];
-  }
-  const appId = currentAppId();
-  const missed = saved.words
-    .filter((w) => (w.band || bandForScore(w.score || 0, appId)) === 'red')
-    .map((w) => w.word);
-  if (missed.length > 0 && missed.length < saved.words.length) {
-    return missed;
-  }
-  return [];
-}
-
-function partResultHtml(saved) {
+export function partResultHtml(saved) {
   if (!saved) return '';
   if (saved.doorFail) {
     return `<div class="after show"><p class="meta">${escapeHtml(saved.reason || DOOR_FAIL_TEXT)}</p></div>`;
   }
   const appId = currentAppId();
-  const pct = saved.scorePct != null ? saved.scorePct : Math.round((saved.score || 0) * 100);
-  const band = saved.band || (saved.pass ? bandForScore(pct, appId) : 'red');
+  const pct = shownPct(saved.scorePct, saved.score);
+  const band = bandForScore(pct, appId);
   let verdict = 'Not yet';
   let cls = 'fail red';
-  if (saved.pass) {
-    if (band === 'yellow' || saved.assistedPass) {
-      verdict = 'Almost (Move on)';
-      cls = 'pass yellow';
-    } else {
-      verdict = 'Pass';
-      cls = 'pass green';
-    }
+  if (saved.pass && band !== 'yellow') {
+    verdict = 'Pass';
+    cls = 'pass green';
+  } else if (band === 'yellow') {
+    verdict = saved.pass ? 'Almost (Move on)' : 'Not yet';
+    cls = saved.pass ? 'pass yellow' : 'fail yellow';
   }
-  const retryList = pendingRetryWords(saved);
-  const retryBanner = retryList.length
-    ? `<p class="meta retry-missed">Now retry only the missed word${retryList.length > 1 ? 's' : ''}: <b>${escapeHtml(retryList.join(' '))}</b></p>`
-    : '';
-  const reason = !retryList.length && saved.reason
+  const reason = !saved.pass && saved.reason
     ? `<p class="meta">${escapeHtml(saved.reason)}</p>`
     : '';
   const chips = englishRevealed(saved) ? wordChipsHtml(saved.words, saved) : '';
   return `<div class="after show" data-band="${escapeHtml(band)}">
     <p class="verdict ${cls}">${verdict} · ${pct}</p>
     ${chips}
-    ${retryBanner}
     ${reason}
   </div>`;
 }
 
 function micButtonHtml(skey, itemId, partKey, english, audioRel, allowed, ready, label) {
   const live = !!(capture && capture.scoreKey === skey);
-  const playingHere = playingMandatoryAudio && mandatoryAudioScoreKey === skey;
   let text = 'Wait';
   if (live) text = 'Listening…';
-  else if (playingHere || playingMandatoryAudio) text = 'Listen…';
   else if (label && label !== 'Mic') text = label;
   else if (ready) text = 'Mic';
 
   const itemAttr = itemId ? ` data-item-id="${escapeHtml(itemId)}"` : '';
   const partAttr = partKey ? ` data-part-key="${escapeHtml(partKey)}"` : '';
-  const enabled = live || (allowed && ready && !playingMandatoryAudio);
+  const enabled = live || (allowed && ready);
   const cls = live ? 'mic live' : 'mic';
   const stop = live ? '<button type="button" class="take-stop">Stop</button>' : '';
   return `<button type="button" class="${cls}" data-score-key="${escapeHtml(skey)}"${itemAttr}${partAttr} data-grade-text="${escapeHtml(english)}" data-audio-rel="${escapeHtml(audioRel)}" ${enabled ? '' : 'disabled'}>${text}</button>${stop}`;
@@ -1310,7 +1293,7 @@ function studentRecord(graded, gradeText, reason) {
   const appId = currentAppId();
   const pct = graded ? graded.scorePct : 0;
   const pass = graded ? !!graded.pass : false;
-  const band = graded && graded.band ? graded.band : (pass ? bandForScore(pct, appId) : 'red');
+  const band = graded && graded.band ? graded.band : bandForScore(pct, appId);
   return {
     score: graded ? graded.score : 0,
     scorePct: pct,
@@ -1385,19 +1368,9 @@ async function gradeStudentOrTeacher(meta, blob) {
   let graded = null;
   let thrown = null;
 
-  // Check if the student is retrying only the missed words from their previous attempt
-  const existingFlow = loadUnitFlow(meta.bookId, meta.unitId);
-  const prevAttempt = meta.phase === 'part1' && existingFlow.attempts
-    ? existingFlow.attempts[meta.scoreKey]
-    : null;
-  const retryList = pendingRetryWords(prevAttempt);
-
   try {
     graded = await gradeBlob(blob, meta.gradeText, doorPassHook(meta), {
       hints: meta.phase !== 'part2',
-      retryTargetText: retryList.length ? retryList.join(' ') : null,
-      previousResult: retryList.length ? prevAttempt : null,
-      fullTargetText: meta.gradeText,
     });
   } catch (err) {
     thrown = err;
@@ -1583,6 +1556,16 @@ async function gradeBlob(blob, english, hooks, gradeOpts = {}) {
   return graded.result;
 }
 
+function stopMandatoryPlayback() {
+  playingMandatoryAudio = false;
+  mandatoryAudioScoreKey = null;
+  const audio = mandatoryAudioEl;
+  mandatoryAudioEl = null;
+  if (!audio) return;
+  try { audio.pause(); } catch (_) {}
+  try { audio.dispatchEvent(new Event('ended')); } catch (_) {}
+}
+
 function playAudioUrl(url) {
   return new Promise((resolve) => {
     if (typeof Audio === 'undefined' || !url) {
@@ -1590,13 +1573,15 @@ function playAudioUrl(url) {
       return;
     }
     let settled = false;
+    const audio = new Audio(url);
+    mandatoryAudioEl = audio;
     const done = () => {
       if (settled) return;
       settled = true;
+      if (mandatoryAudioEl === audio) mandatoryAudioEl = null;
       resolve();
     };
     const timer = setTimeout(done, 8000);
-    const audio = new Audio(url);
     audio.addEventListener('ended', () => { clearTimeout(timer); done(); });
     audio.addEventListener('error', () => { clearTimeout(timer); done(); });
     audio.play().catch(() => { clearTimeout(timer); done(); });
@@ -1627,7 +1612,7 @@ let armingMic = false;
 let armToken = 0;
 
 async function onMic(btn) {
-  if (playingMandatoryAudio) return;
+  stopMandatoryPlayback();
   const r = route();
   if (r.name !== 'sheet') return;
   const book = byId.get(r.bookId);

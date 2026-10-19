@@ -7,7 +7,7 @@ import * as trial from '../src/trial.js';
 import * as engine from '../src/engine.js';
 import * as audio from '../src/audio.js';
 import * as app from '../src/app.js';
-import { canStartMic, noteAttempt, emptyFlow } from '../src/flow.js';
+import { canStartMic, noteAttempt, emptyFlow, lineOpenFor } from '../src/flow.js';
 
 const root = join(dirname(fileURLToPath(import.meta.url)), '..');
 const cmuJson = JSON.parse(readFileSync(join(root, 'models/cmudict.full.json'), 'utf8'));
@@ -199,7 +199,7 @@ test('near-field gate drops voiced segments >= 12 dB quieter than main speaker',
   assert.ok(trimmed.length < sr * 0.7, `expected trimmed length < 0.7s, got ${trimmed.length / sr}s`);
 });
 
-test('red / yellow / green banding, mandatory voice playback, and retry-missed-words merge', () => {
+test('red / yellow / green banding, and the mic stays tappable after a score', () => {
   // Yellow is nearly right -> student may move on (pass: true), logged with assistedPass: true
   const flow0 = emptyFlow();
   const yellowGrade = {
@@ -216,7 +216,7 @@ test('red / yellow / green banding, mandatory voice playback, and retry-missed-w
   assert.equal(flow1.student.line1.assistedPass, true);
   assert.deepEqual(flow1.student.line1.yellowWords, ['janitor']);
 
-  // Mandatory voice playback triggers on red OR yellow words, and locks mic while playing
+  // Model voice may play, but it must not grey out the mic or start a recording.
   assert.equal(app.shouldPlayMandatoryAudio(yellowGrade, null), true);
   assert.equal(
     canStartMic({
@@ -226,36 +226,45 @@ test('red / yellow / green banding, mandatory voice playback, and retry-missed-w
       lineOpen: true,
       playingMandatoryAudio: true,
     }),
-    false,
+    true,
   );
+  assert.equal('pendingRetryWords' in app, false);
+  assert.equal('mergeRetryResult' in trial, false);
 
-  // Retry only the missed words: merge newly passed missed word into previous attempt
-  const prevAttempt = {
+  const missed = {
     score: 0.55,
     scorePct: 55,
-    band: 'red',
+    band: 'yellow',
     pass: false,
+    reason: 'Tap the mic to try the whole sentence again.',
     words: [
-      { word: 'Where', score: 85, band: 'green', pass: true },
-      { word: 'is', score: 82, band: 'green', pass: true },
-      { word: 'the', score: 78, band: 'green', pass: true },
-      { word: 'janitor', score: 35, band: 'red', pass: false },
+      { word: 'Where', score: 85, scorePct: 85 },
+      { word: 'is', score: 62, scorePct: 62 },
+      { word: 'the', score: 40, scorePct: 40 },
     ],
   };
-  assert.deepEqual(app.pendingRetryWords(prevAttempt), ['janitor']);
+  const flowMiss = noteAttempt(emptyFlow(), 'line1', missed);
+  assert.equal(flowMiss.fails.line1, 1);
+  assert.equal(lineOpenFor(flowMiss, 'line1'), true);
+  const html = app.partResultHtml(missed);
+  assert.equal(html.includes('missed'), false);
+  assert.equal(html.includes('fail yellow'), true);
+  assert.equal(html.includes('Tap the mic to try the whole sentence again.'), true);
+  assert.equal(html.includes('word-chip yellow'), true);
+  assert.equal(html.includes('word-chip good green'), true);
+  assert.equal(html.includes('word-chip bad red'), true);
 
-  const retrySingleWord = {
-    score: 0.84,
-    scorePct: 84,
-    band: 'green',
+  const almost = { scorePct: 68, score: 0.68, pass: true, band: 'yellow', words: [{ word: 'here', scorePct: 68 }] };
+  const almostHtml = app.partResultHtml(almost);
+  assert.equal(almostHtml.includes('pass yellow'), true);
+  assert.equal(almostHtml.includes('Almost (Move on)'), true);
+
+  // A 0–1 word score must still land in yellow, not get rounded down to red.
+  const scaled = app.partResultHtml({
+    scorePct: 0.62,
     pass: true,
-    acousticFail: false,
-    words: [{ word: 'janitor', score: 84, band: 'green', pass: true }],
-  };
-  const merged = trial.mergeRetryResult(prevAttempt, retrySingleWord, 'Where is the janitor?', 'day4');
-  assert.equal(merged.pass, true);
-  assert.equal(merged.band, 'green');
-  assert.equal(merged.words.length, 4);
-  assert.equal(merged.words[3].word, 'janitor');
-  assert.equal(merged.words[3].score, 84);
+    words: [{ word: 'here', score: 0.62 }],
+  });
+  assert.equal(scaled.includes('62'), true);
+  assert.equal(scaled.includes('word-chip yellow'), true);
 });

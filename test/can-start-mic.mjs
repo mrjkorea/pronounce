@@ -16,6 +16,17 @@ test('canStartMic allows the next mic while a grade is running', () => {
   }
 });
 
+test('canStartMic stays available while the model voice is playing', () => {
+  assert.equal(canStartMic({
+    phase: 'part1',
+    recording: false,
+    grading: false,
+    timerRunning: false,
+    lineOpen: true,
+    playingMandatoryAudio: true,
+  }), true);
+});
+
 test('canStartMic blocks while a take is recording', () => {
   for (const phase of phases) {
     assert.equal(canStartMic({

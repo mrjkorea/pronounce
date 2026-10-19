@@ -371,13 +371,9 @@ h1 {
 }
 
 .verdict.pass { color: var(--pass); }
-.verdict.pass.yellow { color: var(--chip-yellow); }
+.verdict.pass.yellow,
+.verdict.fail.yellow { color: var(--chip-yellow); }
 .verdict.fail { color: var(--fail); }
-
-.retry-missed {
-  color: var(--blue);
-  font-weight: 800;
-}
 
 .meta, .english {
   margin: 0 0 8px;

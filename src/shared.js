@@ -2,13 +2,13 @@
 // Other MRJ apps import this file from https://mrjkorea.github.io/pronounce/src/shared.js so the
 // ~116 MB model (models/hubert/manifest.json + part-00..02.bin) is downloaded and cached once per browser.
 // Scoring for every app: green 75+, yellow 50-74, red under 50. PASS = line average >= 60.
-import { bootTrialInPage, gradeTrialSamples, gradeAudioForApp, mergeRetryResult, checkModelCached, DOOR_FAIL_TEXT, exposeGlobalPronounceApi } from './trial.js';
+import { bootTrialInPage, gradeTrialSamples, gradeAudioForApp, checkModelCached, DOOR_FAIL_TEXT, exposeGlobalPronounceApi } from './trial.js';
 import { APP_THRESHOLDS, PASS_PCT, getAppThresholds, bandForScore } from './engine.js';
 import * as audio from './audio.js';
 
 export const PRONOUNCE_BASE = new URL('../', import.meta.url).href;
 export const HUBERT_MANIFEST_URL = PRONOUNCE_BASE + 'models/hubert/manifest.json';
-export { APP_THRESHOLDS, PASS_PCT, getAppThresholds, bandForScore, gradeTrialSamples, gradeAudioForApp, mergeRetryResult, checkModelCached, DOOR_FAIL_TEXT, audio };
+export { APP_THRESHOLDS, PASS_PCT, getAppThresholds, bandForScore, gradeTrialSamples, gradeAudioForApp, checkModelCached, DOOR_FAIL_TEXT, audio };
 
 let bootP = null;
 export function bootShared(opts = {}) {
