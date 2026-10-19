@@ -51,6 +51,9 @@ export const APP_THRESHOLDS = Object.freeze({
 /** PASS rule (all apps): the line's average score is 60 or more. After 5 tries the student may always move on. */
 export const PASS_PCT = 60;
 
+/** Shown when a scored line does not pass. The student taps the mic and says the whole sentence. */
+export const WHOLE_SENTENCE_HINT = 'Tap the mic to try the whole sentence again.';
+
 export function getAppThresholds(appId = 'day4') {
   const key = String(appId || 'day4').toLowerCase().trim();
   return APP_THRESHOLDS[key] || APP_THRESHOLDS.default;
@@ -1301,11 +1304,8 @@ export function scoreUtteranceFromLogits(logitsOrFlat, timeSteps, targetText, op
   const yellowWords = words.filter((w) => w.band === 'yellow').map((w) => w.word);
   const greenWords = words.filter((w) => w.band === 'green').map((w) => w.word);
 
-  // Determine overall line band (red / yellow / green)
-  // If any word is red or lineScorePct < yellow, the line is red (student retries missed words).
-  // If no word is red and lineScorePct >= yellow, student passes (green if >= green and no yellow words, else yellow).
-  // Line colour by average score: green 75+, yellow 50-74, red under 50.
-  // PASS = line average >= PASS_PCT (60).
+  // Line colour by the average on the 0–100 scale: green 75+, yellow 50–74, red under 50.
+  // PASS = line average >= PASS_PCT (60). A miss is retried as the whole sentence.
   const lineBand = acousticFail ? 'red' : bandForScore(lineScorePct, appId, thresholds);
   const pass = !acousticFail && lineScorePct >= passCut;
   const needsModelAudioPlayback = acousticFail || redWords.length > 0 || yellowWords.length > 0 || lineBand !== 'green';
@@ -1325,7 +1325,7 @@ export function scoreUtteranceFromLogits(logitsOrFlat, timeSteps, targetText, op
     greenWords,
     reason: acousticFail
       ? 'Say the sentence again, please. Say each word clearly.'
-      : (pass ? '' : 'Listen to the voice, then try the missed words again.'),
+      : (pass ? '' : WHOLE_SENTENCE_HINT),
     english: targetText,
     words,
     doorFail: acousticFail,

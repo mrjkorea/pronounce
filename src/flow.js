@@ -233,7 +233,8 @@ export function reconcileFlow(flow, now) {
 
 /**
  * Next mic policy.
- * A grade, a fail sound, or rushInFlight does not block the next mic.
+ * A grade, a model-voice playback, or a fail does not block the next mic.
+ * Playback never starts a recording. The mic runs only after a tap.
  * A recording still blocks, because only one take runs at a time.
  * Part 2 also needs the timer to be running.
  */
@@ -243,11 +244,10 @@ export function canStartMic({
   timerRunning: running,
   lineOpen,
   grading: _grading,
-  playingMandatoryAudio,
+  playingMandatoryAudio: _playingMandatoryAudio,
 }) {
   if (lineOpen === false) return false;
   if (recording) return false;
-  if (playingMandatoryAudio) return false;
   if (phase === 'part1' || phase === 'teacher') return true;
   if (phase === 'part2') return !!running;
   return false;

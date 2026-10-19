@@ -435,7 +435,7 @@ export async function initTrialEngine(parts = {}) {
  * 2. VAD + Spectral clarity gate (rejects silence & low-pass mumbles)
  * 3. HuBERT phoneme CTC forward pass
  * 4. Forced alignment vs Free phoneme decode acoustic gate + phoneme/word/line scoring
- * 5. Optional retry-missed-words merge when opts.previousResult is supplied
+ * 5. The target is always the whole sentence. Single-word retries are not graded.
  */
 export async function gradeTrialSamples(samples, targetText, passAt, hooks, opts = {}) {
   const rt = runtime;
@@ -487,17 +487,11 @@ export async function gradeTrialSamples(samples, targetText, passAt, hooks, opts
 
   // Step 4: Phoneme forced alignment, free-decode acoustic gate & Korean-L1 diagnosis
   const tAlign0 = typeof performance !== 'undefined' ? performance.now() : Date.now();
-  const effectiveTarget = opts.retryTargetText || targetText;
-  let result = scoreUtteranceFromLogits(fwd.data, fwd.timeSteps, effectiveTarget, {
+  const result = scoreUtteranceFromLogits(fwd.data, fwd.timeSteps, targetText, {
     passAt,
     appId,
     acousticMarginCut: opts.acousticMarginCut,
   });
-
-  // If this was a retry of only the missed words, merge the newly scored words into previousResult
-  if (opts.previousResult && opts.fullTargetText && !result.acousticFail) {
-    result = mergeRetryResult(opts.previousResult, result, opts.fullTargetText, appId, passAt);
-  }
   const alignMs = (typeof performance !== 'undefined' ? performance.now() : Date.now()) - tAlign0;
 
   if (!result.acousticFail && hooks && typeof hooks.onDoorPass === 'function') {
@@ -527,87 +521,6 @@ export async function gradeTrialSamples(samples, targetText, passAt, hooks, opts
     perf,
     audioStats: prep.stats,
     nearField: prep.nearField,
-  };
-}
-
-/**
- * Merge a retry of only the missed (red) words back into the previous attempt's word list.
- * Allows the child to retry ONLY the missed words instead of repeating already-passed words.
- */
-export function mergeRetryResult(previousResult, retryResult, fullTargetText, appId = 'day4', passAt = null) {
-  if (!previousResult || !Array.isArray(previousResult.words) || !previousResult.words.length) {
-    return retryResult;
-  }
-  if (!retryResult || retryResult.acousticFail || !Array.isArray(retryResult.words)) {
-    return retryResult;
-  }
-
-  const baseThresholds = getAppThresholds(appId);
-  const passCut = typeof passAt === 'number' ? passAt : PASS_PCT;
-  const thresholds = { green: baseThresholds.green, yellow: baseThresholds.yellow };
-
-  const prevWords = previousResult.words;
-  const retryWords = retryResult.words;
-
-  // If the student spoke the entire sentence again, pair word-by-word and keep the better/updated score
-  const mergedWords = prevWords.map((pw) => ({ ...pw }));
-  if (retryWords.length === prevWords.length) {
-    for (let i = 0; i < mergedWords.length; i++) {
-      if (prevWords[i].band === 'red' || retryWords[i].score >= prevWords[i].score) {
-        mergedWords[i] = retryWords[i];
-      }
-    }
-  } else {
-    // Replace the previously red (missed) slots in order with the newly graded words
-    const missedIndices = [];
-    for (let i = 0; i < mergedWords.length; i++) {
-      if (mergedWords[i].band === 'red' || !mergedWords[i].pass) {
-        missedIndices.push(i);
-      }
-    }
-    for (let k = 0; k < missedIndices.length && k < retryWords.length; k++) {
-      const targetIdx = missedIndices[k];
-      mergedWords[targetIdx] = {
-        ...retryWords[k],
-        word: mergedWords[targetIdx].word,
-      };
-    }
-  }
-
-  const lineRawAvg = mergedWords.length
-    ? mergedWords.reduce((s, w) => s + w.score, 0) / mergedWords.length
-    : 0;
-  const lineScorePct = Math.round(lineRawAvg);
-  const redWords = mergedWords.filter((w) => w.band === 'red').map((w) => w.word);
-  const yellowWords = mergedWords.filter((w) => w.band === 'yellow').map((w) => w.word);
-  const greenWords = mergedWords.filter((w) => w.band === 'green').map((w) => w.word);
-
-  const lineBand = bandForScore(lineScorePct, appId, thresholds);
-  const pass = lineScorePct >= passCut;
-  const needsAudioPlayback = redWords.length > 0 || yellowWords.length > 0 || lineBand !== 'green';
-
-  return {
-    ...retryResult,
-    score: lineScorePct / 100,
-    scorePct: lineScorePct,
-    rawScorePct: lineScorePct,
-    band: lineBand,
-    color: lineBand,
-    pass,
-    assistedPass: pass && lineBand !== 'green',
-    needsAudioPlayback,
-    weak: redWords,
-    missedWords: redWords,
-    yellowWords,
-    greenWords,
-    reason: pass ? '' : 'Listen to the voice, then try the missed words again.',
-    english: fullTargetText,
-    words: mergedWords,
-    doorFail: false,
-    acousticFail: false,
-    retriedMissedOnly: true,
-    thresholds,
-    appId,
   };
 }
 
@@ -718,7 +631,6 @@ export function exposeGlobalPronounceApi() {
     checkModelCached,
     gradeSamples: gradeTrialSamples,
     gradeAudio: gradeAudioForApp,
-    mergeRetryResult,
     expectedPhoneSequence,
     tokenizeWords,
     // App-specific entry points for Day 4, Day 6, Decodable Readers, and TOEIC Read-Aloud
