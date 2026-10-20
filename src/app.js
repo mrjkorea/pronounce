@@ -49,24 +49,61 @@ import {
   loadPackWithRetry,
   mergeScoresAfterServerFetch,
   packLoadAllowsSave,
+  parsePackJson,
+  mergeScoreMaps,
   scoresNeedSaveAfterSync,
   shouldFlushPackOnPagehide,
   studentScoreStorageKey,
 } from './progress-merge.js';
+import { createPackSaveScheduler } from './pack-save-scheduler.js?v=20261020-packsave';
 import { reportScoredActivity } from './score-reporting.js';
 
 export const PASS_PCT = ENGINE_PASS_PCT; // pass = line average >= 60
 let activeStudentKey = '';
 const remoteSync = {
   packLoadOk: false,
-  dirty: false,
   loadedServerScores: {},
   syncGen: 0,
-  saveTimer: null,
-  flushPending: false,
-  lastSaveAt: 0,
-  inFlight: false,
+  packSave: null,
 };
+
+function packSaveScheduler() {
+  if (!remoteSync.packSave) {
+    remoteSync.packSave = createPackSaveScheduler({
+      minIntervalMs: REMOTE_SAVE_MIN_MS,
+      getPackLoadOk: () => remoteSync.packLoadOk,
+      setPackLoadOk: (ok) => { remoteSync.packLoadOk = !!ok; },
+      isAuthReady: () => {
+        const auth = window.MRJ_AUTH;
+        return !!(auth && typeof auth.savePack === 'function'
+          && auth.packReady && auth.packReady(PROGRAM));
+      },
+      readLocalScores: () => loadScores(),
+      getLoadedServerScores: () => remoteSync.loadedServerScores,
+      setLoadedServerScores: (scores) => { remoteSync.loadedServerScores = scores || {}; },
+      savePack: (json) => window.MRJ_AUTH.savePack(PROGRAM, json),
+      ensurePackLoaded: () => ensurePackLoadedForSave(),
+      buildPackSavePayload,
+      scoresNeedSaveAfterSync,
+      shouldFlushOnPagehide: shouldFlushPackOnPagehide,
+    });
+  }
+  return remoteSync.packSave;
+}
+
+async function ensurePackLoadedForSave() {
+  const auth = window.MRJ_AUTH;
+  if (!auth || typeof auth.loadPack !== 'function') return false;
+  const loaded = await loadPackWithRetry((program) => auth.loadPack(program), PROGRAM);
+  if (!loaded.ok || !packLoadAllowsSave(loaded.result)) return false;
+  remoteSync.packLoadOk = true;
+  const parsed = parsePackJson(loaded.result.progress_json);
+  remoteSync.loadedServerScores = mergeScoreMaps(
+    remoteSync.loadedServerScores,
+    parsed.scores,
+  );
+  return !!(auth.packReady && auth.packReady(PROGRAM));
+}
 const LANG_KEY = 'day4-ui-lang';
 const UI_LANGS = [
   ['en', 'English'],
@@ -264,66 +301,15 @@ function loadScores() {
 function saveScores(scores) {
   if (!activeStudentKey) return;
   localStorage.setItem(activeStudentKey, JSON.stringify(scores));
-  remoteSync.dirty = true;
-  schedulePackSave();
-}
-
-function clearRemoteSaveTimer() {
-  if (remoteSync.saveTimer) {
-    clearTimeout(remoteSync.saveTimer);
-    remoteSync.saveTimer = null;
-  }
+  packSaveScheduler().markDirty();
 }
 
 function schedulePackSave(delayMs) {
-  if (!remoteSync.packLoadOk || remoteSync.inFlight) return;
-  const auth = window.MRJ_AUTH;
-  if (!auth || typeof auth.savePack !== 'function' || !auth.packReady || !auth.packReady(PROGRAM)) return;
-  clearRemoteSaveTimer();
-  const now = Date.now();
-  const wait = delayMs != null
-    ? delayMs
-    : Math.max(0, REMOTE_SAVE_MIN_MS - (now - remoteSync.lastSaveAt));
-  remoteSync.saveTimer = setTimeout(() => {
-    remoteSync.saveTimer = null;
-    void flushPackSave(false);
-  }, wait);
+  packSaveScheduler().schedule(delayMs);
 }
 
-async function flushPackSave(force, opts) {
-  if (!remoteSync.packLoadOk) return;
-  if (opts && opts.pagehide && !shouldFlushPackOnPagehide(remoteSync.dirty, remoteSync.packLoadOk)) return;
-  const auth = window.MRJ_AUTH;
-  if (!auth || typeof auth.savePack !== 'function' || !auth.packReady || !auth.packReady(PROGRAM)) return;
-  const now = Date.now();
-  if (!force && now - remoteSync.lastSaveAt < REMOTE_SAVE_MIN_MS) {
-    schedulePackSave();
-    return;
-  }
-  if (!remoteSync.dirty && !(opts && opts.pagehide)) return;
-  if (remoteSync.inFlight) {
-    remoteSync.flushPending = true;
-    return;
-  }
-  remoteSync.inFlight = true;
-  try {
-    const merged = buildPackSavePayload(loadScores(), remoteSync.loadedServerScores);
-    const payload = JSON.stringify(merged);
-    const res = await auth.savePack(PROGRAM, payload);
-    if (res && res.ok) {
-      remoteSync.lastSaveAt = Date.now();
-      remoteSync.loadedServerScores = merged;
-      remoteSync.dirty = false;
-    }
-  } catch (err) {
-    console.error(err);
-  } finally {
-    remoteSync.inFlight = false;
-    if (remoteSync.flushPending) {
-      remoteSync.flushPending = false;
-      void flushPackSave(true);
-    }
-  }
+function flushPackSave(force, opts) {
+  return packSaveScheduler().flush(force, opts);
 }
 
 async function syncScoresFromServer(detail) {
@@ -334,7 +320,7 @@ async function syncScoresFromServer(detail) {
   if (!studentId) {
     activeStudentKey = '';
     remoteSync.packLoadOk = false;
-    remoteSync.dirty = false;
+    packSaveScheduler().setDirty(false);
     remoteSync.loadedServerScores = {};
     return;
   }
@@ -342,7 +328,9 @@ async function syncScoresFromServer(detail) {
   activeStudentKey = nextKey;
   remoteSync.packLoadOk = false;
   remoteSync.loadedServerScores = {};
-  clearRemoteSaveTimer();
+  const sched = packSaveScheduler();
+  sched.prepareForServerSync();
+  sched.setDirty(false);
 
   let packJson = '';
   if (typeof auth.loadPack === 'function') {
@@ -374,10 +362,11 @@ async function syncScoresFromServer(detail) {
   if (activeStudentKey) {
     localStorage.setItem(activeStudentKey, JSON.stringify(merged));
     remoteSync.loadedServerScores = serverMerged;
-    const dirtyBefore = remoteSync.dirty;
-    remoteSync.dirty = dirtyBefore || scoresNeedSaveAfterSync(merged, serverMerged);
-    if (remoteSync.packLoadOk && remoteSync.dirty) {
-      remoteSync.lastSaveAt = 0;
+    const sched = packSaveScheduler();
+    const dirtyBefore = sched.getDirty();
+    sched.setDirty(dirtyBefore || scoresNeedSaveAfterSync(merged, serverMerged));
+    if (remoteSync.packLoadOk && sched.getDirty()) {
+      sched.setLastSaveAt(0);
       schedulePackSave(0);
     }
   }
@@ -1779,8 +1768,12 @@ if (appEl) {
   }
 
   window.addEventListener('mrj-auth-ready', onAuthReady);
-  window.addEventListener('pagehide', () => {
+  const flushPackOnHide = () => {
     void flushPackSave(true, { pagehide: true });
+  };
+  window.addEventListener('pagehide', flushPackOnHide);
+  document.addEventListener('visibilitychange', () => {
+    if (document.visibilityState === 'hidden') flushPackOnHide();
   });
 
   loadContent().then(async () => {
