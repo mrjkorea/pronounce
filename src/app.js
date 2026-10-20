@@ -547,7 +547,7 @@ function bookProgress(book) {
 function renderHome() {
   const cards = books.map((book) => {
     const prog = bookProgress(book);
-    return `<a class="book" href="#/book/${book.id}">${book.label}<small>${prog.pass} / ${prog.n} passed</small></a>`;
+    return `<a class="book" href="#/book/${book.id}">${book.label}<small>${prog.pass} / ${prog.n} (${prog.n ? Math.round((prog.pass / prog.n) * 100) : 0}%) passed</small></a>`;
   }).join('');
   appEl.innerHTML = `<h1>Pronounce · Day 4</h1><p class="lead">Tap your book.</p><div class="books">${cards}</div>`;
 }
@@ -559,7 +559,7 @@ function renderUnits(bookId) {
   const rows = book.units.map((unit) => {
     const lines = sheetLines(book.id, unit);
     const passed = lines.filter((line) => linePassed(line, unit, scores)).length;
-    return `<a class="unit" href="#/book/${book.id}/unit/${unit.id}">${unit.title}<small>${passed} / ${lines.length}</small></a>`;
+    return `<a class="unit" href="#/book/${book.id}/unit/${unit.id}">${unit.title}<small>${passed} / ${lines.length} (${lines.length ? Math.round((passed / lines.length) * 100) : 0}%)</small></a>`;
   }).join('');
   appEl.innerHTML = `<a class="back" href="#/">← Books</a><h1>${book.label}</h1><p class="lead">Tap the unit you are studying.</p><div class="units">${rows}</div>`;
 }
