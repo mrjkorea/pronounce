@@ -985,8 +985,8 @@ function resultsHtml(flow, targets) {
   return `<section class="part-results">
     <h2>Results</h2>
     <p>Seconds used: ${view.secondsUsed}. Limit ${view.limitSec}.</p>
-    <p>Part 2 pronunciation: ${view.rushPassed} passed</p>
-    <p>Part 1 pronunciation: ${view.passed} passed</p>
+    <p>Part 2 pronunciation: ${view.rushPassed} passed${view.total ? ` (${Math.round((view.rushPassed / view.total) * 100)}%)` : ''}</p>
+    <p>Part 1 pronunciation: ${view.passed} passed${view.total ? ` (${Math.round((view.passed / view.total) * 100)}%)` : ''}</p>
     ${skips}
     ${said}
   </section>`;
