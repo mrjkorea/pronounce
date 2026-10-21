@@ -984,6 +984,7 @@ function resultsHtml(flow, targets) {
   const said = view.teacherSaid.map((line) => `<p class="teacher-line">${escapeHtml(line.label)} <b>teacher</b></p>`).join('');
   return `<section class="part-results">
     <h2>Results</h2>
+    ${view.total ? `<p class="big-pct" style="font-size:2.4rem;font-weight:900;margin:.2em 0">Part 1: ${Math.round((view.passed / view.total) * 100)}% · Part 2: ${Math.round((view.rushPassed / view.total) * 100)}%</p>` : ''}
     <p>Seconds used: ${view.secondsUsed}. Limit ${view.limitSec}.</p>
     <p>Part 2 pronunciation: ${view.rushPassed} passed${view.total ? ` (${Math.round((view.rushPassed / view.total) * 100)}%)` : ''}</p>
     <p>Part 1 pronunciation: ${view.passed} passed${view.total ? ` (${Math.round((view.passed / view.total) * 100)}%)` : ''}</p>
