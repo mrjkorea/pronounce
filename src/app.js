@@ -15,9 +15,10 @@ import {
   FLOW_STORAGE_KEY,
   LOCK_TEXT,
   advanceFlow,
-  canStartMic,
+  enterPart2,
+  canStartMic as flowCanStartMic,
   isLocked,
-  lineOpenFor,
+  lineOpenFor as flowLineOpenFor,
   markRushRecorded,
   normalizeFlow,
   noteAttempt,
@@ -28,10 +29,33 @@ import {
   startTimer,
   stopTimer,
   sumWords,
-  timerRunning,
+  timerRunning as flowTimerRunning,
   timerSeconds,
   tryTeacherPassword,
 } from './flow.js?v=20261019-move-on';
+import { isMrjTeacher } from './mrj-teacher.js';
+
+function lineOpenFor(flow, id) {
+  if (isMrjTeacher()) return true;
+  return flowLineOpenFor(flow, id);
+}
+
+function timerRunning(flow, now) {
+  if (isMrjTeacher() && flow && flow.phase === 'part2') {
+    const part = flow.part2 || {};
+    return !!(part.startedAt && !part.stoppedAt);
+  }
+  return flowTimerRunning(flow, now);
+}
+
+function canStartMic(opts) {
+  if (isMrjTeacher()) {
+    if (opts && opts.lineOpen === false) return false;
+    if (opts && opts.recording) return false;
+    return true;
+  }
+  return flowCanStartMic(opts);
+}
 import {
   DOOR_CHECKING_TEXT,
   DOOR_FAIL_TEXT,
@@ -1059,9 +1083,14 @@ function prepareUnitFlow(bookId, unit) {
   const targets = speakTargets(bookId, unit);
   const ids = targets.map((target) => target.id);
   const wordCount = sumWords(targets.map((target) => target.english));
-  let flow = reconcileFlow(loadUnitFlow(bookId, unit.id), Date.now());
-  if (flow.phase === 'part1' || flow.phase === 'teacher') {
-    flow = advanceFlow(flow, ids, wordCount);
+  let flow = loadUnitFlow(bookId, unit.id);
+  if (isMrjTeacher()) {
+    if (flow.phase === 'part1' || flow.phase === 'teacher') flow = enterPart2(flow, wordCount);
+  } else {
+    flow = reconcileFlow(flow, Date.now());
+    if (flow.phase === 'part1' || flow.phase === 'teacher') {
+      flow = advanceFlow(flow, ids, wordCount);
+    }
   }
   if (flow.phase === 'part2' && !flow.part2.wordCount) {
     flow = Object.assign({}, flow, {
@@ -1769,6 +1798,7 @@ if (appEl) {
   }
 
   window.addEventListener('mrj-auth-ready', onAuthReady);
+  document.addEventListener('mrj-teacher', () => render());
   const flushPackOnHide = () => {
     void flushPackSave(true, { pagehide: true });
   };
