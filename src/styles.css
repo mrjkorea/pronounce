@@ -45,7 +45,42 @@ body.auth-wait #app {
   align-items: center;
   justify-content: space-between;
   gap: 12px;
+  flex-wrap: wrap;
 }
+
+.topbar-controls {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  flex-shrink: 0;
+}
+
+.topbar-controls .student-pill {
+  font-size: 16px;
+  font-weight: 700;
+  padding: 8px 14px;
+  border-radius: 999px;
+  border: 2px solid var(--border, #cfe0d4);
+  background: #fff;
+  color: var(--accent-dark, #157a42);
+  cursor: pointer;
+  max-width: min(11rem, 38vw);
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.topbar-controls .mrj-auth-teacher-btn {
+  font-size: 15px;
+  font-weight: 800;
+  padding: 8px 14px;
+  border-radius: 999px;
+  border: 2px solid var(--accent-dark, #157a42);
+  background: #fff;
+  color: var(--accent-dark, #157a42);
+  cursor: pointer;
+}
+
 
 .lang-label select {
   font: inherit;

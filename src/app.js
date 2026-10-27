@@ -33,7 +33,7 @@ import {
   timerSeconds,
   tryTeacherPassword,
 } from './flow.js?v=20261019-move-on';
-import { isMrjTeacher } from './mrj-teacher.js';
+import { isMrjTeacher, installTeacherRefresh, promptTeacherUnlock } from './mrj-teacher.js';
 
 function lineOpenFor(flow, id) {
   if (isMrjTeacher()) return true;
@@ -402,6 +402,7 @@ function onAuthReady(ev) {
   if (typeof window.MRJ_AUTH?.progressError === 'function' && window.MRJ_AUTH.progressError()) {
     // Progress book failed; keep local data and still try pack sync below.
   }
+  syncStudentChrome();
   exposeBenchHook();
   void syncScoresFromServer(detail);
 }
@@ -541,6 +542,40 @@ function linePassed(line, unit, scores) {
     return !!(saved && saved.pass);
   }
   return itemRowPassed(line.item, unit, scores);
+}
+
+function studentDisplayId() {
+  try {
+    const auth = window.MRJ_AUTH || window.MRJSignin;
+    if (auth && typeof auth.student === 'function') return String(auth.student() || '').trim();
+  } catch (_) { /* ignore */ }
+  return '';
+}
+
+function syncStudentChrome() {
+  const id = studentDisplayId();
+  const pill = document.getElementById('pronounceStudentPill');
+  if (pill) {
+    if (id) {
+      pill.textContent = id;
+      pill.hidden = false;
+    } else {
+      pill.hidden = true;
+      pill.textContent = '';
+    }
+  }
+  try {
+    const auth = window.MRJ_AUTH || window.MRJSignin;
+    if (auth && typeof auth.applyStudentChrome === 'function') auth.applyStudentChrome();
+    else if (auth && typeof auth.updateStudentChip === 'function') auth.updateStudentChip();
+  } catch (_) { /* ignore */ }
+}
+
+function wireTopTeacherButton() {
+  const btn = document.getElementById('pronounceTeacherBtn');
+  if (!btn || btn.getAttribute('data-pronounce-teacher-wired') === '1') return;
+  btn.setAttribute('data-pronounce-teacher-wired', '1');
+  btn.addEventListener('click', () => promptTeacherUnlock());
 }
 
 function bookProgress(book) {
@@ -979,7 +1014,7 @@ function sheetView(flow, targets) {
       lineOpen: lineOpenFor(flow, id),
       playingMandatoryAudio,
     });
-    if (flow.phase === 'part1' && isLocked(flow, id)) locked[id] = true;
+    if (flow.phase === 'part1' && isLocked(flow, id) && !isMrjTeacher()) locked[id] = true;
     if (flow.phase === 'part2' || flow.phase === 'results') marks[id] = rushMark(flow, id);
   }
   const rush = flow.phase === 'part2' || flow.phase === 'results';
@@ -1797,8 +1832,18 @@ if (appEl) {
     });
   }
 
+  wireTopTeacherButton();
+  syncStudentChrome();
+  installTeacherRefresh(() => {
+    syncStudentChrome();
+    render();
+  });
+
   window.addEventListener('mrj-auth-ready', onAuthReady);
-  document.addEventListener('mrj-teacher', () => render());
+  document.addEventListener('mrj-teacher', () => {
+    syncStudentChrome();
+    render();
+  });
   const flushPackOnHide = () => {
     void flushPackSave(true, { pagehide: true });
   };
