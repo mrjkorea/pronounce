@@ -6,10 +6,10 @@
   <meta name="viewport" content="width=device-width, initial-scale=1">
   <title>Pronounce · Day 4</title>
   <link rel="stylesheet" href="https://mrjkorea.github.io/mrj-signin/mrj-auth.css">
-  <meta name="mrj-build" content="20261020-packsave">
-  <link rel="stylesheet" href="src/styles.css?v=20261020-packsave">
-  <link rel="stylesheet" href="preview-assets/mrj-theme.css?v=20261020-packsave">
-  <link rel="stylesheet" href="preview-assets/pronounce-preview.css?v=20261020-packsave">
+  <meta name="mrj-build" content="20261027-teacher-chrome">
+  <link rel="stylesheet" href="src/styles.css?v=20261027-teacher-chrome">
+  <link rel="stylesheet" href="preview-assets/mrj-theme.css?v=20261027-teacher-chrome">
+  <link rel="stylesheet" href="preview-assets/pronounce-preview.css?v=20261027-teacher-chrome">
   <script src="https://mrjkorea.github.io/mrj-signin/mrj-auth.js"></script>
   <script src="https://mrjkorea.github.io/mrj-signin/mrj-auth-boot.js" data-mrj-app="pronounce"></script>
 </head>
@@ -18,6 +18,10 @@
     <div class="top-row">
       <a class="brand" href="#/">Pronounce · Day 4</a>
       <label class="lang-label"><select id="langMenu" aria-label="Language"></select></label>
+      <div class="topbar-controls" id="mrjTopChrome">
+        <button type="button" class="student-pill" id="pronounceStudentPill" data-mrj-name-pill hidden></button>
+        <button type="button" class="mrj-auth-teacher-btn" id="pronounceTeacherBtn">Teacher</button>
+      </div>
     </div>
     <div class="voice-toggle" role="group" aria-label="Voice · 목소리">
       <button type="button" class="voice-btn" data-voice="ray" aria-pressed="true">👨‍🏫 Coach Ray</button>
@@ -28,9 +32,9 @@
   </header>
   <main id="app"></main>
   <script src="vendor/ort/ort.wasm.min.js"></script>
-  <script src="mrj-scores.js?v=20261020-packsave"></script>
-  <script type="module" src="src/app.js?v=20261020-packsave"></script>
-  <script src="preview-assets/preview-ui.js?v=20261020-packsave"></script>
+  <script src="mrj-scores.js?v=20261027-teacher-chrome"></script>
+  <script type="module" src="src/app.js?v=20261027-teacher-chrome"></script>
+  <script src="preview-assets/preview-ui.js?v=20261027-teacher-chrome"></script>
   <script>
     window.addEventListener('mrj-auth-ready', function () {
       document.body.classList.remove('auth-wait');

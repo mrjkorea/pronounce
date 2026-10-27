@@ -17,6 +17,9 @@ html[data-book] body { padding: 0 16px 48px; font-family: var(--font-ui); }
 .pv-lang-pop[hidden] { display: none; }
 .pv-lang-chip { font: 700 1rem var(--font-ui); padding: .55rem .7rem; border-radius: 12px; border: 2px solid var(--border); background: #fff; color: var(--ink); cursor: pointer; }
 .pv-lang-chip.is-on { border-color: var(--accent); background: var(--accent-soft); color: var(--accent-dark); }
+.topbar-controls .mrj-auth-teacher-btn:focus-visible,
+.topbar-controls .student-pill:focus-visible { outline: none; box-shadow: var(--ring); }
+html.mrj-teacher .topbar-controls .mrj-auth-teacher-btn { background: var(--accent-soft); }
 /* home + units */
 #app h1 { font-size: 2rem; font-weight: 900; }
 #app .lead { font-size: 1.1rem; color: var(--muted); }
