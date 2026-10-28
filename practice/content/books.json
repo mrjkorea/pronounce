@@ -1,0 +1,549 @@
+{
+  "packs": [
+    {
+      "id": "greetings",
+      "title": {
+        "en": "Greetings",
+        "ko": "인사"
+      },
+      "phrases": [
+        {
+          "en": "Hello.",
+          "ko": "안녕하세요."
+        },
+        {
+          "en": "Hi there.",
+          "ko": "안녕."
+        },
+        {
+          "en": "Good morning.",
+          "ko": "좋은 아침이에요."
+        },
+        {
+          "en": "Good afternoon.",
+          "ko": "좋은 오후예요."
+        },
+        {
+          "en": "Good evening.",
+          "ko": "좋은 저녁이에요."
+        },
+        {
+          "en": "Good night.",
+          "ko": "잘 자요."
+        },
+        {
+          "en": "How are you?",
+          "ko": "잘 지냈어요?"
+        },
+        {
+          "en": "I'm fine, thank you.",
+          "ko": "잘 지내요, 고마워요."
+        },
+        {
+          "en": "Nice to meet you.",
+          "ko": "만나서 반가워요."
+        },
+        {
+          "en": "See you later.",
+          "ko": "나중에 봐요."
+        },
+        {
+          "en": "See you tomorrow.",
+          "ko": "내일 봐요."
+        },
+        {
+          "en": "Take care.",
+          "ko": "잘 지내요."
+        },
+        {
+          "en": "Have a nice day.",
+          "ko": "좋은 하루 보내세요."
+        },
+        {
+          "en": "What's up?",
+          "ko": "무슨 일이야?"
+        },
+        {
+          "en": "Long time no see.",
+          "ko": "오랜만이에요."
+        },
+        {
+          "en": "How have you been?",
+          "ko": "어떻게 지냈어요?"
+        },
+        {
+          "en": "Pleased to meet you.",
+          "ko": "만나서 기쁩니다."
+        },
+        {
+          "en": "Welcome.",
+          "ko": "환영합니다."
+        },
+        {
+          "en": "Good to see you.",
+          "ko": "만나서 반가워요."
+        },
+        {
+          "en": "How's it going?",
+          "ko": "잘 지내?"
+        },
+        {
+          "en": "I'm glad to see you.",
+          "ko": "만나서 기뻐요."
+        },
+        {
+          "en": "See you soon.",
+          "ko": "곧 봐요."
+        },
+        {
+          "en": "Bye for now.",
+          "ko": "일단 안녕."
+        },
+        {
+          "en": "Catch you later.",
+          "ko": "나중에 봐."
+        },
+        {
+          "en": "Have a good one.",
+          "ko": "좋은 하루 되세요."
+        }
+      ]
+    },
+    {
+      "id": "classroom",
+      "title": {
+        "en": "Classroom",
+        "ko": "교실"
+      },
+      "phrases": [
+        {
+          "en": "Open your book.",
+          "ko": "책을 펴세요."
+        },
+        {
+          "en": "Close your book.",
+          "ko": "책을 닫으세요."
+        },
+        {
+          "en": "Listen carefully.",
+          "ko": "잘 들으세요."
+        },
+        {
+          "en": "Repeat after me.",
+          "ko": "따라 하세요."
+        },
+        {
+          "en": "Raise your hand.",
+          "ko": "손을 드세요."
+        },
+        {
+          "en": "Sit down, please.",
+          "ko": "앉으세요."
+        },
+        {
+          "en": "Stand up, please.",
+          "ko": "일어서세요."
+        },
+        {
+          "en": "Work in pairs.",
+          "ko": "짝과 하세요."
+        },
+        {
+          "en": "Check your answer.",
+          "ko": "답을 확인하세요."
+        },
+        {
+          "en": "Turn to page ten.",
+          "ko": "열 페이지로 가세요."
+        },
+        {
+          "en": "Do you understand?",
+          "ko": "이해했어요?"
+        },
+        {
+          "en": "I don't understand.",
+          "ko": "이해 못 했어요."
+        },
+        {
+          "en": "Can you help me?",
+          "ko": "도와줄 수 있어요?"
+        },
+        {
+          "en": "May I go out?",
+          "ko": "나가도 될까요?"
+        },
+        {
+          "en": "I'm sorry I'm late.",
+          "ko": "늦어서 미안해요."
+        },
+        {
+          "en": "What's the homework?",
+          "ko": "숙제가 뭐예요?"
+        },
+        {
+          "en": "When is the test?",
+          "ko": "시험이 언제예요?"
+        },
+        {
+          "en": "I finished.",
+          "ko": "다 했어요."
+        },
+        {
+          "en": "Can I ask a question?",
+          "ko": "질문해도 될까요?"
+        },
+        {
+          "en": "Write your name.",
+          "ko": "이름을 쓰세요."
+        },
+        {
+          "en": "Read the sentence.",
+          "ko": "문장을 읽으세요."
+        },
+        {
+          "en": "Circle the correct answer.",
+          "ko": "맞는 답에 동그라미 하세요."
+        },
+        {
+          "en": "Line up, please.",
+          "ko": "줄을 서세요."
+        },
+        {
+          "en": "Be quiet, please.",
+          "ko": "조용히 하세요."
+        },
+        {
+          "en": "Great job today.",
+          "ko": "오늘 잘했어요."
+        }
+      ]
+    },
+    {
+      "id": "shopping",
+      "title": {
+        "en": "Shopping",
+        "ko": "쇼핑"
+      },
+      "phrases": [
+        {
+          "en": "How much is this?",
+          "ko": "이거 얼마예요?"
+        },
+        {
+          "en": "It's too expensive.",
+          "ko": "너무 비싸요."
+        },
+        {
+          "en": "Do you have a smaller size?",
+          "ko": "더 작은 사이즈 있어요?"
+        },
+        {
+          "en": "I'll take this one.",
+          "ko": "이걸로 할게요."
+        },
+        {
+          "en": "Can I pay by card?",
+          "ko": "카드로 될까요?"
+        },
+        {
+          "en": "Where is the fitting room?",
+          "ko": "탈의실이 어디예요?"
+        },
+        {
+          "en": "I'm just looking.",
+          "ko": "그냥 구경해요."
+        },
+        {
+          "en": "Do you have this in blue?",
+          "ko": "파란색 있어요?"
+        },
+        {
+          "en": "It's on sale.",
+          "ko": "할인 중이에요."
+        },
+        {
+          "en": "I need a receipt.",
+          "ko": "영수증 주세요."
+        },
+        {
+          "en": "Can I get a bag?",
+          "ko": "봉투 주세요."
+        },
+        {
+          "en": "Is there a discount?",
+          "ko": "할인 있어요?"
+        },
+        {
+          "en": "I'll come back later.",
+          "ko": "나중에 올게요."
+        },
+        {
+          "en": "Where do I pay?",
+          "ko": "어디서 계산해요?"
+        },
+        {
+          "en": "That's all, thanks.",
+          "ko": "이게 다예요, 감사합니다."
+        },
+        {
+          "en": "Can you wrap it?",
+          "ko": "포장해 주세요."
+        },
+        {
+          "en": "I want to return this.",
+          "ko": "이거 반품하고 싶어요."
+        },
+        {
+          "en": "Do you accept cash?",
+          "ko": "현금 되나요?"
+        },
+        {
+          "en": "It's a gift.",
+          "ko": "선물이에요."
+        },
+        {
+          "en": "What time do you close?",
+          "ko": "몇 시에 문 닫아요?"
+        },
+        {
+          "en": "I'm looking for shoes.",
+          "ko": "신발 찾고 있어요."
+        },
+        {
+          "en": "This fits well.",
+          "ko": "잘 맞아요."
+        },
+        {
+          "en": "This doesn't fit.",
+          "ko": "안 맞아요."
+        },
+        {
+          "en": "Can I try it on?",
+          "ko": "입어 봐도 될까요?"
+        },
+        {
+          "en": "Thank you for your help.",
+          "ko": "도와주셔서 감사합니다."
+        }
+      ]
+    },
+    {
+      "id": "travel",
+      "title": {
+        "en": "Travel",
+        "ko": "여행"
+      },
+      "phrases": [
+        {
+          "en": "Where is the gate?",
+          "ko": "게이트가 어디예요?"
+        },
+        {
+          "en": "I have a reservation.",
+          "ko": "예약했어요."
+        },
+        {
+          "en": "One ticket, please.",
+          "ko": "표 한 장 주세요."
+        },
+        {
+          "en": "What time does it leave?",
+          "ko": "몇 시에 출발해요?"
+        },
+        {
+          "en": "Is this seat taken?",
+          "ko": "이 자리 있어요?"
+        },
+        {
+          "en": "I lost my passport.",
+          "ko": "여권을 잃어버렸어요."
+        },
+        {
+          "en": "Where is the baggage claim?",
+          "ko": "수하물 찾는 곳이 어디예요?"
+        },
+        {
+          "en": "How do I get to the hotel?",
+          "ko": "호텔까지 어떻게 가요?"
+        },
+        {
+          "en": "I'd like to check in.",
+          "ko": "체크인할게요."
+        },
+        {
+          "en": "What floor is my room?",
+          "ko": "방이 몇 층이에요?"
+        },
+        {
+          "en": "Is breakfast included?",
+          "ko": "조식 포함이에요?"
+        },
+        {
+          "en": "Can you call a taxi?",
+          "ko": "택시 불러 주세요."
+        },
+        {
+          "en": "How far is the airport?",
+          "ko": "공항까지 얼마나 멀어요?"
+        },
+        {
+          "en": "I'm here for vacation.",
+          "ko": "휴가로 왔어요."
+        },
+        {
+          "en": "Where can I exchange money?",
+          "ko": "환전 어디서 해요?"
+        },
+        {
+          "en": "Is there free Wi-Fi?",
+          "ko": "무료 와이파이 있어요?"
+        },
+        {
+          "en": "I need a map.",
+          "ko": "지도 필요해요."
+        },
+        {
+          "en": "Which bus goes downtown?",
+          "ko": "시내 가는 버스가 뭐예요?"
+        },
+        {
+          "en": "Two adults, one child.",
+          "ko": "어른 둘, 아이 하나."
+        },
+        {
+          "en": "Is it far from here?",
+          "ko": "여기서 멀어요?"
+        },
+        {
+          "en": "Turn left at the corner.",
+          "ko": "모퉁이에서 왼쪽으로 가세요."
+        },
+        {
+          "en": "I'm allergic to nuts.",
+          "ko": "견과류 알레르기가 있어요."
+        },
+        {
+          "en": "Can I have the menu?",
+          "ko": "메뉴 주세요."
+        },
+        {
+          "en": "The view is beautiful.",
+          "ko": "경치가 아름다워요."
+        },
+        {
+          "en": "Have a safe trip.",
+          "ko": "안전한 여행 되세요."
+        }
+      ]
+    },
+    {
+      "id": "daily",
+      "title": {
+        "en": "Daily life",
+        "ko": "일상"
+      },
+      "phrases": [
+        {
+          "en": "I'm hungry.",
+          "ko": "배고파요."
+        },
+        {
+          "en": "I'm thirsty.",
+          "ko": "목말라요."
+        },
+        {
+          "en": "I'm tired.",
+          "ko": "피곤해요."
+        },
+        {
+          "en": "I'm busy today.",
+          "ko": "오늘 바빠요."
+        },
+        {
+          "en": "What time is it?",
+          "ko": "몇 시예요?"
+        },
+        {
+          "en": "Let's eat lunch.",
+          "ko": "점심 먹자."
+        },
+        {
+          "en": "I like coffee.",
+          "ko": "커피 좋아해요."
+        },
+        {
+          "en": "I don't like that.",
+          "ko": "그건 싫어요."
+        },
+        {
+          "en": "It's raining.",
+          "ko": "비 와요."
+        },
+        {
+          "en": "It's cold today.",
+          "ko": "오늘 추워요."
+        },
+        {
+          "en": "It's hot today.",
+          "ko": "오늘 더워요."
+        },
+        {
+          "en": "I woke up early.",
+          "ko": "일찍 일어났어요."
+        },
+        {
+          "en": "I need to go home.",
+          "ko": "집에 가야 해요."
+        },
+        {
+          "en": "See you at school.",
+          "ko": "학교에서 봐요."
+        },
+        {
+          "en": "Call me later.",
+          "ko": "나중에 전화해요."
+        },
+        {
+          "en": "I'm on my way.",
+          "ko": "가는 중이에요."
+        },
+        {
+          "en": "Wait a minute.",
+          "ko": "잠깐만요."
+        },
+        {
+          "en": "That's a good idea.",
+          "ko": "좋은 생각이에요."
+        },
+        {
+          "en": "I'm not sure.",
+          "ko": "잘 모르겠어요."
+        },
+        {
+          "en": "No problem.",
+          "ko": "문제없어요."
+        },
+        {
+          "en": "Thank you so much.",
+          "ko": "정말 고마워요."
+        },
+        {
+          "en": "You're welcome.",
+          "ko": "천만에요."
+        },
+        {
+          "en": "Excuse me.",
+          "ko": "실례합니다."
+        },
+        {
+          "en": "I'm sorry.",
+          "ko": "미안해요."
+        },
+        {
+          "en": "That's okay.",
+          "ko": "괜찮아요."
+        }
+      ]
+    }
+  ]
+}

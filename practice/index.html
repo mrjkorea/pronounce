@@ -1,0 +1,86 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+  <title>Pronunciation practice · Pronounce</title>
+  <link rel="stylesheet" href="css/app.css">
+  <meta name="pronounce-practice-base" content="/pronounce/practice/">
+</head>
+<body>
+  <div id="bootOverlay" class="boot-overlay" aria-live="polite">
+    <p class="boot-title">Pronunciation practice</p>
+    <p id="bootStatus" class="boot-status">Loading the sound checker…</p>
+    <div class="boot-track" aria-hidden="true"><div id="bootFill" class="boot-fill"></div></div>
+  </div>
+
+  <header class="site-header">
+    <div class="header-row">
+      <h1 class="brand" data-i18n="appTitle">Pronunciation practice</h1>
+      <label class="lang-picker">
+        <span class="visually-hidden" data-i18n="uiLanguage">UI language</span>
+        <select id="uiLang" aria-label="UI language"></select>
+      </label>
+    </div>
+    <nav class="tabs" role="tablist" aria-label="Sections">
+      <button type="button" class="tab is-active" data-tab="practice" role="tab" aria-selected="true" data-i18n="tabPractice">Practice</button>
+      <button type="button" class="tab" data-tab="books" role="tab" aria-selected="false" data-i18n="tabBooks">Books</button>
+      <button type="button" class="tab" data-tab="guides" role="tab" aria-selected="false" data-i18n="tabGuides">My Guides</button>
+      <button type="button" class="tab" data-tab="history" role="tab" aria-selected="false" data-i18n="tabHistory">History</button>
+    </nav>
+    <p id="ttsNote" class="tts-note" hidden></p>
+  </header>
+
+  <main id="main" class="main">
+    <section id="panelPractice" class="panel is-active" role="tabpanel">
+      <label class="field">
+        <span class="field-label" data-i18n="typeEnglish">Type English to practice</span>
+        <textarea id="practiceText" rows="3" maxlength="240" placeholder="Hello, how are you?" autocomplete="off" spellcheck="false"></textarea>
+      </label>
+      <div class="voice-row" role="group" aria-label="Listen voices">
+        <button type="button" class="voice-btn is-on" data-voice="bella" aria-pressed="true">👩 Bella</button>
+        <button type="button" class="voice-btn" data-voice="puck" aria-pressed="false">👨 Puck</button>
+        <button type="button" class="btn secondary" id="btnListen" data-i18n="listen">Listen</button>
+      </div>
+      <div class="action-row">
+        <button type="button" class="btn primary mic-btn" id="btnRecord" disabled data-i18n="tapMic">Tap mic · say it</button>
+      </div>
+      <p id="practiceHint" class="hint" data-i18n="practiceHint">Listen, then tap the mic and say the whole line clearly.</p>
+      <div id="wordChips" class="word-chips" aria-live="polite"></div>
+      <p id="lineResult" class="line-result" hidden></p>
+    </section>
+
+    <section id="panelBooks" class="panel" role="tabpanel" hidden>
+      <p class="hint" data-i18n="booksHint">Pick a phrase pack. English is what you say; your language is a hint.</p>
+      <div id="bookList" class="book-list"></div>
+      <div id="bookDetail" class="book-detail" hidden></div>
+    </section>
+
+    <section id="panelGuides" class="panel" role="tabpanel" hidden>
+      <p class="hint" data-i18n="guidesHint">Save your own lines (up to 200 guides, 20 sentences each).</p>
+      <div class="guides-toolbar">
+        <button type="button" class="btn secondary" id="btnNewGuide" data-i18n="newGuide">New guide</button>
+      </div>
+      <div id="guidesList" class="guides-list"></div>
+      <div id="guideEditor" class="guide-editor" hidden></div>
+    </section>
+
+    <section id="panelHistory" class="panel" role="tabpanel" hidden>
+      <div class="history-toolbar">
+        <input type="search" id="historySearch" class="history-search" data-i18n-placeholder="historySearch" placeholder="Search history">
+        <button type="button" class="btn secondary" id="btnExportJson" data-i18n="exportJson">Export JSON</button>
+        <button type="button" class="btn secondary" id="btnExportCsv" data-i18n="exportCsv">Export CSV</button>
+      </div>
+      <p id="historyStats" class="hint"></p>
+      <ul id="historyList" class="history-list"></ul>
+    </section>
+  </main>
+
+  <footer class="site-footer">
+    <a href="../" data-i18n="backDay4">← Day 4 sheets</a>
+  </footer>
+
+  <script src="../vendor/ort/ort.wasm.min.js"></script>
+  <script type="module" src="js/app.js"></script>
+</body>
+</html>
