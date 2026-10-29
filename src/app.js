@@ -31,9 +31,8 @@ import {
   sumWords,
   timerRunning as flowTimerRunning,
   timerSeconds,
-  tryTeacherPassword,
 } from './flow.js?v=20261019-move-on';
-import { isMrjTeacher, installTeacherRefresh, promptTeacherUnlock } from './mrj-teacher.js';
+import { isMrjTeacher, installTeacherRefresh } from './mrj-teacher.js';
 
 function lineOpenFor(flow, id) {
   if (isMrjTeacher()) return true;
@@ -571,13 +570,6 @@ function syncStudentChrome() {
   } catch (_) { /* ignore */ }
 }
 
-function wireTopTeacherButton() {
-  const btn = document.getElementById('pronounceTeacherBtn');
-  if (!btn || btn.getAttribute('data-pronounce-teacher-wired') === '1') return;
-  btn.setAttribute('data-pronounce-teacher-wired', '1');
-  btn.addEventListener('click', () => promptTeacherUnlock());
-}
-
 function bookProgress(book) {
   const scores = loadScores();
   let n = 0;
@@ -1104,14 +1096,10 @@ function teacherBlockHtml(targets, ready, flow) {
       ${miss}
     </article>`;
   }).join('');
-  return `<form id="teacherGate" class="teacher-gate" method="post" action="#/" autocomplete="off">
-      <label class="gate-label">Password
-        <input type="password" id="teacherPassword" autocomplete="off" spellcheck="false">
-      </label>
-      <button type="submit" class="gate-go">Enter</button>
-      <p class="gate-bad" id="teacherGateBad" hidden>That password is not right.</p>
-    </form>
-    <div class="sheet">${rows}</div>`;
+  const gateHint = isMrjTeacher()
+    ? ''
+    : '<p class="teacher-gate-hint ask-teacher">To open Part 2, tap <strong>Teacher</strong> in the top bar and enter the classroom PIN.</p>';
+  return `${gateHint}<div class="sheet">${rows}</div>`;
 }
 
 function prepareUnitFlow(bookId, unit) {
@@ -1753,31 +1741,6 @@ function onRushStart() {
   render();
 }
 
-function onTeacherGate(ev) {
-  ev.preventDefault();
-  const r = route();
-  if (r.name !== 'sheet') return;
-  const book = byId.get(r.bookId);
-  const unit = book && book.units.find((u) => u.id === r.unitId);
-  if (!unit) return;
-  const input = document.getElementById('teacherPassword');
-  const text = input ? input.value : '';
-  const targets = speakTargets(r.bookId, unit);
-  const result = tryTeacherPassword(
-    loadUnitFlow(r.bookId, r.unitId),
-    targets.map((target) => target.id),
-    sumWords(targets.map((target) => target.english)),
-    text,
-  );
-  if (!result.ok) {
-    const bad = document.getElementById('teacherGateBad');
-    if (bad) bad.hidden = false;
-    return;
-  }
-  saveUnitFlow(r.bookId, r.unitId, result.flow);
-  render();
-}
-
 function onHear(btn) {
   const here = route();
   if (here.name === 'sheet' && loadUnitFlow(here.bookId, here.unitId).phase === 'part2') return;
@@ -1807,10 +1770,6 @@ if (appEl) {
     if (mic) onMic(mic);
   });
 
-  appEl.addEventListener('submit', (ev) => {
-    if (ev.target.closest('#teacherGate')) onTeacherGate(ev);
-  });
-
   window.addEventListener('hashchange', () => {
     chain(async () => {
       const rec = claimCapture();
@@ -1832,7 +1791,6 @@ if (appEl) {
     });
   }
 
-  wireTopTeacherButton();
   syncStudentChrome();
   installTeacherRefresh(() => {
     syncStudentChrome();

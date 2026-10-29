@@ -125,6 +125,20 @@ test('index.html cache-bust ?v= values match mrj-build meta', () => {
   }
 });
 
+test('flow.js does not ship a client teacher password', () => {
+  const root = dirname(fileURLToPath(import.meta.url));
+  const flowSrc = readFileSync(join(root, '..', 'src', 'flow.js'), 'utf8');
+  assert.doesNotMatch(flowSrc, /TEACHER_PASSWORD/);
+  assert.doesNotMatch(flowSrc, /tryTeacherPassword/);
+});
+
+test('index.html uses mrj-auth chip Teacher control only', () => {
+  const root = dirname(fileURLToPath(import.meta.url));
+  const html = readFileSync(join(root, '..', 'index.html'), 'utf8');
+  assert.doesNotMatch(html, /pronounceTeacherBtn/);
+  assert.match(html, /mrj-auth-boot\.js/);
+});
+
 test('mrj-scores post uses signed-in student id_key, not unknown (mocked fetch)', async () => {
   const fetches = [];
   const root = {
