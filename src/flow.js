@@ -4,7 +4,6 @@ export const FLOW_STORAGE_KEY = 'day4-pronounce-two-parts-v1';
 export const LEGACY_SCORE_KEY = 'day4-pronounce-scores-v2';
 export const LOCK_AT = 5;
 export const LOCK_TEXT = 'Please ask your teacher for help.';
-export const TEACHER_PASSWORD = 'MRJ';
 /** Part 2 rush timer — fixed classroom limit (seconds). */
 export const PART2_LIMIT_SEC = 120;
 
@@ -186,21 +185,6 @@ export function advanceFlow(flow, ids, wordCount) {
     return enterPart2(flow, wordCount);
   }
   return flow;
-}
-
-/** Password works on the teacher screen only. It does not count during the five tries. */
-export function acceptTeacherPassword(phase, text) {
-  if (phase !== 'teacher') return false;
-  return String(text || '').trim() === TEACHER_PASSWORD;
-}
-
-export function tryTeacherPassword(flow, ids, wordCount, text) {
-  if (!acceptTeacherPassword(flow.phase, text)) return { ok: false, flow };
-  const teacher = Object.assign({}, flow.teacher);
-  const stuck = stuckIds(flow, ids);
-  for (let i = 0; i < stuck.length; i++) teacher[stuck[i]] = 'skipped';
-  const next = advanceFlow(Object.assign({}, flow, { teacher }), ids, wordCount);
-  return { ok: true, flow: next };
 }
 
 export function timerRunning(flow, now) {

@@ -602,39 +602,8 @@ body.phase-part2 .rush-clock {
   cursor: not-allowed;
 }
 
-.teacher-gate {
-  display: flex;
-  flex-wrap: wrap;
-  align-items: end;
-  gap: 12px;
+.teacher-gate-hint {
   margin: 0 0 14px;
-}
-
-.gate-label {
-  display: flex;
-  flex-direction: column;
-  gap: 6px;
-  font-size: 18px;
-  font-weight: 700;
-  color: var(--muted);
-}
-
-.gate-label input {
-  min-width: 220px;
-  min-height: 64px;
-  padding: 0 14px;
-  border: 2px solid var(--line);
-  border-radius: 14px;
-  font: inherit;
-  font-size: 28px;
-}
-
-.gate-bad {
-  flex-basis: 100%;
-  margin: 0;
-  color: var(--fail);
-  font-size: 18px;
-  font-weight: 700;
 }
 
 .row.teacher-row {
