@@ -36,11 +36,7 @@ export const MODEL_CACHE_URL = 'https://mrj-pronounce.local/models/hubert-base-p
 export const DICT_CACHE_URL = 'https://mrj-pronounce.local/models/cmudict.full.json';
 export const IDB_DB_NAME = 'mrj-pronounce-model-cache-v1';
 export const IDB_STORE_NAME = 'assets';
-export const EXPECTED_MODEL_BYTES = 121951866;
-/** Fail the download if no new bytes arrive for this long (classroom Wi‑Fi stalls). */
-export const MODEL_DOWNLOAD_STALL_MS = 45000;
-export const DOWNLOAD_STALL_USER_MESSAGE =
-  'Download stopped too long. Check Wi‑Fi, tap Retry or refresh the page, or ask your teacher for help.';
+export const EXPECTED_MODEL_BYTES = 122222068;
 
 export function bootModelPaths() {
   return [
@@ -62,10 +58,6 @@ let runtime = {
   fromCache: false,
   cacheSource: 'none',
 };
-
-let modelLoadPromise = null;
-let lastModelBootError = null;
-let lastModelBootOpts = null;
 
 let workerReqSeq = 0;
 const workerPending = new Map();
@@ -202,80 +194,34 @@ export async function checkModelCached(expectedBytes = EXPECTED_MODEL_BYTES) {
   return { cached: false, source: 'none', byteLength: 0, buffer: null };
 }
 
-/**
- * Stream (or buffer) one model part; call onPartBytes per chunk and onHeartbeat on a timer
- * so UI progress does not freeze on slow links. Rejects if no bytes arrive for stallMs.
- */
-export async function fetchPartWithProgress(url, fetchImpl, callbacks = {}) {
-  const onPartBytes = typeof callbacks === 'function' ? callbacks : callbacks.onPartBytes;
-  const onHeartbeat = typeof callbacks === 'function' ? undefined : callbacks.onHeartbeat;
-  const stallMs = typeof callbacks === 'function' ? MODEL_DOWNLOAD_STALL_MS : (callbacks.stallMs ?? MODEL_DOWNLOAD_STALL_MS);
-
-  let lastByteAt = Date.now();
-  let reader = null;
-  let settled = false;
-  let stallReject = null;
-  const stallPromise = new Promise((_, reject) => {
-    stallReject = reject;
-  });
-
-  const touchBytes = (n) => {
-    if (n > 0) lastByteAt = Date.now();
-    if (onPartBytes) onPartBytes(n);
-  };
-
-  const watchdog = setInterval(() => {
-    if (settled) return;
-    if (Date.now() - lastByteAt >= stallMs) {
-      settled = true;
-      clearInterval(watchdog);
-      if (reader && typeof reader.cancel === 'function') reader.cancel().catch(() => {});
-      stallReject(new Error(DOWNLOAD_STALL_USER_MESSAGE));
-      return;
-    }
-    if (onHeartbeat) onHeartbeat();
-  }, 2000);
-
-  const readBody = async () => {
-    const res = await fetchImpl(url);
-    if (!res.ok) throw new Error('Failed to download ' + url + ' (' + res.status + ')');
-    if (res.body && typeof res.body.getReader === 'function') {
-      reader = res.body.getReader();
-      const chunks = [];
-      let len = 0;
-      while (true) {
-        const { done, value } = await reader.read();
-        if (done) break;
-        if (value && value.byteLength) {
-          chunks.push(value);
-          len += value.byteLength;
-          touchBytes(value.byteLength);
-        }
+async function fetchPartWithProgress(url, fetchImpl, onPartBytes) {
+  const res = await fetchImpl(url);
+  if (!res.ok) throw new Error('Failed to download ' + url + ' (' + res.status + ')');
+  if (res.body && typeof res.body.getReader === 'function') {
+    const reader = res.body.getReader();
+    const chunks = [];
+    let len = 0;
+    while (true) {
+      const { done, value } = await reader.read();
+      if (done) break;
+      if (value && value.byteLength) {
+        chunks.push(value);
+        len += value.byteLength;
+        if (onPartBytes) onPartBytes(value.byteLength);
       }
-      const out = new Uint8Array(len);
-      let offset = 0;
-      for (const c of chunks) {
-        out.set(c, offset);
-        offset += c.byteLength;
-      }
-      return out;
     }
-    const buf = await res.arrayBuffer();
-    const u8 = new Uint8Array(buf);
-    touchBytes(u8.byteLength);
-    return u8;
-  };
-
-  const bodyTask = readBody();
-  try {
-    const part = await Promise.race([bodyTask, stallPromise]);
-    settled = true;
-    return part;
-  } finally {
-    settled = true;
-    clearInterval(watchdog);
-    bodyTask.catch(() => {});
+    const out = new Uint8Array(len);
+    let offset = 0;
+    for (const c of chunks) {
+      out.set(c, offset);
+      offset += c.byteLength;
+    }
+    return out;
   }
+  const buf = await res.arrayBuffer();
+  const u8 = new Uint8Array(buf);
+  if (onPartBytes) onPartBytes(u8.byteLength);
+  return u8;
 }
 
 /**
@@ -319,30 +265,15 @@ export async function loadOrCacheModelBuffer(opts = {}) {
   const assembled = new Uint8Array(totalBytes);
   let loadedBytes = 0;
   let writeOffset = 0;
-  const stallMs =
-    typeof opts.stallMs === 'number'
-      ? opts.stallMs
-      : typeof opts.downloadStallMs === 'number'
-        ? opts.downloadStallMs
-        : MODEL_DOWNLOAD_STALL_MS;
-
-  const reportDownloadProgress = (extraSuffix = '') => {
-    const frac = Math.min(0.82, 0.05 + (loadedBytes / totalBytes) * 0.77);
-    const mbDone = (loadedBytes / (1024 * 1024)).toFixed(0);
-    const mbTotal = (totalBytes / (1024 * 1024)).toFixed(0);
-    onProgress(frac, `Downloading sound checker… ${mbDone} / ${mbTotal} MB${extraSuffix}`);
-  };
 
   for (let i = 0; i < parts.length; i++) {
     const partUrl = `${baseUrl}${parts[i].file}`;
-    reportDownloadProgress(parts.length > 1 ? ` (part ${i + 1}/${parts.length})` : '');
-    const partData = await fetchPartWithProgress(partUrl, fetchImpl, {
-      stallMs,
-      onPartBytes: (delta) => {
-        loadedBytes += delta;
-        reportDownloadProgress();
-      },
-      onHeartbeat: () => reportDownloadProgress(' (still downloading…)'),
+    const partData = await fetchPartWithProgress(partUrl, fetchImpl, (delta) => {
+      loadedBytes += delta;
+      const frac = Math.min(0.82, 0.05 + (loadedBytes / totalBytes) * 0.77);
+      const mbDone = (loadedBytes / (1024 * 1024)).toFixed(0);
+      const mbTotal = (totalBytes / (1024 * 1024)).toFixed(0);
+      onProgress(frac, `Downloading sound checker… ${mbDone} / ${mbTotal} MB`);
     });
     assembled.set(partData, writeOffset);
     writeOffset += partData.byteLength;
@@ -598,65 +529,17 @@ export async function gradeTrialSamples(samples, targetText, passAt, hooks, opts
  * 1. Loads & caches `cmudict.full.json` (124,926 words) + phonics G2P rules
  * 2. Checks Cache Storage / IndexedDB for `ron-jo/hubert-base-phoneme-en-onnx` (downloads with progress if needed)
  * 3. Spawns single-thread WASM Web Worker (`src/grade-worker.js`) with in-page fallback
- *
- * Options:
- * - `lazy` / `deferModel`: load G2P immediately and return; start the ~116 MB HuBERT download in the background.
- *   Call `ensureTrialModel()` (or `grade*`) before scoring. Progress via `onProgress` still fires during background load.
- * - `stallMs` / `downloadStallMs`: per-part stall timeout (default MODEL_DOWNLOAD_STALL_MS / 45s).
  */
-export function getTrialBootState() {
-  if (runtime.ready) return 'ready';
-  if (modelLoadPromise) return 'loading';
-  if (lastModelBootError) return 'failed';
-  return 'idle';
-}
-
-/** After a failed lazy load, clear error state so ensureTrialModel / bootShared can retry. */
-export function resetTrialBoot() {
-  if (runtime.ready || modelLoadPromise) return false;
-  lastModelBootError = null;
-  lastModelBootOpts = null;
-  return true;
-}
-
-export function ensureTrialModel(opts = {}) {
-  if (runtime.ready) return Promise.resolve(runtime);
-  return startHubertModelLoad({ ...(lastModelBootOpts || {}), ...opts });
-}
-
-function startHubertModelLoad(opts = {}) {
-  if (runtime.ready) return Promise.resolve(runtime);
-  if (modelLoadPromise) return modelLoadPromise;
-  lastModelBootError = null;
-  lastModelBootOpts = { ...opts };
-  modelLoadPromise = completeHubertModelBoot(lastModelBootOpts)
-    .then((rt) => {
-      modelLoadPromise = null;
-      return rt;
-    })
-    .catch((err) => {
-      modelLoadPromise = null;
-      lastModelBootError = err;
-      throw err;
-    });
-  return modelLoadPromise;
-}
-
-async function completeHubertModelBoot(opts = {}) {
+export async function bootTrialInPage(opts = {}) {
   const fetchImpl = opts.fetchImpl || fetch;
   const baseUrl = opts.baseUrl || '';
   const onProgress = typeof opts.onProgress === 'function' ? opts.onProgress : () => {};
 
+  await loadOrCacheG2PDictionary(baseUrl, fetchImpl);
   const modelAsset = await loadOrCacheModelBuffer({
     baseUrl,
     fetchImpl,
     onProgress,
-    stallMs:
-      typeof opts.stallMs === 'number'
-        ? opts.stallMs
-        : typeof opts.downloadStallMs === 'number'
-          ? opts.downloadStallMs
-          : undefined,
   });
 
   onProgress(0.9, 'Starting sound checker…');
@@ -719,29 +602,6 @@ async function completeHubertModelBoot(opts = {}) {
   return runtime;
 }
 
-export async function bootTrialInPage(opts = {}) {
-  const fetchImpl = opts.fetchImpl || fetch;
-  const baseUrl = opts.baseUrl || '';
-  const onProgress = typeof opts.onProgress === 'function' ? opts.onProgress : () => {};
-  const lazy = !!(opts.lazy || opts.deferModel);
-
-  onProgress(0.01, 'Loading pronunciation dictionary…');
-  await loadOrCacheG2PDictionary(baseUrl, fetchImpl);
-  exposeGlobalPronounceApi();
-
-  if (lazy) {
-    onProgress(0.04, 'Loading sound checker in background…');
-    void startHubertModelLoad({ ...opts, baseUrl, fetchImpl, onProgress });
-    return {
-      ...runtime,
-      lazy: true,
-      ensureModel: () => ensureTrialModel(opts),
-    };
-  }
-
-  return startHubertModelLoad({ ...opts, baseUrl, fetchImpl, onProgress });
-}
-
 /**
  * High-level helper for Day 4, Day 6, Phonics / Decodable Readers, and TOEIC Read-Aloud.
  */
@@ -768,8 +628,6 @@ export function exposeGlobalPronounceApi() {
     getAppThresholds,
     bandForScore,
     boot: bootTrialInPage,
-    ensureModel: ensureTrialModel,
-    getBootState: getTrialBootState,
     checkModelCached,
     gradeSamples: gradeTrialSamples,
     gradeAudio: gradeAudioForApp,

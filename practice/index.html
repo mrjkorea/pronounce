@@ -3,9 +3,8 @@
 <head>
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
-  <meta name="mrj-build" content="20261030-speak-failopen">
   <title>Pronunciation practice · Pronounce</title>
-  <link rel="stylesheet" href="css/app.css?v=20261030-speak-failopen">
+  <link rel="stylesheet" href="css/app.css">
   <meta name="pronounce-practice-base" content="/pronounce/practice/">
 </head>
 <body>
@@ -30,8 +29,6 @@
       <button type="button" class="tab" data-tab="history" role="tab" aria-selected="false" data-i18n="tabHistory">History</button>
     </nav>
     <p id="ttsNote" class="tts-note" hidden></p>
-    <p id="modelStatus" class="hint model-status" hidden></p>
-    <button type="button" class="btn secondary retry-checker" id="btnRetryChecker" hidden data-i18n="retryChecker">Retry sound checker</button>
   </header>
 
   <main id="main" class="main">
@@ -84,6 +81,6 @@
   </footer>
 
   <script src="../vendor/ort/ort.wasm.min.js"></script>
-  <script type="module" src="js/app.js?v=20261030-speak-failopen"></script>
+  <script type="module" src="js/app.js"></script>
 </body>
 </html>
