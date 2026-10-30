@@ -74,6 +74,17 @@ const S = {
   failLine: { en: 'Try again · average {pct}%', ko: '다시 · 평균 {pct}%', 'zh-Hans': '再试 · 平均 {pct}%', ja: '再試行 · 平均 {pct}%', es: 'Otra vez · {pct}%', hi: 'फिर · {pct}%', de: 'Nochmal · {pct}%', vi: 'Thử lại · {pct}%', 'pt-BR': 'De novo · {pct}%', id: 'Lagi · {pct}%', fr: 'Encore · {pct}%', ar: 'مرة أخرى · {pct}%', tr: 'Tekrar · {pct}%', it: 'Riprova · {pct}%', pl: 'Jeszcze · {pct}%' },
   micDenied: { en: 'Microphone blocked. Allow mic in browser settings.', ko: '마이크가 차단됨. 브라우저에서 허용하세요.', 'zh-Hans': '麦克风被阻止', ja: 'マイクがブロック', es: 'Micrófono bloqueado', hi: 'माइक ब्लॉक', de: 'Mikro blockiert', vi: 'Mic bị chặn', 'pt-BR': 'Microfone bloqueado', id: 'Mik diblokir', fr: 'Micro bloqué', ar: 'الميكروفون محظور', tr: 'Mik kapalı', it: 'Microfono bloccato', pl: 'Mik zablokowany' },
   emptyText: { en: 'Type or pick a sentence first.', ko: '먼저 문장을 입력하거나 고르세요.', 'zh-Hans': '先输入或选择句子', ja: '文を入力または選択', es: 'Escribe o elige una frase', hi: 'पहले वाक्य लिखें', de: 'Zuerst Satz wählen', vi: 'Nhập hoặc chọn câu', 'pt-BR': 'Digite ou escolha', id: 'Ketik atau pilih', fr: 'Saisissez une phrase', ar: 'اكتب جملة', tr: 'Cümle seçin', it: 'Scrivi una frase', pl: 'Wpisz zdanie' },
+  basicListen: {
+    en: 'Listen now with the voices above. The sound checker is still loading — mic scoring starts when it is ready.',
+    ko: '위 목소리로 먼저 들으세요. 발음 확인기가 아직 로딩 중입니다 — 준비되면 마이크 채점이 시작됩니다.',
+  },
+  checkerReady: { en: 'Ready — tap the mic and say the line.', ko: '준비됨 — 마이크를 눌러 말하세요.' },
+  checkerFailed: {
+    en: 'Sound checker did not load. You can still listen. Tap Retry below or refresh the page.',
+    ko: '발음 확인기를 불러오지 못했습니다. 듣기는 가능합니다. 아래 재시도 또는 새로고침.',
+  },
+  retryChecker: { en: 'Retry sound checker', ko: '발음 확인기 다시 시도' },
+  gradingWait: { en: 'Sound checker still loading… try Listen, or wait a moment.', ko: '발음 확인기 로딩 중… 듣기를 사용하거나 잠시 기다리세요.' },
   historyStats: { en: '{n} attempts · {pass} passed', ko: '시도 {n} · 통과 {pass}', 'zh-Hans': '{n} 次 · 通过 {pass}', ja: '{n} 回 · 合格 {pass}', es: '{n} intentos · {pass} ok', hi: '{n} · {pass}', de: '{n} · {pass} bestanden', vi: '{n} · {pass} đạt', 'pt-BR': '{n} · {pass}', id: '{n} · {pass}', fr: '{n} · {pass}', ar: '{n} · {pass}', tr: '{n} · {pass}', it: '{n} · {pass}', pl: '{n} · {pass}' },
 };
 

@@ -201,3 +201,6 @@ textarea:focus, input:focus { outline: none; border-color: var(--teal); }
 @media (min-width: 480px) {
   .main { padding: 1.25rem 1.5rem 2rem; }
 }
+
+.model-status { margin: 0.35rem 0 0; color: var(--teal); font-size: 0.9rem; }
+.retry-checker { margin: 0.35rem 0 0; font-size: 0.9rem; }
