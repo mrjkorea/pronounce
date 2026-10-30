@@ -5,12 +5,12 @@ import {
   bandForScore,
   getAppThresholds,
   tokenizeWords,
-} from './engine.js';
+} from './engine.js?v=20261030-day4-mic-score';
 import {
   RAW_MIC_CONSTRAINTS,
   decodeAudioToMono,
-} from './audio.js';
-import { sheetLines } from './sheet.js';
+} from './audio.js?v=20261030-day4-mic-score';
+import { sheetLines } from './sheet.js?v=20261030-day4-mic-score';
 import {
   FLOW_STORAGE_KEY,
   LOCK_TEXT,
@@ -31,8 +31,8 @@ import {
   sumWords,
   timerRunning as flowTimerRunning,
   timerSeconds,
-} from './flow.js?v=20261019-move-on';
-import { isMrjTeacher, installTeacherRefresh } from './mrj-teacher.js';
+} from './flow.js?v=20261030-day4-mic-score';
+import { isMrjTeacher, installTeacherRefresh } from './mrj-teacher.js?v=20261030-day4-mic-score';
 
 function lineOpenFor(flow, id) {
   if (isMrjTeacher()) return true;
@@ -61,8 +61,8 @@ import {
   gradeTrialSamples,
   MODEL_DOWNLOAD_STALL_MS,
   trialRuntime,
-} from './trial.js';
-import { bootShared, resetSharedBoot } from './shared.js';
+} from './trial.js?v=20261030-day4-mic-score';
+import { bootShared, resetSharedBoot } from './shared.js?v=20261030-day4-mic-score';
 
 import {
   PROGRAM,
@@ -77,9 +77,9 @@ import {
   scoresNeedSaveAfterSync,
   shouldFlushPackOnPagehide,
   studentScoreStorageKey,
-} from './progress-merge.js';
-import { createPackSaveScheduler } from './pack-save-scheduler.js?v=20261020-packsave';
-import { reportScoredActivity } from './score-reporting.js';
+} from './progress-merge.js?v=20261030-day4-mic-score';
+import { createPackSaveScheduler } from './pack-save-scheduler.js?v=20261030-day4-mic-score';
+import { reportScoredActivity } from './score-reporting.js?v=20261030-day4-mic-score';
 
 export const PASS_PCT = ENGINE_PASS_PCT; // pass = line average >= 60
 let activeStudentKey = '';
@@ -1493,7 +1493,7 @@ function encodeWavOffTap(floatChunks, sampleRate) {
   return new Promise((resolve, reject) => {
     let worker;
     try {
-      worker = new Worker(new URL('./wav-worker.js', import.meta.url));
+      worker = new Worker(new URL('./wav-worker.js?v=20261030-day4-mic-score', import.meta.url));
     } catch (err) {
       reject(err);
       return;

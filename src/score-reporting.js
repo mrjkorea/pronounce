@@ -1,4 +1,4 @@
-import { authStudentId } from './progress-merge.js';
+import { authStudentId } from './progress-merge.js?v=20261030-day4-mic-score';
 
 export const PROGRAM = 'pronounce';
 

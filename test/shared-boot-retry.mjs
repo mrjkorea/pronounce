@@ -16,3 +16,11 @@ test('Day 4 app blocks on bootShared (no fail-open bootSharedForUi import)', asy
   assert.match(src, /await bootShared\(/);
   assert.match(src, /MODEL_DOWNLOAD_STALL_MS/);
 });
+
+test('callWorker uses a timeout so hung worker calls cannot block scoreTail forever', async () => {
+  const fs = await import('node:fs/promises');
+  const src = await fs.readFile(new URL('../src/trial.js', import.meta.url), 'utf8');
+  assert.match(src, /WORKER_CALL_TIMEOUT_MS = 15000/);
+  assert.match(src, /Worker call timed out after/);
+  assert.match(src, /workerPending\.delete\(id\)/);
+});
