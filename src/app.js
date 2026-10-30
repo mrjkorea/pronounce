@@ -58,10 +58,11 @@ function canStartMic(opts) {
 import {
   DOOR_CHECKING_TEXT,
   DOOR_FAIL_TEXT,
+  bootModelPaths,
+  bootTrialInPage,
   gradeTrialSamples,
   trialRuntime,
 } from './trial.js';
-import { bootSharedForUi } from './shared.js';
 
 import {
   PROGRAM,
@@ -179,7 +180,6 @@ const modelTrack = typeof document !== 'undefined' ? document.getElementById('mo
 let books = [];
 let byId = new Map();
 let checkerReady = false;
-let lazyModelBoot = null;
 let modelError = '';
 let capture = null;
 let silenceTimer = null;
@@ -493,49 +493,19 @@ function exposeBenchHook() {
   };
 }
 
-async function finishModelBoot(uiBoot) {
-  lazyModelBoot = uiBoot;
-  try {
-    await uiBoot.ensureModel();
-    checkerReady = true;
-    modelError = null;
-    if (modelLabel) delete modelLabel.dataset.retry;
-    setProgress(1, 'Ready');
-    markModelReady();
-  } catch (err) {
-    modelError = err && err.message ? err.message : String(err);
-    if (modelLabel) {
-      modelLabel.classList.remove('done');
-      modelLabel.textContent = `Listen-only · ${modelError} Tap to retry.`;
-      modelLabel.dataset.retry = '1';
-    }
-    console.error(err);
-  }
-  render();
-}
-
-async function retryModelFromLabel() {
-  if (!lazyModelBoot || !modelLabel || modelLabel.dataset.retry !== '1') return;
-  delete modelLabel.dataset.retry;
-  setProgress(0.02, 'Retrying sound checker…');
-  render();
-  await finishModelBoot(lazyModelBoot);
-}
-
 async function bootModel() {
   try {
     setProgress(0.02, 'Loading the sound checker…');
     const wasmPaths = new URL('../vendor/ort/', import.meta.url).href;
-    const bootOpts = {
+    await bootTrialInPage({
       wasmPaths,
+      paths: bootModelPaths(),
       onProgress: (frac, label) => setProgress(frac, label),
-    };
-    const uiBoot = await bootSharedForUi(bootOpts);
-    if (!checkerReady) {
-      setProgress(0.06, 'Listen now · sound checker still loading…');
-    }
+    });
+    checkerReady = true;
+    setProgress(1, 'Ready');
+    markModelReady();
     render();
-    void finishModelBoot(uiBoot);
   } catch (err) {
     modelError = err && err.message ? err.message : String(err);
     if (modelLabel) modelLabel.textContent = 'Sound checker did not start. ' + modelError;
@@ -1812,9 +1782,6 @@ if (appEl) {
 
   fillLangMenu();
   applyLangDir();
-  modelLabel?.addEventListener('click', () => {
-    void retryModelFromLabel();
-  });
   const langMenu = document.getElementById('langMenu');
   if (langMenu) {
     langMenu.addEventListener('change', () => {

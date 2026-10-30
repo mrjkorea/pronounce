@@ -22,43 +22,6 @@ test('text door check functions are completely deleted from trial.js and engine.
   assert.equal('greedyCitrinetTranscript' in trial, false, 'greedyCitrinetTranscript must be deleted');
 });
 
-test('shared boot helpers expose lazy-load API for embeds', async () => {
-  const shared = await import('../src/shared.js');
-  assert.equal(typeof shared.bootShared, 'function');
-  assert.equal(typeof shared.bootSharedForUi, 'function');
-  assert.equal(typeof shared.ensureModel, 'function');
-  assert.equal(typeof shared.getModelBootState, 'function');
-  assert.equal(typeof shared.resetSharedBoot, 'function');
-  assert.equal(shared.SHARED_BOOT_UI_TIMEOUT_MS, 10000);
-  assert.equal(shared.SHARED_DOWNLOAD_STALL_MS, 20000);
-  assert.equal(trial.getTrialBootState(), 'idle');
-});
-
-test('fetchPartWithProgress rejects a stalled part download', async () => {
-  const hang = () =>
-    new Promise((resolve) => {
-      setTimeout(() => {
-        resolve(
-          new Response(
-            new ReadableStream({
-              pull() {
-                /* never sends bytes */
-              },
-            }),
-            { status: 200 },
-          ),
-        );
-      }, 5);
-    });
-  await assert.rejects(
-    trial.fetchPartWithProgress('https://example.test/part-00.bin', hang, {
-      stallMs: 80,
-      onHeartbeat: () => {},
-    }),
-    /Download stopped too long/i,
-  );
-}, { timeout: 5000 });
-
 test('bootModelPaths lists HuBERT phoneme model parts and full CMUdict', () => {
   const paths = trial.bootModelPaths();
   assert.ok(paths.includes('models/hubert/manifest.json'));

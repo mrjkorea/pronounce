@@ -1,8 +1,7 @@
 import {
-  bootSharedForUi,
+  bootShared,
   grade,
   tokenizeWords,
-  getModelBootState,
 } from '../../src/shared.js';
 import {
   applyI18n,
@@ -43,61 +42,11 @@ const guideEditor = $('#guideEditor');
 const historyList = $('#historyList');
 const historySearch = $('#historySearch');
 const historyStats = $('#historyStats');
-const modelStatus = $('#modelStatus');
-const btnRetryChecker = $('#btnRetryChecker');
 
 let ui = getUiLang();
 let booksData = null;
 let recording = false;
 let engineReady = false;
-let uiBoot = null;
-
-function setModelStatus(msg, showRetry = false) {
-  if (modelStatus) {
-    modelStatus.textContent = msg || '';
-    modelStatus.hidden = !msg;
-  }
-  if (btnRetryChecker) btnRetryChecker.hidden = !showRetry;
-}
-
-function paintPracticeHint() {
-  const hint = $('#practiceHint');
-  if (!hint) return;
-  hint.textContent = engineReady ? t('practiceHint', ui) : t('basicListen', ui);
-}
-
-async function finishCheckerLoad() {
-  if (!uiBoot) return;
-  try {
-    await uiBoot.ensureModel();
-    engineReady = true;
-    btnRecord.disabled = false;
-    setModelStatus(t('checkerReady', ui));
-    paintPracticeHint();
-  } catch (err) {
-    console.error(err);
-    engineReady = false;
-    btnRecord.disabled = true;
-    setModelStatus(t('checkerFailed', ui), true);
-    paintPracticeHint();
-  }
-}
-
-async function retryChecker() {
-  if (!uiBoot?.retryModel) return;
-  setModelStatus(t('grading', ui));
-  btnRetryChecker.hidden = true;
-  try {
-    await uiBoot.retryModel();
-    engineReady = true;
-    btnRecord.disabled = false;
-    setModelStatus(t('checkerReady', ui));
-    paintPracticeHint();
-  } catch (err) {
-    console.error(err);
-    setModelStatus(t('checkerFailed', ui), true);
-  }
-}
 
 function setBootProgress(pct, msg) {
   if (bootStatus && msg) bootStatus.textContent = msg;
@@ -174,10 +123,6 @@ async function runGrade(blob, source) {
   const text = currentLine();
   if (!text) {
     alert(t('emptyText', ui));
-    return;
-  }
-  if (!engineReady) {
-    alert(t('gradingWait', ui));
     return;
   }
   btnRecord.disabled = true;
@@ -371,7 +316,6 @@ async function boot() {
     ui = uiLang.value;
     setUiLang(ui);
     applyI18n(ui);
-    paintPracticeHint();
     renderBooksList();
     renderHistory();
     btnRecord.textContent = t('tapMic', ui);
@@ -423,32 +367,19 @@ async function boot() {
   });
 
   try {
-    const bootOpts = {
+    await bootShared({
       onProgress: (p, label) => {
         setBootProgress(p * 0.95, label || bootStatus?.textContent);
       },
-    };
-    uiBoot = await bootSharedForUi(bootOpts);
+    });
+    setBootProgress(1, 'Ready');
+    engineReady = true;
+    btnRecord.disabled = false;
     hideBoot();
-    paintPracticeHint();
-    if (getModelBootState() === 'ready') {
-      engineReady = true;
-      btnRecord.disabled = false;
-      setModelStatus(t('checkerReady', ui));
-    } else {
-      setModelStatus(t('basicListen', ui));
-      void finishCheckerLoad();
-    }
   } catch (err) {
     console.error(err);
-    hideBoot();
-    setModelStatus(t('checkerFailed', ui), true);
-    paintPracticeHint();
+    setBootProgress(0, 'Could not load sound checker. Refresh the page.');
   }
-
-  btnRetryChecker?.addEventListener('click', () => {
-    void retryChecker();
-  });
 
   paintPendingChips(currentLine());
 }
