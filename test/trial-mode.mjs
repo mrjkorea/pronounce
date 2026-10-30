@@ -25,9 +25,12 @@ test('text door check functions are completely deleted from trial.js and engine.
 test('shared boot helpers expose lazy-load API for embeds', async () => {
   const shared = await import('../src/shared.js');
   assert.equal(typeof shared.bootShared, 'function');
+  assert.equal(typeof shared.bootSharedForUi, 'function');
   assert.equal(typeof shared.ensureModel, 'function');
   assert.equal(typeof shared.getModelBootState, 'function');
   assert.equal(typeof shared.resetSharedBoot, 'function');
+  assert.equal(shared.SHARED_BOOT_UI_TIMEOUT_MS, 10000);
+  assert.equal(shared.SHARED_DOWNLOAD_STALL_MS, 20000);
   assert.equal(trial.getTrialBootState(), 'idle');
 });
 
