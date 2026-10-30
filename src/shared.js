@@ -17,8 +17,8 @@ import {
   trialRuntime,
   resetTrialBoot,
 } from './trial.js';
-import { APP_THRESHOLDS, PASS_PCT, getAppThresholds, bandForScore } from './engine.js';
-import * as audio from './audio.js';
+import { APP_THRESHOLDS, PASS_PCT, getAppThresholds, bandForScore } from './engine.js?v=20261030-day4-mic-score';
+import * as audio from './audio.js?v=20261030-day4-mic-score';
 
 export const PRONOUNCE_BASE = new URL('../', import.meta.url).href;
 export const HUBERT_MANIFEST_URL = PRONOUNCE_BASE + 'models/hubert/manifest.json';

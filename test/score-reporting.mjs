@@ -125,6 +125,20 @@ test('index.html cache-bust ?v= values match mrj-build meta', () => {
   }
 });
 
+test('Day 4 app.js module imports use the same build pin as index.html', () => {
+  const root = dirname(fileURLToPath(import.meta.url));
+  const html = readFileSync(join(root, '..', 'index.html'), 'utf8');
+  const buildMatch = html.match(/name="mrj-build"\s+content="([^"]+)"/);
+  assert.ok(buildMatch, 'mrj-build meta');
+  const build = buildMatch[1];
+  const appSrc = readFileSync(join(root, '..', 'src', 'app.js'), 'utf8');
+  const importPins = [...appSrc.matchAll(/\?v=([^'"]+)/g)].map((m) => m[1]);
+  assert.ok(importPins.length >= 8, 'expected versioned Day 4 imports');
+  for (const v of importPins) {
+    assert.equal(v, build, `app.js import ?v=${v} should match build ${build}`);
+  }
+});
+
 test('flow.js does not ship a client teacher password', () => {
   const root = dirname(fileURLToPath(import.meta.url));
   const flowSrc = readFileSync(join(root, '..', 'src', 'flow.js'), 'utf8');
