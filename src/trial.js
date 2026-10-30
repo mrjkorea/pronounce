@@ -36,7 +36,11 @@ export const MODEL_CACHE_URL = 'https://mrj-pronounce.local/models/hubert-base-p
 export const DICT_CACHE_URL = 'https://mrj-pronounce.local/models/cmudict.full.json';
 export const IDB_DB_NAME = 'mrj-pronounce-model-cache-v1';
 export const IDB_STORE_NAME = 'assets';
-export const EXPECTED_MODEL_BYTES = 122222068;
+export const EXPECTED_MODEL_BYTES = 121951866;
+/** Fail the download if no new bytes arrive for this long (classroom Wi‑Fi stalls). */
+export const MODEL_DOWNLOAD_STALL_MS = 45000;
+export const DOWNLOAD_STALL_USER_MESSAGE =
+  'Download stopped too long. Check Wi‑Fi, tap Retry or refresh the page, or ask your teacher for help.';
 
 export function bootModelPaths() {
   return [
@@ -194,34 +198,80 @@ export async function checkModelCached(expectedBytes = EXPECTED_MODEL_BYTES) {
   return { cached: false, source: 'none', byteLength: 0, buffer: null };
 }
 
-async function fetchPartWithProgress(url, fetchImpl, onPartBytes) {
-  const res = await fetchImpl(url);
-  if (!res.ok) throw new Error('Failed to download ' + url + ' (' + res.status + ')');
-  if (res.body && typeof res.body.getReader === 'function') {
-    const reader = res.body.getReader();
-    const chunks = [];
-    let len = 0;
-    while (true) {
-      const { done, value } = await reader.read();
-      if (done) break;
-      if (value && value.byteLength) {
-        chunks.push(value);
-        len += value.byteLength;
-        if (onPartBytes) onPartBytes(value.byteLength);
+/**
+ * Stream (or buffer) one model part; call onPartBytes per chunk and onHeartbeat on a timer
+ * so UI progress does not freeze on slow links. Rejects if no bytes arrive for stallMs.
+ */
+export async function fetchPartWithProgress(url, fetchImpl, callbacks = {}) {
+  const onPartBytes = typeof callbacks === 'function' ? callbacks : callbacks.onPartBytes;
+  const onHeartbeat = typeof callbacks === 'function' ? undefined : callbacks.onHeartbeat;
+  const stallMs = typeof callbacks === 'function' ? MODEL_DOWNLOAD_STALL_MS : (callbacks.stallMs ?? MODEL_DOWNLOAD_STALL_MS);
+
+  let lastByteAt = Date.now();
+  let reader = null;
+  let settled = false;
+  let stallReject = null;
+  const stallPromise = new Promise((_, reject) => {
+    stallReject = reject;
+  });
+
+  const touchBytes = (n) => {
+    if (n > 0) lastByteAt = Date.now();
+    if (onPartBytes) onPartBytes(n);
+  };
+
+  const watchdog = setInterval(() => {
+    if (settled) return;
+    if (Date.now() - lastByteAt >= stallMs) {
+      settled = true;
+      clearInterval(watchdog);
+      if (reader && typeof reader.cancel === 'function') reader.cancel().catch(() => {});
+      stallReject(new Error(DOWNLOAD_STALL_USER_MESSAGE));
+      return;
+    }
+    if (onHeartbeat) onHeartbeat();
+  }, 2000);
+
+  const readBody = async () => {
+    const res = await fetchImpl(url);
+    if (!res.ok) throw new Error('Failed to download ' + url + ' (' + res.status + ')');
+    if (res.body && typeof res.body.getReader === 'function') {
+      reader = res.body.getReader();
+      const chunks = [];
+      let len = 0;
+      while (true) {
+        const { done, value } = await reader.read();
+        if (done) break;
+        if (value && value.byteLength) {
+          chunks.push(value);
+          len += value.byteLength;
+          touchBytes(value.byteLength);
+        }
       }
+      const out = new Uint8Array(len);
+      let offset = 0;
+      for (const c of chunks) {
+        out.set(c, offset);
+        offset += c.byteLength;
+      }
+      return out;
     }
-    const out = new Uint8Array(len);
-    let offset = 0;
-    for (const c of chunks) {
-      out.set(c, offset);
-      offset += c.byteLength;
-    }
-    return out;
+    const buf = await res.arrayBuffer();
+    const u8 = new Uint8Array(buf);
+    touchBytes(u8.byteLength);
+    return u8;
+  };
+
+  const bodyTask = readBody();
+  try {
+    const part = await Promise.race([bodyTask, stallPromise]);
+    settled = true;
+    return part;
+  } finally {
+    settled = true;
+    clearInterval(watchdog);
+    bodyTask.catch(() => {});
   }
-  const buf = await res.arrayBuffer();
-  const u8 = new Uint8Array(buf);
-  if (onPartBytes) onPartBytes(u8.byteLength);
-  return u8;
 }
 
 /**
@@ -265,15 +315,25 @@ export async function loadOrCacheModelBuffer(opts = {}) {
   const assembled = new Uint8Array(totalBytes);
   let loadedBytes = 0;
   let writeOffset = 0;
+  const stallMs = typeof opts.stallMs === 'number' ? opts.stallMs : MODEL_DOWNLOAD_STALL_MS;
+
+  const reportDownloadProgress = (extraSuffix = '') => {
+    const frac = Math.min(0.82, 0.05 + (loadedBytes / totalBytes) * 0.77);
+    const mbDone = (loadedBytes / (1024 * 1024)).toFixed(0);
+    const mbTotal = (totalBytes / (1024 * 1024)).toFixed(0);
+    onProgress(frac, `Downloading sound checker… ${mbDone} / ${mbTotal} MB${extraSuffix}`);
+  };
 
   for (let i = 0; i < parts.length; i++) {
     const partUrl = `${baseUrl}${parts[i].file}`;
-    const partData = await fetchPartWithProgress(partUrl, fetchImpl, (delta) => {
-      loadedBytes += delta;
-      const frac = Math.min(0.82, 0.05 + (loadedBytes / totalBytes) * 0.77);
-      const mbDone = (loadedBytes / (1024 * 1024)).toFixed(0);
-      const mbTotal = (totalBytes / (1024 * 1024)).toFixed(0);
-      onProgress(frac, `Downloading sound checker… ${mbDone} / ${mbTotal} MB`);
+    reportDownloadProgress(parts.length > 1 ? ` (part ${i + 1}/${parts.length})` : '');
+    const partData = await fetchPartWithProgress(partUrl, fetchImpl, {
+      stallMs,
+      onPartBytes: (delta) => {
+        loadedBytes += delta;
+        reportDownloadProgress();
+      },
+      onHeartbeat: () => reportDownloadProgress(' (still downloading…)'),
     });
     assembled.set(partData, writeOffset);
     writeOffset += partData.byteLength;
@@ -535,11 +595,13 @@ export async function bootTrialInPage(opts = {}) {
   const baseUrl = opts.baseUrl || '';
   const onProgress = typeof opts.onProgress === 'function' ? opts.onProgress : () => {};
 
+  onProgress(0.01, 'Loading pronunciation dictionary…');
   await loadOrCacheG2PDictionary(baseUrl, fetchImpl);
   const modelAsset = await loadOrCacheModelBuffer({
     baseUrl,
     fetchImpl,
     onProgress,
+    stallMs: opts.stallMs,
   });
 
   onProgress(0.9, 'Starting sound checker…');
