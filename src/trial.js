@@ -63,6 +63,10 @@ let runtime = {
   cacheSource: 'none',
 };
 
+let modelLoadPromise = null;
+let lastModelBootError = null;
+let lastModelBootOpts = null;
+
 let workerReqSeq = 0;
 const workerPending = new Map();
 
@@ -315,7 +319,12 @@ export async function loadOrCacheModelBuffer(opts = {}) {
   const assembled = new Uint8Array(totalBytes);
   let loadedBytes = 0;
   let writeOffset = 0;
-  const stallMs = typeof opts.stallMs === 'number' ? opts.stallMs : MODEL_DOWNLOAD_STALL_MS;
+  const stallMs =
+    typeof opts.stallMs === 'number'
+      ? opts.stallMs
+      : typeof opts.downloadStallMs === 'number'
+        ? opts.downloadStallMs
+        : MODEL_DOWNLOAD_STALL_MS;
 
   const reportDownloadProgress = (extraSuffix = '') => {
     const frac = Math.min(0.82, 0.05 + (loadedBytes / totalBytes) * 0.77);
@@ -589,19 +598,65 @@ export async function gradeTrialSamples(samples, targetText, passAt, hooks, opts
  * 1. Loads & caches `cmudict.full.json` (124,926 words) + phonics G2P rules
  * 2. Checks Cache Storage / IndexedDB for `ron-jo/hubert-base-phoneme-en-onnx` (downloads with progress if needed)
  * 3. Spawns single-thread WASM Web Worker (`src/grade-worker.js`) with in-page fallback
+ *
+ * Options:
+ * - `lazy` / `deferModel`: load G2P immediately and return; start the ~116 MB HuBERT download in the background.
+ *   Call `ensureTrialModel()` (or `grade*`) before scoring. Progress via `onProgress` still fires during background load.
+ * - `stallMs` / `downloadStallMs`: per-part stall timeout (default MODEL_DOWNLOAD_STALL_MS / 45s).
  */
-export async function bootTrialInPage(opts = {}) {
+export function getTrialBootState() {
+  if (runtime.ready) return 'ready';
+  if (modelLoadPromise) return 'loading';
+  if (lastModelBootError) return 'failed';
+  return 'idle';
+}
+
+/** After a failed lazy load, clear error state so ensureTrialModel / bootShared can retry. */
+export function resetTrialBoot() {
+  if (runtime.ready || modelLoadPromise) return false;
+  lastModelBootError = null;
+  lastModelBootOpts = null;
+  return true;
+}
+
+export function ensureTrialModel(opts = {}) {
+  if (runtime.ready) return Promise.resolve(runtime);
+  return startHubertModelLoad({ ...(lastModelBootOpts || {}), ...opts });
+}
+
+function startHubertModelLoad(opts = {}) {
+  if (runtime.ready) return Promise.resolve(runtime);
+  if (modelLoadPromise) return modelLoadPromise;
+  lastModelBootError = null;
+  lastModelBootOpts = { ...opts };
+  modelLoadPromise = completeHubertModelBoot(lastModelBootOpts)
+    .then((rt) => {
+      modelLoadPromise = null;
+      return rt;
+    })
+    .catch((err) => {
+      modelLoadPromise = null;
+      lastModelBootError = err;
+      throw err;
+    });
+  return modelLoadPromise;
+}
+
+async function completeHubertModelBoot(opts = {}) {
   const fetchImpl = opts.fetchImpl || fetch;
   const baseUrl = opts.baseUrl || '';
   const onProgress = typeof opts.onProgress === 'function' ? opts.onProgress : () => {};
 
-  onProgress(0.01, 'Loading pronunciation dictionary…');
-  await loadOrCacheG2PDictionary(baseUrl, fetchImpl);
   const modelAsset = await loadOrCacheModelBuffer({
     baseUrl,
     fetchImpl,
     onProgress,
-    stallMs: opts.stallMs,
+    stallMs:
+      typeof opts.stallMs === 'number'
+        ? opts.stallMs
+        : typeof opts.downloadStallMs === 'number'
+          ? opts.downloadStallMs
+          : undefined,
   });
 
   onProgress(0.9, 'Starting sound checker…');
@@ -664,6 +719,29 @@ export async function bootTrialInPage(opts = {}) {
   return runtime;
 }
 
+export async function bootTrialInPage(opts = {}) {
+  const fetchImpl = opts.fetchImpl || fetch;
+  const baseUrl = opts.baseUrl || '';
+  const onProgress = typeof opts.onProgress === 'function' ? opts.onProgress : () => {};
+  const lazy = !!(opts.lazy || opts.deferModel);
+
+  onProgress(0.01, 'Loading pronunciation dictionary…');
+  await loadOrCacheG2PDictionary(baseUrl, fetchImpl);
+  exposeGlobalPronounceApi();
+
+  if (lazy) {
+    onProgress(0.04, 'Loading sound checker in background…');
+    void startHubertModelLoad({ ...opts, baseUrl, fetchImpl, onProgress });
+    return {
+      ...runtime,
+      lazy: true,
+      ensureModel: () => ensureTrialModel(opts),
+    };
+  }
+
+  return startHubertModelLoad({ ...opts, baseUrl, fetchImpl, onProgress });
+}
+
 /**
  * High-level helper for Day 4, Day 6, Phonics / Decodable Readers, and TOEIC Read-Aloud.
  */
@@ -690,6 +768,8 @@ export function exposeGlobalPronounceApi() {
     getAppThresholds,
     bandForScore,
     boot: bootTrialInPage,
+    ensureModel: ensureTrialModel,
+    getBootState: getTrialBootState,
     checkModelCached,
     gradeSamples: gradeTrialSamples,
     gradeAudio: gradeAudioForApp,
