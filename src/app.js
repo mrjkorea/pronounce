@@ -59,9 +59,10 @@ import {
   DOOR_CHECKING_TEXT,
   DOOR_FAIL_TEXT,
   gradeTrialSamples,
+  MODEL_DOWNLOAD_STALL_MS,
   trialRuntime,
 } from './trial.js';
-import { bootSharedForUi } from './shared.js';
+import { bootShared, resetSharedBoot } from './shared.js';
 
 import {
   PROGRAM,
@@ -179,7 +180,6 @@ const modelTrack = typeof document !== 'undefined' ? document.getElementById('mo
 let books = [];
 let byId = new Map();
 let checkerReady = false;
-let lazyModelBoot = null;
 let modelError = '';
 let capture = null;
 let silenceTimer = null;
@@ -493,52 +493,42 @@ function exposeBenchHook() {
   };
 }
 
-async function finishModelBoot(uiBoot) {
-  lazyModelBoot = uiBoot;
+async function retryModelFromLabel() {
+  if (!modelLabel || modelLabel.dataset.retry !== '1') return;
+  delete modelLabel.dataset.retry;
+  modelError = '';
+  resetSharedBoot();
+  await bootModel();
+}
+
+/** Day 4: block until HuBERT is ready before enabling Mic (no fail-open paint). Embeds use bootSharedForUi in shared.js. */
+async function bootModel() {
   try {
-    await uiBoot.ensureModel();
+    checkerReady = false;
+    setProgress(0.02, 'Loading the sound checker…');
+    render();
+    const wasmPaths = new URL('../vendor/ort/', import.meta.url).href;
+    await bootShared({
+      wasmPaths,
+      onProgress: (frac, label) => setProgress(frac, label),
+      downloadStallMs: MODEL_DOWNLOAD_STALL_MS,
+    });
     checkerReady = true;
     modelError = null;
     if (modelLabel) delete modelLabel.dataset.retry;
     setProgress(1, 'Ready');
     markModelReady();
+    render();
   } catch (err) {
+    checkerReady = false;
     modelError = err && err.message ? err.message : String(err);
     if (modelLabel) {
       modelLabel.classList.remove('done');
       modelLabel.textContent = `Listen-only · ${modelError} Tap to retry.`;
       modelLabel.dataset.retry = '1';
+    } else {
+      modelError = 'Sound checker did not start. ' + modelError;
     }
-    console.error(err);
-  }
-  render();
-}
-
-async function retryModelFromLabel() {
-  if (!lazyModelBoot || !modelLabel || modelLabel.dataset.retry !== '1') return;
-  delete modelLabel.dataset.retry;
-  setProgress(0.02, 'Retrying sound checker…');
-  render();
-  await finishModelBoot(lazyModelBoot);
-}
-
-async function bootModel() {
-  try {
-    setProgress(0.02, 'Loading the sound checker…');
-    const wasmPaths = new URL('../vendor/ort/', import.meta.url).href;
-    const bootOpts = {
-      wasmPaths,
-      onProgress: (frac, label) => setProgress(frac, label),
-    };
-    const uiBoot = await bootSharedForUi(bootOpts);
-    if (!checkerReady) {
-      setProgress(0.06, 'Listen now · sound checker still loading…');
-    }
-    render();
-    void finishModelBoot(uiBoot);
-  } catch (err) {
-    modelError = err && err.message ? err.message : String(err);
-    if (modelLabel) modelLabel.textContent = 'Sound checker did not start. ' + modelError;
     console.error(err);
     render();
   }
