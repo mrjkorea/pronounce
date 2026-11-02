@@ -39,6 +39,14 @@ a.unit { counter-increment: pvunit; justify-content: flex-start; gap: .8rem; min
 a.unit::before { content: counter(pvunit); display: inline-flex; align-items: center; justify-content: center; width: 46px; height: 46px; flex: none; border-radius: 14px; background: linear-gradient(150deg, var(--accent), var(--accent-dark)); color: #fff; font: 900 1.25rem var(--font-en); box-shadow: 0 3px 0 rgba(0,0,0,.15); }
 a.unit small { margin-left: auto; padding: .2rem .65rem; border-radius: 999px; background: var(--accent-soft); color: var(--accent-dark); font-weight: 800; }
 a.unit:hover { border-color: var(--accent); transform: translateY(-2px); }
+a.book.is-locked, span.book.is-locked, span.unit.is-locked {
+  opacity: 0.55;
+  cursor: not-allowed;
+  pointer-events: none;
+  filter: grayscale(0.15);
+}
+span.unit.is-locked::before { background: linear-gradient(150deg, #b8bcc4, #8a9099); }
+.lock-tag { margin-left: auto; font-size: 1rem; }
 a.back { font: 800 1.05rem var(--font-ui); color: var(--accent-dark); min-height: 48px; }
 /* sheet */
 .sheet { background: transparent; border: 0; box-shadow: none; display: flex; flex-direction: column; gap: .9rem; }

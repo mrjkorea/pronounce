@@ -21,12 +21,12 @@ import {
   loadG2P,
   scoreUtteranceFromLogits,
   tokenizeWords,
-} from './engine.js?v=20261030-day4-mic-score';
+} from './engine.js?v=20261102-unlock-all';
 import {
   TARGET_SAMPLE_RATE,
    decodeAudioToMono,
   prepareSpeechSamples,
-} from './audio.js?v=20261030-day4-mic-score';
+} from './audio.js?v=20261102-unlock-all';
 
 export const DOOR_FAIL_TEXT = 'Say the sentence again, please. Say each word clearly.';
 export const DOOR_CHECKING_TEXT = 'Now checking pronunciation.';
@@ -41,7 +41,7 @@ export const EXPECTED_MODEL_BYTES = 121951866;
 export const MODEL_DOWNLOAD_STALL_MS = 45000;
 /** Reject hung HuBERT worker calls so score queues cannot block forever (low-memory seats). */
 export const WORKER_CALL_TIMEOUT_MS = 15000;
-export const DAY4_MODULE_V = '20261030-day4-mic-score';
+export const DAY4_MODULE_V = '20261102-unlock-all';
 export const DOWNLOAD_STALL_USER_MESSAGE =
   'Download stopped too long. Check Wi‑Fi, tap Retry or refresh the page, or ask your teacher for help.';
 

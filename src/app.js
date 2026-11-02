@@ -5,12 +5,12 @@ import {
   bandForScore,
   getAppThresholds,
   tokenizeWords,
-} from './engine.js?v=20261030-day4-mic-score';
+} from './engine.js?v=20261102-unlock-all';
 import {
   RAW_MIC_CONSTRAINTS,
   decodeAudioToMono,
-} from './audio.js?v=20261030-day4-mic-score';
-import { sheetLines } from './sheet.js?v=20261030-day4-mic-score';
+} from './audio.js?v=20261102-unlock-all';
+import { sheetLines } from './sheet.js?v=20261102-unlock-all';
 import {
   FLOW_STORAGE_KEY,
   LOCK_TEXT,
@@ -31,8 +31,13 @@ import {
   sumWords,
   timerRunning as flowTimerRunning,
   timerSeconds,
-} from './flow.js?v=20261030-day4-mic-score';
-import { isMrjTeacher, installTeacherRefresh } from './mrj-teacher.js?v=20261030-day4-mic-score';
+} from './flow.js?v=20261102-unlock-all';
+import { isMrjTeacher, installTeacherRefresh } from './mrj-teacher.js?v=20261102-unlock-all';
+import {
+  buildPathSteps,
+  isBookPathOpen,
+  isUnitPathOpen,
+} from './path-lock.js?v=20261102-unlock-all';
 
 function lineOpenFor(flow, id) {
   if (isMrjTeacher()) return true;
@@ -61,8 +66,8 @@ import {
   gradeTrialSamples,
   MODEL_DOWNLOAD_STALL_MS,
   trialRuntime,
-} from './trial.js?v=20261030-day4-mic-score';
-import { bootShared, resetSharedBoot } from './shared.js?v=20261030-day4-mic-score';
+} from './trial.js?v=20261102-unlock-all';
+import { bootShared, resetSharedBoot } from './shared.js?v=20261102-unlock-all';
 
 import {
   PROGRAM,
@@ -77,9 +82,9 @@ import {
   scoresNeedSaveAfterSync,
   shouldFlushPackOnPagehide,
   studentScoreStorageKey,
-} from './progress-merge.js?v=20261030-day4-mic-score';
-import { createPackSaveScheduler } from './pack-save-scheduler.js?v=20261030-day4-mic-score';
-import { reportScoredActivity } from './score-reporting.js?v=20261030-day4-mic-score';
+} from './progress-merge.js?v=20261102-unlock-all';
+import { createPackSaveScheduler } from './pack-save-scheduler.js?v=20261102-unlock-all';
+import { reportScoredActivity } from './score-reporting.js?v=20261102-unlock-all';
 
 export const PASS_PCT = ENGINE_PASS_PCT; // pass = line average >= 60
 let activeStudentKey = '';
@@ -178,6 +183,7 @@ const modelFill = typeof document !== 'undefined' ? document.getElementById('mod
 const modelTrack = typeof document !== 'undefined' ? document.getElementById('modelTrack') : null;
 
 let books = [];
+let pathSteps = [];
 let byId = new Map();
 let checkerReady = false;
 let modelError = '';
@@ -543,6 +549,7 @@ async function loadContent() {
     return { id, label: (meta && meta.label) || data.label, units };
   }));
   books = files;
+  pathSteps = buildPathSteps(books, BOOK_ORDER);
   byId = new Map(files.map((b) => [b.id, b]));
 }
 
@@ -604,10 +611,25 @@ function bookProgress(book) {
   return { n, pass };
 }
 
+function pathLockCtx() {
+  return {
+    teacher: isMrjTeacher(),
+    books,
+    steps: pathSteps,
+    scores: loadScores(),
+    linePassed,
+  };
+}
+
 function renderHome() {
+  const ctx = pathLockCtx();
   const cards = books.map((book) => {
     const prog = bookProgress(book);
-    return `<a class="book" href="#/book/${book.id}">${book.label}<small>${prog.pass} / ${prog.n} (${prog.n ? Math.round((prog.pass / prog.n) * 100) : 0}%) passed</small></a>`;
+    const stats = `<small>${prog.pass} / ${prog.n} (${prog.n ? Math.round((prog.pass / prog.n) * 100) : 0}% passed)</small>`;
+    if (!isBookPathOpen(book.id, ctx)) {
+      return `<span class="book is-locked" aria-disabled="true">${book.label}${stats}<small class="lock-tag">🔒</small></span>`;
+    }
+    return `<a class="book" href="#/book/${book.id}">${book.label}${stats}</a>`;
   }).join('');
   appEl.innerHTML = `<h1>Pronounce · Day 4</h1><p class="lead">Tap your book.</p><div class="books">${cards}</div>`;
 }
@@ -615,11 +637,20 @@ function renderHome() {
 function renderUnits(bookId) {
   const book = byId.get(bookId);
   if (!book) { appEl.innerHTML = '<p class="lead">That book is not here.</p>'; return; }
+  const ctx = pathLockCtx();
+  if (!isBookPathOpen(bookId, ctx)) {
+    appEl.innerHTML = `<a class="back" href="#/">← Books</a><p class="lead">This book is locked. Finish your current unit first, or ask your teacher.</p>`;
+    return;
+  }
   const scores = loadScores();
   const rows = book.units.map((unit) => {
     const lines = sheetLines(book.id, unit);
     const passed = lines.filter((line) => linePassed(line, unit, scores)).length;
-    return `<a class="unit" href="#/book/${book.id}/unit/${unit.id}">${unit.title}<small>${passed} / ${lines.length} (${lines.length ? Math.round((passed / lines.length) * 100) : 0}%)</small></a>`;
+    const stats = `<small>${passed} / ${lines.length} (${lines.length ? Math.round((passed / lines.length) * 100) : 0}%)</small>`;
+    if (!isUnitPathOpen(book.id, unit.id, ctx)) {
+      return `<span class="unit is-locked" aria-disabled="true">${unit.title}${stats}<small class="lock-tag">🔒</small></span>`;
+    }
+    return `<a class="unit" href="#/book/${book.id}/unit/${unit.id}">${unit.title}${stats}</a>`;
   }).join('');
   appEl.innerHTML = `<a class="back" href="#/">← Books</a><h1>${book.label}</h1><p class="lead">Tap the unit you are studying.</p><div class="units">${rows}</div>`;
 }
@@ -1217,8 +1248,17 @@ function render() {
   if (r.name === 'units') {
     document.body.classList.remove('phase-part2');
     renderUnits(r.bookId);
-  } else if (r.name === 'sheet') renderSheet(r.bookId, r.unitId);
-  else {
+  } else if (r.name === 'sheet') {
+    const ctx = pathLockCtx();
+    if (!isUnitPathOpen(r.bookId, r.unitId, ctx)) {
+      document.body.classList.remove('phase-part2');
+      const book = byId.get(r.bookId);
+      const label = book ? book.label : 'Books';
+      appEl.innerHTML = `<a class="back" href="#/book/${r.bookId}">← ${escapeHtml(label)}</a><p class="lead">This unit is locked. Finish your current unit first, or ask your teacher.</p>`;
+      return;
+    }
+    renderSheet(r.bookId, r.unitId);
+  } else {
     document.body.classList.remove('phase-part2');
     renderHome();
   }
@@ -1493,7 +1533,7 @@ function encodeWavOffTap(floatChunks, sampleRate) {
   return new Promise((resolve, reject) => {
     let worker;
     try {
-      worker = new Worker(new URL('./wav-worker.js?v=20261030-day4-mic-score', import.meta.url));
+      worker = new Worker(new URL('./wav-worker.js?v=20261102-unlock-all', import.meta.url));
     } catch (err) {
       reject(err);
       return;
@@ -1835,7 +1875,7 @@ if (appEl) {
 
   loadContent().then(async () => {
     try {
-      const response = await fetch('content/l1.json?v=20260930-l1');
+      const response = await fetch('content/l1.json?v=20261102-unlock-all');
       if (response.ok) l1Pack = await response.json();
     } catch (err) {
       console.error(err);
