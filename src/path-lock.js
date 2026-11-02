@@ -1,14 +1,34 @@
 /** Unit/day path gates for Pronounce navigation and sheet line order. */
 import { sheetLines } from './sheet.js';
 
-/** Jay: temporary unlock all unit/path gates until proper teacher unlock UI ships. */
+/** Jay: temporary unlock all unit/path gates until teacher unlock UI is enough for class. */
 export const TEMP_UNLOCK_ALL = true;
 
+/**
+ * Section open when TEMP_UNLOCK_ALL, teacher session, natural progress, or teacherPathGrant (see teacher-grants.js).
+ * Turn off TEMP_UNLOCK_ALL here when classroom is ready for sequential locks again.
+ */
 export function pathLocksActive(ctx = {}) {
   const unlockAll = ctx.unlockAll != null ? ctx.unlockAll : TEMP_UNLOCK_ALL;
   if (unlockAll) return false;
   if (ctx.teacher) return false;
   return true;
+}
+
+export function teacherOpenStepIndex(steps, grant) {
+  if (!grant || !steps || !steps.length) return -1;
+  if (grant.mode === 'open') return steps.length;
+  if (grant.mode === 'start' && grant.bookId && grant.unitId) {
+    return pathStepIndex(steps, grant.bookId, grant.unitId);
+  }
+  return -1;
+}
+
+export function effectiveOpenPathIndex(steps, books, scores, linePassed, grant) {
+  const natural = firstOpenPathIndex(steps, books, scores, linePassed);
+  const teacherIdx = teacherOpenStepIndex(steps, grant);
+  if (teacherIdx < 0) return natural;
+  return Math.max(natural, teacherIdx);
 }
 
 export function buildPathSteps(books, bookOrder) {
@@ -51,7 +71,13 @@ export function isUnitPathOpen(bookId, unitId, ctx) {
   const steps = ctx.steps || [];
   const idx = pathStepIndex(steps, bookId, unitId);
   if (idx < 0) return true;
-  const openIdx = firstOpenPathIndex(steps, ctx.books, ctx.scores, ctx.linePassed);
+  const openIdx = effectiveOpenPathIndex(
+    steps,
+    ctx.books,
+    ctx.scores,
+    ctx.linePassed,
+    ctx.teacherPathGrant,
+  );
   return idx <= openIdx;
 }
 
