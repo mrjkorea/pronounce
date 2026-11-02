@@ -5,12 +5,12 @@ import {
   bandForScore,
   getAppThresholds,
   tokenizeWords,
-} from './engine.js?v=20261102-unlock-all';
+} from './engine.js?v=20261103-teacher-start-here';
 import {
   RAW_MIC_CONSTRAINTS,
   decodeAudioToMono,
-} from './audio.js?v=20261102-unlock-all';
-import { sheetLines } from './sheet.js?v=20261102-unlock-all';
+} from './audio.js?v=20261103-teacher-start-here';
+import { sheetLines } from './sheet.js?v=20261103-teacher-start-here';
 import {
   FLOW_STORAGE_KEY,
   LOCK_TEXT,
@@ -31,13 +31,20 @@ import {
   sumWords,
   timerRunning as flowTimerRunning,
   timerSeconds,
-} from './flow.js?v=20261102-unlock-all';
-import { isMrjTeacher, installTeacherRefresh } from './mrj-teacher.js?v=20261102-unlock-all';
+} from './flow.js?v=20261103-teacher-start-here';
+import { isMrjTeacher, installTeacherRefresh, configureTeacherPanel, onTeacherChrome, mountTeacherPanel } from './mrj-teacher.js?v=20261103-teacher-start-here';
 import {
   buildPathSteps,
   isBookPathOpen,
   isUnitPathOpen,
-} from './path-lock.js?v=20261102-unlock-all';
+} from './path-lock.js?v=20261103-teacher-start-here';
+import {
+  clearTeacherPathGrant,
+  listTeacherPathGrants,
+  readTeacherPathGrant,
+  setTeacherOpenAllGrant,
+  setTeacherStartGrant,
+} from './teacher-grants.js?v=20261103-teacher-start-here';
 
 function lineOpenFor(flow, id) {
   if (isMrjTeacher()) return true;
@@ -66,8 +73,8 @@ import {
   gradeTrialSamples,
   MODEL_DOWNLOAD_STALL_MS,
   trialRuntime,
-} from './trial.js?v=20261102-unlock-all';
-import { bootShared, resetSharedBoot } from './shared.js?v=20261102-unlock-all';
+} from './trial.js?v=20261103-teacher-start-here';
+import { bootShared, resetSharedBoot } from './shared.js?v=20261103-teacher-start-here';
 
 import {
   PROGRAM,
@@ -82,9 +89,10 @@ import {
   scoresNeedSaveAfterSync,
   shouldFlushPackOnPagehide,
   studentScoreStorageKey,
-} from './progress-merge.js?v=20261102-unlock-all';
-import { createPackSaveScheduler } from './pack-save-scheduler.js?v=20261102-unlock-all';
-import { reportScoredActivity } from './score-reporting.js?v=20261102-unlock-all';
+  idKey,
+} from './progress-merge.js?v=20261103-teacher-start-here';
+import { createPackSaveScheduler } from './pack-save-scheduler.js?v=20261103-teacher-start-here';
+import { reportScoredActivity } from './score-reporting.js?v=20261103-teacher-start-here';
 
 export const PASS_PCT = ENGINE_PASS_PCT; // pass = line average >= 60
 let activeStudentKey = '';
@@ -578,6 +586,72 @@ function studentDisplayId() {
   return '';
 }
 
+function teacherStudentKey() {
+  const id = studentDisplayId();
+  return id ? idKey(id) : activeStudentKey;
+}
+
+function notifyTeacherUnlockChanged() {
+  document.dispatchEvent(new CustomEvent('mrj-teacher-unlock-changed'));
+}
+
+function teacherActionGuard() {
+  if (!isMrjTeacher()) return false;
+  if (!teacherStudentKey()) {
+    window.alert('Sign in as a student first, then enter Teacher PIN.');
+    return false;
+  }
+  return true;
+}
+
+function teacherStartFrom(bookId, unitId) {
+  if (!teacherActionGuard()) return;
+  setTeacherStartGrant(localStorage, studentDisplayId(), bookId, unitId);
+  notifyTeacherUnlockChanged();
+  render();
+}
+
+function teacherOpenAllPath() {
+  if (!teacherActionGuard()) return;
+  setTeacherOpenAllGrant(localStorage, studentDisplayId());
+  notifyTeacherUnlockChanged();
+  render();
+}
+
+function teacherUndoGrant() {
+  if (!teacherActionGuard()) return;
+  clearTeacherPathGrant(localStorage, studentDisplayId());
+  notifyTeacherUnlockChanged();
+  render();
+}
+
+function routeContextForTeacher() {
+  const hash = (location.hash || '#/').replace(/^#/, '');
+  const unit = hash.match(/^\/book\/([a-z0-9_]+)\/unit\/([a-z0-9_]+)$/);
+  if (unit) {
+    const book = byId.get(unit[1]);
+    return { bookId: unit[1], unitId: unit[2], bookLabel: book ? book.label : unit[1] };
+  }
+  const book = hash.match(/^\/book\/([a-z0-9_]+)$/);
+  if (book) {
+    const b = byId.get(book[1]);
+    return { bookId: book[1], unitId: '', bookLabel: b ? b.label : book[1] };
+  }
+  return { bookId: '', unitId: '', bookLabel: '' };
+}
+
+function listUnitsForTeacher(bookId) {
+  const book = byId.get(bookId);
+  if (!book) return [];
+  return book.units.map((u) => ({ id: u.id, title: u.title }));
+}
+
+function unitLabelForTeacher(bookId, unitId) {
+  const book = byId.get(bookId);
+  const unit = book && book.units.find((u) => u.id === unitId);
+  return unit ? unit.title : unitId;
+}
+
 function syncStudentChrome() {
   const id = studentDisplayId();
   const pill = document.getElementById('pronounceStudentPill');
@@ -612,13 +686,20 @@ function bookProgress(book) {
 }
 
 function pathLockCtx() {
+  const studentId = studentDisplayId();
   return {
     teacher: isMrjTeacher(),
     books,
     steps: pathSteps,
     scores: loadScores(),
     linePassed,
+    teacherPathGrant: studentId ? readTeacherPathGrant(localStorage, studentId) : null,
   };
+}
+
+function teacherStartBtnHtml(bookId, unitId) {
+  if (!isMrjTeacher()) return '';
+  return `<button type="button" class="teacher-start-btn" data-teacher-start="${escapeHtml(bookId)}:${escapeHtml(unitId)}">Start from here</button>`;
 }
 
 function renderHome() {
@@ -627,9 +708,9 @@ function renderHome() {
     const prog = bookProgress(book);
     const stats = `<small>${prog.pass} / ${prog.n} (${prog.n ? Math.round((prog.pass / prog.n) * 100) : 0}% passed)</small>`;
     if (!isBookPathOpen(book.id, ctx)) {
-      return `<span class="book is-locked" aria-disabled="true">${book.label}${stats}<small class="lock-tag">🔒</small></span>`;
+      return `<div class="book-wrap"><span class="book is-locked" aria-disabled="true">${book.label}${stats}<small class="lock-tag">🔒</small></span>${teacherStartBtnHtml(book.id, book.units[0]?.id || 'unit01')}</div>`;
     }
-    return `<a class="book" href="#/book/${book.id}">${book.label}${stats}</a>`;
+    return `<div class="book-wrap"><a class="book" href="#/book/${book.id}">${book.label}${stats}</a>${teacherStartBtnHtml(book.id, book.units[0]?.id || 'unit01')}</div>`;
   }).join('');
   appEl.innerHTML = `<h1>Pronounce · Day 4</h1><p class="lead">Tap your book.</p><div class="books">${cards}</div>`;
 }
@@ -648,9 +729,9 @@ function renderUnits(bookId) {
     const passed = lines.filter((line) => linePassed(line, unit, scores)).length;
     const stats = `<small>${passed} / ${lines.length} (${lines.length ? Math.round((passed / lines.length) * 100) : 0}%)</small>`;
     if (!isUnitPathOpen(book.id, unit.id, ctx)) {
-      return `<span class="unit is-locked" aria-disabled="true">${unit.title}${stats}<small class="lock-tag">🔒</small></span>`;
+      return `<div class="unit-wrap"><span class="unit is-locked" aria-disabled="true">${unit.title}${stats}<small class="lock-tag">🔒</small></span>${teacherStartBtnHtml(book.id, unit.id)}</div>`;
     }
-    return `<a class="unit" href="#/book/${book.id}/unit/${unit.id}">${unit.title}${stats}</a>`;
+    return `<div class="unit-wrap"><a class="unit" href="#/book/${book.id}/unit/${unit.id}">${unit.title}${stats}</a>${teacherStartBtnHtml(book.id, unit.id)}</div>`;
   }).join('');
   appEl.innerHTML = `<a class="back" href="#/">← Books</a><h1>${book.label}</h1><p class="lead">Tap the unit you are studying.</p><div class="units">${rows}</div>`;
 }
@@ -1533,7 +1614,7 @@ function encodeWavOffTap(floatChunks, sampleRate) {
   return new Promise((resolve, reject) => {
     let worker;
     try {
-      worker = new Worker(new URL('./wav-worker.js?v=20261102-unlock-all', import.meta.url));
+      worker = new Worker(new URL('./wav-worker.js?v=20261103-teacher-start-here', import.meta.url));
     } catch (err) {
       reject(err);
       return;
@@ -1814,6 +1895,16 @@ function onHear(btn) {
 
 if (appEl) {
   appEl.addEventListener('click', (ev) => {
+    const startBtn = ev.target.closest('.teacher-start-btn');
+    if (startBtn) {
+      ev.preventDefault();
+      const raw = startBtn.getAttribute('data-teacher-start') || '';
+      const split = raw.indexOf(':');
+      if (split > 0) {
+        teacherStartFrom(raw.slice(0, split), raw.slice(split + 1));
+      }
+      return;
+    }
     const hear = ev.target.closest('.hear');
     if (hear) { onHear(hear); return; }
     if (ev.target.closest('#rushStart')) { onRushStart(); return; }
@@ -1855,6 +1946,25 @@ if (appEl) {
   }
 
   syncStudentChrome();
+  mountTeacherPanel();
+  configureTeacherPanel({
+    studentLabel: studentDisplayId,
+    listGrants: () => {
+      const id = studentDisplayId();
+      if (!id) return [];
+      return listTeacherPathGrants(localStorage, id);
+    },
+    routeContext: routeContextForTeacher,
+    listUnits: listUnitsForTeacher,
+    bookLabel: (bookId) => {
+      const book = byId.get(bookId);
+      return book ? book.label : bookId;
+    },
+    unitLabel: unitLabelForTeacher,
+    openAllPath: teacherOpenAllPath,
+    startFrom: teacherStartFrom,
+    undoGrant: teacherUndoGrant,
+  });
   installTeacherRefresh(() => {
     syncStudentChrome();
     render();
@@ -1863,6 +1973,7 @@ if (appEl) {
   window.addEventListener('mrj-auth-ready', onAuthReady);
   document.addEventListener('mrj-teacher', () => {
     syncStudentChrome();
+    onTeacherChrome();
     render();
   });
   const flushPackOnHide = () => {
@@ -1875,7 +1986,7 @@ if (appEl) {
 
   loadContent().then(async () => {
     try {
-      const response = await fetch('content/l1.json?v=20261102-unlock-all');
+      const response = await fetch('content/l1.json?v=20261103-teacher-start-here');
       if (response.ok) l1Pack = await response.json();
     } catch (err) {
       console.error(err);

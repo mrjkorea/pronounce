@@ -642,3 +642,176 @@ body.phase-part2 .rush-clock {
 .voice-btn { font: inherit; font-size: 1rem; font-weight: 700; padding: 8px 14px; border-radius: 999px;
   border: 2px solid #c9d3e6; background: #fff; color: #334; cursor: pointer; }
 .voice-btn.on { background: #ffd43b; border-color: #f59f00; color: #222; }
+
+.book-wrap,
+.unit-wrap {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+.teacher-start-btn,
+.p4-teacher-tools-btn {
+  align-self: flex-end;
+  min-height: 48px;
+  padding: 10px 16px;
+  border-radius: 14px;
+  border: 3px solid var(--blue);
+  background: #fff;
+  color: var(--blue);
+  font: inherit;
+  font-size: 1rem;
+  font-weight: 800;
+  cursor: pointer;
+}
+
+.teacher-start-btn:active,
+.p4-teacher-tools-btn:active {
+  transform: translateY(2px);
+}
+
+body:not(.mrj-teacher) .teacher-start-btn {
+  display: none;
+}
+
+.p4-teacher-tools-btn {
+  font-size: 0.9rem;
+  min-height: 44px;
+  padding: 8px 12px;
+  border-color: var(--accent-dark, #157a42);
+  color: var(--accent-dark, #157a42);
+}
+
+body:not(.mrj-teacher) .p4-teacher-tools-btn {
+  display: none;
+}
+
+.p4-teacher-panel-backdrop {
+  position: fixed;
+  inset: 0;
+  background: rgba(20, 30, 50, 0.45);
+  z-index: 9000;
+}
+
+.p4-teacher-panel {
+  position: fixed;
+  top: 72px;
+  right: max(12px, calc(50vw - 460px));
+  width: min(420px, 92vw);
+  max-height: min(78vh, 640px);
+  overflow: auto;
+  background: #fff;
+  border-radius: 22px;
+  border: 3px solid var(--line);
+  box-shadow: 0 16px 40px rgba(0, 0, 0, 0.18);
+  z-index: 9001;
+  padding: 14px 16px 18px;
+}
+
+.p4-teacher-panel-head {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 10px;
+  margin-bottom: 8px;
+}
+
+.p4-teacher-panel-head h1 {
+  font-size: 1.25rem;
+  margin: 0;
+}
+
+.p4-teacher-panel-close {
+  min-width: 44px;
+  min-height: 44px;
+  border-radius: 12px;
+  border: 2px solid var(--line);
+  background: #fffef8;
+  font-size: 1.2rem;
+  font-weight: 800;
+  cursor: pointer;
+}
+
+.p4-teacher-panel-lead {
+  font-weight: 800;
+  margin: 0.4em 0;
+}
+
+.p4-teacher-panel-note {
+  color: var(--muted);
+  font-size: 1.05rem;
+}
+
+.p4-teacher-panel-h {
+  font-size: 1.1rem;
+  margin: 1em 0 0.4em;
+}
+
+.p4-teacher-grant-list {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+}
+
+.p4-teacher-grant-item {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  justify-content: space-between;
+  padding: 10px 0;
+  border-bottom: 2px dashed var(--line);
+}
+
+.p4-teacher-grant-text {
+  flex: 1;
+  font-weight: 700;
+  font-size: 1rem;
+}
+
+.p4-teacher-unit-list {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  margin-top: 8px;
+}
+
+.p4-teacher-unit-row {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 8px;
+  justify-content: space-between;
+  padding: 10px 12px;
+  border: 2px solid var(--line);
+  border-radius: 16px;
+}
+
+.p4-teacher-unit-title {
+  flex: 1;
+  font-weight: 800;
+  font-size: 1rem;
+}
+
+.p4-teacher-btn {
+  min-height: 48px;
+  padding: 10px 14px;
+  border-radius: 14px;
+  border: 3px solid var(--blue);
+  background: var(--blue);
+  color: #fff;
+  font: inherit;
+  font-weight: 800;
+  font-size: 0.95rem;
+  cursor: pointer;
+}
+
+.p4-teacher-btn-undo {
+  background: #fff;
+  color: var(--fail);
+  border-color: #e57373;
+}
+
+.p4-teacher-btn-wide {
+  width: 100%;
+  margin-top: 6px;
+}

@@ -153,6 +153,16 @@ test('index.html uses mrj-auth chip Teacher control only', () => {
   assert.match(html, /mrj-auth-boot\.js/);
 });
 
+test('teacher panel module ships Start from here UI', () => {
+  const root = dirname(fileURLToPath(import.meta.url));
+  const panelSrc = readFileSync(join(root, '..', 'src', 'mrj-teacher-panel.js'), 'utf8');
+  assert.match(panelSrc, /Start from here/);
+  assert.match(panelSrc, /mrj-teacher/);
+  const appSrc = readFileSync(join(root, '..', 'src', 'app.js'), 'utf8');
+  assert.match(appSrc, /teacher-start-btn/);
+  assert.match(appSrc, /configureTeacherPanel/);
+});
+
 test('mrj-scores post uses signed-in student id_key, not unknown (mocked fetch)', async () => {
   const fetches = [];
   const root = {
