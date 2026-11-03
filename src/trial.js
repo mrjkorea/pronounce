@@ -21,12 +21,12 @@ import {
   loadG2P,
   scoreUtteranceFromLogits,
   tokenizeWords,
-} from './engine.js?v=20261103-classroom-mic-hold-v2';
+} from './engine.js?v=20261103-day4-shared-grade-v3';
 import {
   TARGET_SAMPLE_RATE,
    decodeAudioToMono,
   prepareSpeechSamples,
-} from './audio.js?v=20261103-classroom-mic-hold-v2';
+} from './audio.js?v=20261103-day4-shared-grade-v3';
 
 export const DOOR_FAIL_TEXT = 'Say the sentence again, please. Say each word clearly.';
 export const DOOR_CHECKING_TEXT = 'Now checking pronunciation.';
@@ -39,9 +39,18 @@ export const IDB_STORE_NAME = 'assets';
 export const EXPECTED_MODEL_BYTES = 121951866;
 /** Fail the download if no new bytes arrive for this long (classroom Wi‑Fi stalls). */
 export const MODEL_DOWNLOAD_STALL_MS = 45000;
-/** Reject hung HuBERT worker calls so score queues cannot block forever (low-memory seats). */
-export const WORKER_CALL_TIMEOUT_MS = 15000;
-export const DAY4_MODULE_V = '20261103-classroom-mic-hold-v2';
+/** Reject hung HuBERT worker init (low-memory seats). Forward pass uses workerForwardTimeoutMs. */
+export const WORKER_INIT_TIMEOUT_MS = 15000;
+export const WORKER_FORWARD_TIMEOUT_MIN_MS = 30000;
+
+export function workerForwardTimeoutMs(sampleCount, sampleRate = TARGET_SAMPLE_RATE) {
+  const sec = sampleCount / sampleRate;
+  return Math.min(90000, Math.max(WORKER_FORWARD_TIMEOUT_MIN_MS, 15000 + Math.round(sec * 5000)));
+}
+
+/** @deprecated use WORKER_INIT_TIMEOUT_MS */
+export const WORKER_CALL_TIMEOUT_MS = WORKER_INIT_TIMEOUT_MS;
+export const DAY4_MODULE_V = '20261103-day4-shared-grade-v3';
 export const DOWNLOAD_STALL_USER_MESSAGE =
   'Download stopped too long. Check Wi‑Fi, tap Retry or refresh the page, or ask your teacher for help.';
 
@@ -447,10 +456,12 @@ export async function forwardHubertPhoneme(rtOrSession, normalizedSamples) {
   // If worker is active on runtime
   if (rtOrSession && rtOrSession.worker) {
     const copy = new Float32Array(normalizedSamples);
+    const timeoutMs = workerForwardTimeoutMs(copy.length);
     const out = await callWorker(
       rtOrSession.worker,
       { type: 'forward', samples: copy },
       [copy.buffer],
+      timeoutMs,
     );
     return {
       data: out.data,
@@ -698,6 +709,7 @@ async function completeHubertModelBoot(opts = {}) {
         worker,
         { type: 'init', wasmPaths, modelBuffer: workerBuf },
         [workerBuf],
+        WORKER_INIT_TIMEOUT_MS,
       );
       await initTrialEngine({
         worker,
@@ -766,8 +778,10 @@ export async function bootTrialInPage(opts = {}) {
  * High-level helper for Day 4, Day 6, Phonics / Decodable Readers, and TOEIC Read-Aloud.
  */
 export async function gradeAudioForApp(audioBlobOrSamples, targetText, opts = {}) {
+  if (!runtime.ready) {
+    await ensureTrialModel(opts);
+  }
   const appId = opts.appId || 'day4';
-  const thresholds = getAppThresholds(appId);
   const passAt = typeof opts.passAt === 'number' ? opts.passAt : PASS_PCT;
   const samples = audioBlobOrSamples instanceof Float32Array
     ? audioBlobOrSamples

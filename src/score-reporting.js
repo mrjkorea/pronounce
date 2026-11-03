@@ -1,4 +1,4 @@
-import { authStudentId } from './progress-merge.js?v=20261103-classroom-mic-hold-v2';
+import { authStudentId } from './progress-merge.js?v=20261103-day4-shared-grade-v3';
 
 export const PROGRAM = 'pronounce';
 
