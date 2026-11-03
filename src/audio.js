@@ -12,7 +12,7 @@ export const NEAR_FIELD_DROP_DB = 12;
 export const VAD_FRAME_RMS_MIN = 0.0035;
 /** prepareSpeechSamples / gradeTrialSamples silence gate (still rejects empty hum). */
 export const TOO_QUIET_RMS = 0.0035;
-export const TOO_QUIET_PEAK_WIN = 0.008;
+export const TOO_QUIET_PEAK_WIN = 0.006;
 export const TOO_QUIET_VOICED_MS = 80;
 
 export const RAW_MIC_CONSTRAINTS = Object.freeze({
