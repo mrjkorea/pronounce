@@ -218,9 +218,9 @@ test('Korean-L1 wrong-sound diagnostics identify f/p, v/b, r/l, θ/s, ð/d, vowe
   }
 });
 
-test('classroom-soft speech is not rejected as silence before HuBERT', () => {
+test('classroom-soft speech is not rejected as silence before HuBERT', async () => {
   const sr = 16000;
-  const synthSentence = (peakAmp, sec = 2.5) => {
+  const synthSpeechish = (peakAmp, sec = 2.5) => {
     const n = Math.floor(sr * sec);
     const s = new Float32Array(n);
     const syllables = [0.8, 0.5, 1.0, 0.6, 0.9, 0.4, 0.7, 0.55];
@@ -235,16 +235,68 @@ test('classroom-soft speech is not rejected as silence before HuBERT', () => {
         s[idx] = peakAmp * syllables[sy] * env * Math.sin((2 * Math.PI * hz * idx) / sr);
       }
     }
+    for (let i = 0; i < s.length; i++) {
+      const t = i / sr;
+      s[i] += peakAmp * 0.15 * Math.sin(2 * Math.PI * 800 * t);
+      s[i] += peakAmp * 0.08 * Math.sin(2 * Math.PI * 2400 * t);
+    }
     return s;
   };
-  const prep = audio.prepareSpeechSamples(synthSentence(0.012), sr);
-  assert.equal(prep.stats.tooQuiet, false, 'peak ~0.012 classroom take should reach HuBERT');
-  assert.ok(prep.trimmed.length > sr * 0.5, 'trim should keep most of a soft sentence');
+  const roundTrip = async (samples, captureRate = 48000) => {
+    const up = new Float32Array(Math.floor(samples.length * captureRate / sr));
+    for (let i = 0; i < up.length; i++) {
+      const src = (i * sr) / captureRate;
+      const j = Math.min(samples.length - 1, Math.floor(src));
+      up[i] = samples[j];
+    }
+    const blob = audio.floatToWavBlob(up, captureRate);
+    const decoded = await audio.decodeAudioToMono(blob, sr);
+    return audio.prepareSpeechSamples(decoded, sr);
+  };
+  for (const peak of [0.008, 0.006]) {
+    const prep = await roundTrip(synthSpeechish(peak));
+    assert.equal(prep.stats.tooQuiet, false, `peak ${peak} 48k round-trip should pass VAD`);
+    assert.equal(prep.stats.mumbled, false, `peak ${peak} should not false-mumble before HuBERT`);
+  }
+  const hum = new Float32Array(sr);
+  for (let i = 0; i < hum.length; i++) hum[i] = 0.0005 * (Math.random() * 2 - 1);
+  const humPrep = audio.prepareSpeechSamples(hum, sr);
+  assert.equal(humPrep.stats.tooQuiet, true, 'hum-only take still door-fails');
 });
 
-test('live silence auto-stop uses a classroom-safe analyser RMS floor', () => {
-  assert.equal(app.SILENCE_RMS, 0.01);
-  assert.equal(app.SILENCE_MS, 500);
+test('live silence auto-stop holds through soft speech (does not count as trailing silence)', () => {
+  assert.equal(app.SILENCE_RMS, 0.007);
+  assert.equal(app.SILENCE_TRAIL_RMS, 0.0032);
+  let s = { quietMs: 0, totalMs: 900, spoke: true };
+  for (let i = 0; i < 20; i++) {
+    s = app.stepSilenceWatch(s, 0.0055);
+  }
+  assert.equal(s.shouldFinish, false, 'RMS 0.0055 is soft speech, not 750ms trailing silence');
+  assert.equal(s.quietMs, 0);
+  for (let i = 0; i < 16; i++) {
+    s = app.stepSilenceWatch(s, 0.0025);
+  }
+  assert.equal(s.shouldFinish, true, 'RMS 0.0025 for 750ms+ after grace should auto-stop');
+});
+
+test('mumble gate rejects dull loud speech but not quiet classroom takes', () => {
+  const sr = 16000;
+  const n = sr;
+  const dull = new Float32Array(n);
+  for (let i = 0; i < n; i++) {
+    dull[i] = 0.04 * Math.sin((2 * Math.PI * 180 * i) / sr);
+  }
+  const dullStats = audio.audioStats(dull, sr);
+  assert.equal(dullStats.tooQuiet, false);
+  assert.equal(dullStats.mumbled, true, 'pure low tone at usable level is mumbled');
+
+  const quiet = new Float32Array(n);
+  for (let i = 0; i < n; i++) {
+    quiet[i] = 0.005 * Math.sin((2 * Math.PI * 180 * i) / sr);
+    quiet[i] += 0.002 * Math.sin((2 * Math.PI * 900 * i) / sr);
+  }
+  const quietStats = audio.audioStats(quiet, sr);
+  assert.equal(quietStats.mumbled, false, 'quiet speech should not hit mumble gate');
 });
 
 test('near-field gate drops voiced segments >= 12 dB quieter than main speaker', () => {

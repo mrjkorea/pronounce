@@ -5,12 +5,12 @@ import {
   bandForScore,
   getAppThresholds,
   tokenizeWords,
-} from './engine.js?v=20261103-classroom-soft-mic';
+} from './engine.js?v=20261103-classroom-mic-hold-v2';
 import {
   RAW_MIC_CONSTRAINTS,
   decodeAudioToMono,
-} from './audio.js?v=20261103-classroom-soft-mic';
-import { sheetLines } from './sheet.js?v=20261103-classroom-soft-mic';
+} from './audio.js?v=20261103-classroom-mic-hold-v2';
+import { sheetLines } from './sheet.js?v=20261103-classroom-mic-hold-v2';
 import {
   FLOW_STORAGE_KEY,
   LOCK_TEXT,
@@ -31,20 +31,20 @@ import {
   sumWords,
   timerRunning as flowTimerRunning,
   timerSeconds,
-} from './flow.js?v=20261103-classroom-soft-mic';
-import { isMrjTeacher, installTeacherRefresh, configureTeacherPanel, onTeacherChrome, mountTeacherPanel } from './mrj-teacher.js?v=20261103-classroom-soft-mic';
+} from './flow.js?v=20261103-classroom-mic-hold-v2';
+import { isMrjTeacher, installTeacherRefresh, configureTeacherPanel, onTeacherChrome, mountTeacherPanel } from './mrj-teacher.js?v=20261103-classroom-mic-hold-v2';
 import {
   buildPathSteps,
   isBookPathOpen,
   isUnitPathOpen,
-} from './path-lock.js?v=20261103-classroom-soft-mic';
+} from './path-lock.js?v=20261103-classroom-mic-hold-v2';
 import {
   clearTeacherPathGrant,
   listTeacherPathGrants,
   readTeacherPathGrant,
   setTeacherOpenAllGrant,
   setTeacherStartGrant,
-} from './teacher-grants.js?v=20261103-classroom-soft-mic';
+} from './teacher-grants.js?v=20261103-classroom-mic-hold-v2';
 
 function lineOpenFor(flow, id) {
   if (isMrjTeacher()) return true;
@@ -73,8 +73,8 @@ import {
   gradeTrialSamples,
   MODEL_DOWNLOAD_STALL_MS,
   trialRuntime,
-} from './trial.js?v=20261103-classroom-soft-mic';
-import { bootShared, resetSharedBoot } from './shared.js?v=20261103-classroom-soft-mic';
+} from './trial.js?v=20261103-classroom-mic-hold-v2';
+import { bootShared, resetSharedBoot } from './shared.js?v=20261103-classroom-mic-hold-v2';
 
 import {
   PROGRAM,
@@ -90,9 +90,9 @@ import {
   shouldFlushPackOnPagehide,
   studentScoreStorageKey,
   idKey,
-} from './progress-merge.js?v=20261103-classroom-soft-mic';
-import { createPackSaveScheduler } from './pack-save-scheduler.js?v=20261103-classroom-soft-mic';
-import { reportScoredActivity } from './score-reporting.js?v=20261103-classroom-soft-mic';
+} from './progress-merge.js?v=20261103-classroom-mic-hold-v2';
+import { createPackSaveScheduler } from './pack-save-scheduler.js?v=20261103-classroom-mic-hold-v2';
+import { reportScoredActivity } from './score-reporting.js?v=20261103-classroom-mic-hold-v2';
 
 export const PASS_PCT = ENGINE_PASS_PCT; // pass = line average >= 60
 let activeStudentKey = '';
@@ -177,14 +177,44 @@ const QUESTION_CODES = {
   WDYH: 'What do you have?',
 };
 
-// Auto-stop ~500 ms after speech ends
-export const SILENCE_MS = 500;
+// Auto-stop after true trailing silence (not soft ongoing speech)
+export const SILENCE_MS = 750;
 export const SILENCE_GRACE_MS = 900;
 export const PART2_SILENCE_MS = 400;
 const SILENCE_CHECK_MS = 50;
-/** Live analyser "speech started" floor — must sit below typical classroom laptop peaks (~0.010–0.014). */
-export const SILENCE_RMS = 0.010;
+/** Marks that the student started speaking (classroom laptop peaks often ~0.006–0.012). */
+export const SILENCE_RMS = 0.007;
+/** Only RMS below this counts toward end-of-utterance silence (soft speech hold band). */
+export const SILENCE_TRAIL_RMS = 0.0032;
 const MAX_RECORD_MS = 60000;
+
+/**
+ * One tick of live silence auto-stop (exported for regression tests).
+ * @returns {{ quietMs: number, totalMs: number, spoke: boolean, shouldFinish: boolean }}
+ */
+export function stepSilenceWatch(state, rms, opts = {}) {
+  const checkMs = opts.checkMs ?? SILENCE_CHECK_MS;
+  const endSilence = opts.endSilenceMs ?? SILENCE_MS;
+  const grace = opts.graceMs ?? SILENCE_GRACE_MS;
+  const maxRecord = opts.maxRecordMs ?? MAX_RECORD_MS;
+  const noSpeechCap = opts.noSpeechCapMs ?? 8000;
+  const speechRms = opts.speechRms ?? SILENCE_RMS;
+  const trailRms = opts.trailRms ?? SILENCE_TRAIL_RMS;
+  let quietMs = state.quietMs || 0;
+  let totalMs = state.totalMs || 0;
+  let spoke = !!state.spoke;
+  totalMs += checkMs;
+  if (rms >= speechRms) {
+    spoke = true;
+    quietMs = 0;
+  } else if (totalMs >= grace && spoke) {
+    if (rms < trailRms) quietMs += checkMs;
+    else quietMs = 0;
+  }
+  const shouldFinish =
+    quietMs >= endSilence || totalMs >= maxRecord || (!spoke && totalMs >= noSpeechCap);
+  return { quietMs, totalMs, spoke, shouldFinish };
+}
 
 const appEl = typeof document !== 'undefined' ? document.getElementById('app') : null;
 const modelLabel = typeof document !== 'undefined' ? document.getElementById('modelLabel') : null;
@@ -1399,35 +1429,31 @@ function startSilenceWatch(stream, ctx, onDone, silenceMs, graceMs) {
     const src = ctx.createMediaStreamSource(stream);
     const analyser = ctx.createAnalyser();
     analyser.fftSize = 1024;
-    analyser.smoothingTimeConstant = 0.25;
+    analyser.smoothingTimeConstant = 0.05;
     src.connect(analyser);
     const sink = ctx.createGain();
     sink.gain.value = 0;
     analyser.connect(sink);
     sink.connect(ctx.destination);
     silenceNodes = { src, analyser, sink };
-    const buf = new Uint8Array(analyser.fftSize);
-    let quietMs = 0;
-    let totalMs = 0;
-    let spoke = false;
+    const buf = new Float32Array(analyser.fftSize);
+    let watch = { quietMs: 0, totalMs: 0, spoke: false };
     const tick = () => {
       if (finished) return;
       if (ctx.state === 'suspended') ctx.resume().catch(() => {});
-      analyser.getByteTimeDomainData(buf);
+      analyser.getFloatTimeDomainData(buf);
       let sum = 0;
       for (let i = 0; i < buf.length; i++) {
-        const v = (buf[i] - 128) / 128;
+        const v = buf[i];
         sum += v * v;
       }
       const rms = Math.sqrt(sum / buf.length);
-      totalMs += SILENCE_CHECK_MS;
-      if (rms >= SILENCE_RMS) {
-        spoke = true;
-        quietMs = 0;
-      } else if (totalMs >= grace && spoke) {
-        quietMs += SILENCE_CHECK_MS;
-      }
-      if (quietMs >= endSilence || totalMs >= MAX_RECORD_MS || (!spoke && totalMs >= 8000)) {
+      watch = stepSilenceWatch(watch, rms, {
+        checkMs: SILENCE_CHECK_MS,
+        endSilenceMs: endSilence,
+        graceMs: grace,
+      });
+      if (watch.shouldFinish) {
         finish();
         return;
       }
@@ -1615,15 +1641,13 @@ function encodeWavOffTap(floatChunks, sampleRate) {
   return new Promise((resolve, reject) => {
     let worker;
     try {
-      worker = new Worker(new URL('./wav-worker.js?v=20261103-classroom-soft-mic', import.meta.url));
+      worker = new Worker(new URL('./wav-worker.js?v=20261103-classroom-mic-hold-v2', import.meta.url));
     } catch (err) {
       reject(err);
       return;
     }
-    const transfers = [];
-    for (let i = 0; i < floatChunks.length; i++) {
-      if (floatChunks[i] && floatChunks[i].buffer) transfers.push(floatChunks[i].buffer);
-    }
+    const copies = floatChunks.map((c) => (c && c.length ? new Float32Array(c) : new Float32Array(0)));
+    const transfers = copies.map((c) => c.buffer);
     worker.onmessage = (ev) => {
       worker.terminate();
       resolve(new Blob([ev.data.buf], { type: 'audio/wav' }));
@@ -1632,7 +1656,7 @@ function encodeWavOffTap(floatChunks, sampleRate) {
       worker.terminate();
       reject(err);
     };
-    worker.postMessage({ chunks: floatChunks, sampleRate }, transfers);
+    worker.postMessage({ chunks: copies, sampleRate }, transfers);
   });
 }
 
@@ -1987,7 +2011,7 @@ if (appEl) {
 
   loadContent().then(async () => {
     try {
-      const response = await fetch('content/l1.json?v=20261103-classroom-soft-mic');
+      const response = await fetch('content/l1.json?v=20261103-classroom-mic-hold-v2');
       if (response.ok) l1Pack = await response.json();
     } catch (err) {
       console.error(err);
