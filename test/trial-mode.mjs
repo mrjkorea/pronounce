@@ -218,6 +218,35 @@ test('Korean-L1 wrong-sound diagnostics identify f/p, v/b, r/l, θ/s, ð/d, vowe
   }
 });
 
+test('classroom-soft speech is not rejected as silence before HuBERT', () => {
+  const sr = 16000;
+  const synthSentence = (peakAmp, sec = 2.5) => {
+    const n = Math.floor(sr * sec);
+    const s = new Float32Array(n);
+    const syllables = [0.8, 0.5, 1.0, 0.6, 0.9, 0.4, 0.7, 0.55];
+    const syllDur = n / syllables.length;
+    for (let sy = 0; sy < syllables.length; sy++) {
+      const hz = 150 + sy * 20;
+      for (let i = 0; i < syllDur; i++) {
+        const idx = Math.floor(sy * syllDur + i);
+        if (idx >= n) break;
+        const t = i / syllDur;
+        const env = Math.sin(Math.PI * t);
+        s[idx] = peakAmp * syllables[sy] * env * Math.sin((2 * Math.PI * hz * idx) / sr);
+      }
+    }
+    return s;
+  };
+  const prep = audio.prepareSpeechSamples(synthSentence(0.012), sr);
+  assert.equal(prep.stats.tooQuiet, false, 'peak ~0.012 classroom take should reach HuBERT');
+  assert.ok(prep.trimmed.length > sr * 0.5, 'trim should keep most of a soft sentence');
+});
+
+test('live silence auto-stop uses a classroom-safe analyser RMS floor', () => {
+  assert.equal(app.SILENCE_RMS, 0.01);
+  assert.equal(app.SILENCE_MS, 500);
+});
+
 test('near-field gate drops voiced segments >= 12 dB quieter than main speaker', () => {
   const sr = 16000;
   // 0.5s of loud main speaker (amplitude 0.5, 180 Hz) + 0.5s of quiet classmate (-16 dB -> amp 0.07, 260 Hz)

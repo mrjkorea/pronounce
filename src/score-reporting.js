@@ -1,4 +1,4 @@
-import { authStudentId } from './progress-merge.js?v=20261103-teacher-start-here';
+import { authStudentId } from './progress-merge.js?v=20261103-classroom-soft-mic';
 
 export const PROGRAM = 'pronounce';
 

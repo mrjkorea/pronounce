@@ -5,12 +5,12 @@ import {
   bandForScore,
   getAppThresholds,
   tokenizeWords,
-} from './engine.js?v=20261103-teacher-start-here';
+} from './engine.js?v=20261103-classroom-soft-mic';
 import {
   RAW_MIC_CONSTRAINTS,
   decodeAudioToMono,
-} from './audio.js?v=20261103-teacher-start-here';
-import { sheetLines } from './sheet.js?v=20261103-teacher-start-here';
+} from './audio.js?v=20261103-classroom-soft-mic';
+import { sheetLines } from './sheet.js?v=20261103-classroom-soft-mic';
 import {
   FLOW_STORAGE_KEY,
   LOCK_TEXT,
@@ -31,20 +31,20 @@ import {
   sumWords,
   timerRunning as flowTimerRunning,
   timerSeconds,
-} from './flow.js?v=20261103-teacher-start-here';
-import { isMrjTeacher, installTeacherRefresh, configureTeacherPanel, onTeacherChrome, mountTeacherPanel } from './mrj-teacher.js?v=20261103-teacher-start-here';
+} from './flow.js?v=20261103-classroom-soft-mic';
+import { isMrjTeacher, installTeacherRefresh, configureTeacherPanel, onTeacherChrome, mountTeacherPanel } from './mrj-teacher.js?v=20261103-classroom-soft-mic';
 import {
   buildPathSteps,
   isBookPathOpen,
   isUnitPathOpen,
-} from './path-lock.js?v=20261103-teacher-start-here';
+} from './path-lock.js?v=20261103-classroom-soft-mic';
 import {
   clearTeacherPathGrant,
   listTeacherPathGrants,
   readTeacherPathGrant,
   setTeacherOpenAllGrant,
   setTeacherStartGrant,
-} from './teacher-grants.js?v=20261103-teacher-start-here';
+} from './teacher-grants.js?v=20261103-classroom-soft-mic';
 
 function lineOpenFor(flow, id) {
   if (isMrjTeacher()) return true;
@@ -73,8 +73,8 @@ import {
   gradeTrialSamples,
   MODEL_DOWNLOAD_STALL_MS,
   trialRuntime,
-} from './trial.js?v=20261103-teacher-start-here';
-import { bootShared, resetSharedBoot } from './shared.js?v=20261103-teacher-start-here';
+} from './trial.js?v=20261103-classroom-soft-mic';
+import { bootShared, resetSharedBoot } from './shared.js?v=20261103-classroom-soft-mic';
 
 import {
   PROGRAM,
@@ -90,9 +90,9 @@ import {
   shouldFlushPackOnPagehide,
   studentScoreStorageKey,
   idKey,
-} from './progress-merge.js?v=20261103-teacher-start-here';
-import { createPackSaveScheduler } from './pack-save-scheduler.js?v=20261103-teacher-start-here';
-import { reportScoredActivity } from './score-reporting.js?v=20261103-teacher-start-here';
+} from './progress-merge.js?v=20261103-classroom-soft-mic';
+import { createPackSaveScheduler } from './pack-save-scheduler.js?v=20261103-classroom-soft-mic';
+import { reportScoredActivity } from './score-reporting.js?v=20261103-classroom-soft-mic';
 
 export const PASS_PCT = ENGINE_PASS_PCT; // pass = line average >= 60
 let activeStudentKey = '';
@@ -182,7 +182,8 @@ export const SILENCE_MS = 500;
 export const SILENCE_GRACE_MS = 900;
 export const PART2_SILENCE_MS = 400;
 const SILENCE_CHECK_MS = 50;
-const SILENCE_RMS = 0.018;
+/** Live analyser "speech started" floor — must sit below typical classroom laptop peaks (~0.010–0.014). */
+export const SILENCE_RMS = 0.010;
 const MAX_RECORD_MS = 60000;
 
 const appEl = typeof document !== 'undefined' ? document.getElementById('app') : null;
@@ -1614,7 +1615,7 @@ function encodeWavOffTap(floatChunks, sampleRate) {
   return new Promise((resolve, reject) => {
     let worker;
     try {
-      worker = new Worker(new URL('./wav-worker.js?v=20261103-teacher-start-here', import.meta.url));
+      worker = new Worker(new URL('./wav-worker.js?v=20261103-classroom-soft-mic', import.meta.url));
     } catch (err) {
       reject(err);
       return;
@@ -1986,7 +1987,7 @@ if (appEl) {
 
   loadContent().then(async () => {
     try {
-      const response = await fetch('content/l1.json?v=20261103-teacher-start-here');
+      const response = await fetch('content/l1.json?v=20261103-classroom-soft-mic');
       if (response.ok) l1Pack = await response.json();
     } catch (err) {
       console.error(err);
