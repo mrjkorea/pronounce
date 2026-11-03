@@ -125,6 +125,21 @@ test('index.html cache-bust ?v= values match mrj-build meta', () => {
   }
 });
 
+test('shared.js imports trial.js with the same build pin as index.html (single runtime)', () => {
+  const root = dirname(fileURLToPath(import.meta.url));
+  const html = readFileSync(join(root, '..', 'index.html'), 'utf8');
+  const buildMatch = html.match(/name="mrj-build"\s+content="([^"]+)"/);
+  assert.ok(buildMatch, 'mrj-build meta');
+  const build = buildMatch[1];
+  const sharedSrc = readFileSync(join(root, '..', 'src', 'shared.js'), 'utf8');
+  assert.match(
+    sharedSrc,
+    new RegExp(`from '\\./trial\\.js\\?v=${build.replace(/[.*+?^${}()|[\]\\]/g, '\\$&')}'`),
+    'shared.js must import pinned trial.js so boot and grade share one runtime',
+  );
+  assert.doesNotMatch(sharedSrc, /from '\.\/trial\.js';/, 'unpinned trial.js import would duplicate module runtime');
+});
+
 test('Day 4 app.js module imports use the same build pin as index.html', () => {
   const root = dirname(fileURLToPath(import.meta.url));
   const html = readFileSync(join(root, '..', 'index.html'), 'utf8');
@@ -137,6 +152,16 @@ test('Day 4 app.js module imports use the same build pin as index.html', () => {
   for (const v of importPins) {
     assert.equal(v, build, `app.js import ?v=${v} should match build ${build}`);
   }
+});
+
+test('Day 4 gradeBlob uses shared gradeAudioForApp (same trial runtime as bootShared)', () => {
+  const root = dirname(fileURLToPath(import.meta.url));
+  const appSrc = readFileSync(join(root, '..', 'src', 'app.js'), 'utf8');
+  const gradeBlobFn = appSrc.match(/async function gradeBlob[\s\S]*?\n}/);
+  assert.ok(gradeBlobFn, 'gradeBlob function');
+  assert.match(gradeBlobFn[0], /gradeAudioForApp\(/);
+  assert.match(gradeBlobFn[0], /await ensureModel\(/);
+  assert.doesNotMatch(gradeBlobFn[0], /gradeTrialSamples\(/);
 });
 
 test('flow.js does not ship a client teacher password', () => {

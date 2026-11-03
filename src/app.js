@@ -5,12 +5,12 @@ import {
   bandForScore,
   getAppThresholds,
   tokenizeWords,
-} from './engine.js?v=20261103-classroom-mic-hold-v2';
+} from './engine.js?v=20261103-day4-shared-grade-v3';
 import {
   RAW_MIC_CONSTRAINTS,
   decodeAudioToMono,
-} from './audio.js?v=20261103-classroom-mic-hold-v2';
-import { sheetLines } from './sheet.js?v=20261103-classroom-mic-hold-v2';
+} from './audio.js?v=20261103-day4-shared-grade-v3';
+import { sheetLines } from './sheet.js?v=20261103-day4-shared-grade-v3';
 import {
   FLOW_STORAGE_KEY,
   LOCK_TEXT,
@@ -31,20 +31,20 @@ import {
   sumWords,
   timerRunning as flowTimerRunning,
   timerSeconds,
-} from './flow.js?v=20261103-classroom-mic-hold-v2';
-import { isMrjTeacher, installTeacherRefresh, configureTeacherPanel, onTeacherChrome, mountTeacherPanel } from './mrj-teacher.js?v=20261103-classroom-mic-hold-v2';
+} from './flow.js?v=20261103-day4-shared-grade-v3';
+import { isMrjTeacher, installTeacherRefresh, configureTeacherPanel, onTeacherChrome, mountTeacherPanel } from './mrj-teacher.js?v=20261103-day4-shared-grade-v3';
 import {
   buildPathSteps,
   isBookPathOpen,
   isUnitPathOpen,
-} from './path-lock.js?v=20261103-classroom-mic-hold-v2';
+} from './path-lock.js?v=20261103-day4-shared-grade-v3';
 import {
   clearTeacherPathGrant,
   listTeacherPathGrants,
   readTeacherPathGrant,
   setTeacherOpenAllGrant,
   setTeacherStartGrant,
-} from './teacher-grants.js?v=20261103-classroom-mic-hold-v2';
+} from './teacher-grants.js?v=20261103-day4-shared-grade-v3';
 
 function lineOpenFor(flow, id) {
   if (isMrjTeacher()) return true;
@@ -73,8 +73,8 @@ import {
   gradeTrialSamples,
   MODEL_DOWNLOAD_STALL_MS,
   trialRuntime,
-} from './trial.js?v=20261103-classroom-mic-hold-v2';
-import { bootShared, resetSharedBoot } from './shared.js?v=20261103-classroom-mic-hold-v2';
+} from './trial.js?v=20261103-day4-shared-grade-v3';
+import { bootShared, resetSharedBoot, ensureModel, gradeAudioForApp, doorFailResult } from './shared.js?v=20261103-day4-shared-grade-v3';
 
 import {
   PROGRAM,
@@ -90,9 +90,9 @@ import {
   shouldFlushPackOnPagehide,
   studentScoreStorageKey,
   idKey,
-} from './progress-merge.js?v=20261103-classroom-mic-hold-v2';
-import { createPackSaveScheduler } from './pack-save-scheduler.js?v=20261103-classroom-mic-hold-v2';
-import { reportScoredActivity } from './score-reporting.js?v=20261103-classroom-mic-hold-v2';
+} from './progress-merge.js?v=20261103-day4-shared-grade-v3';
+import { createPackSaveScheduler } from './pack-save-scheduler.js?v=20261103-day4-shared-grade-v3';
+import { reportScoredActivity } from './score-reporting.js?v=20261103-day4-shared-grade-v3';
 
 export const PASS_PCT = ENGINE_PASS_PCT; // pass = line average >= 60
 let activeStudentKey = '';
@@ -1474,13 +1474,15 @@ function startCapture(stream) {
   const gain = ctx.createGain();
   gain.gain.value = 0;
   const chunks = [];
+  proc._capturing = true;
   proc.onaudioprocess = (e) => {
-    if (!capture) return;
+    if (!proc._capturing) return;
     chunks.push(new Float32Array(e.inputBuffer.getChannelData(0)));
   };
   src.connect(proc);
   proc.connect(gain);
   gain.connect(ctx.destination);
+  if (ctx.state === 'suspended') ctx.resume().catch(() => {});
   return { ctx, src, proc, gain, chunks, stream };
 }
 
@@ -1489,6 +1491,7 @@ function claimCapture() {
   capture = null;
   stopSilenceWatch();
   if (!rec) return null;
+  if (rec.proc) rec.proc._capturing = false;
   try { rec.proc.disconnect(); rec.src.disconnect(); rec.gain.disconnect(); } catch (_) {}
   rec.stream.getTracks().forEach((t) => t.stop());
   return rec;
@@ -1641,7 +1644,7 @@ function encodeWavOffTap(floatChunks, sampleRate) {
   return new Promise((resolve, reject) => {
     let worker;
     try {
-      worker = new Worker(new URL('./wav-worker.js?v=20261103-classroom-mic-hold-v2', import.meta.url));
+      worker = new Worker(new URL('./wav-worker.js?v=20261103-day4-shared-grade-v3', import.meta.url));
     } catch (err) {
       reject(err);
       return;
@@ -1700,11 +1703,16 @@ function queuePart2Grade(meta) {
 async function gradeStudentOrTeacherOffTap(meta) {
   await yieldForTap();
   let blob = null;
+  const rate = meta.ctx ? meta.ctx.sampleRate || 48000 : 48000;
   try {
-    blob = await encodeWavOffTap(meta.chunks, meta.ctx.sampleRate || 48000);
+    blob = encodeWav(meta.chunks, rate);
   } catch (err) {
-    blob = encodeWav(meta.chunks, meta.ctx ? meta.ctx.sampleRate || 48000 : 48000);
-    console.error(err);
+    console.error('encodeWav failed', err);
+    try {
+      blob = await encodeWavOffTap(meta.chunks, rate);
+    } catch (err2) {
+      console.error('encodeWavOffTap failed', err2);
+    }
   }
   if (meta.ctx) meta.ctx.close().catch(() => {});
   await gradeStudentOrTeacher(meta, blob);
@@ -1754,14 +1762,28 @@ async function endPart2(bookId, unitId) {
 
 async function gradeBlob(blob, english, hooks, gradeOpts = {}) {
   const appId = currentAppId();
-  const thresholds = getAppThresholds(appId);
   const target = scoringTarget(english);
-  const samples = await decodeAudioToMono(blob, 16000);
-  const graded = await gradeTrialSamples(samples, target, PASS_PCT, hooks, {
-    ...gradeOpts,
-    appId,
-  });
-  return graded.result;
+  const modelOpts = {
+    wasmPaths: new URL('../vendor/ort/', import.meta.url).href,
+    downloadStallMs: MODEL_DOWNLOAD_STALL_MS,
+  };
+  try {
+    await ensureModel(modelOpts);
+    if (!blob || (typeof blob.size === 'number' && blob.size <= 44)) {
+      return doorFailResult(target, DOOR_FAIL_TEXT, appId);
+    }
+    const pack = await gradeAudioForApp(blob, target, {
+      ...gradeOpts,
+      ...modelOpts,
+      appId,
+      passAt: PASS_PCT,
+      hooks,
+    });
+    return pack.result;
+  } catch (err) {
+    console.error('gradeBlob failed', err);
+    return doorFailResult(target, DOOR_FAIL_TEXT, appId);
+  }
 }
 
 function stopMandatoryPlayback() {
@@ -1831,7 +1853,7 @@ async function onMic(btn) {
   const gradeText = btn.getAttribute('data-grade-text');
   const audioRel = btn.getAttribute('data-audio-rel');
   const itemId = btn.getAttribute('data-item-id');
-  if (!scoreKey || !gradeText || !checkerReady) return;
+  if (!scoreKey || !gradeText || !checkerReady || !trialRuntime().ready) return;
   if (capture && capture.scoreKey === scoreKey) {
     stopLiveTake();
     return;
@@ -2011,7 +2033,7 @@ if (appEl) {
 
   loadContent().then(async () => {
     try {
-      const response = await fetch('content/l1.json?v=20261103-classroom-mic-hold-v2');
+      const response = await fetch('content/l1.json?v=20261103-day4-shared-grade-v3');
       if (response.ok) l1Pack = await response.json();
     } catch (err) {
       console.error(err);

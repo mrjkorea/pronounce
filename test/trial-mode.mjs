@@ -264,6 +264,15 @@ test('classroom-soft speech is not rejected as silence before HuBERT', async () 
   assert.equal(humPrep.stats.tooQuiet, true, 'hum-only take still door-fails');
 });
 
+test('workerForwardTimeoutMs scales with classroom-length takes', () => {
+  const sr = 16000;
+  const short = trial.workerForwardTimeoutMs(sr * 2, sr);
+  const long = trial.workerForwardTimeoutMs(sr * 6.5, sr);
+  assert.ok(short >= 30000, `short take timeout ${short}ms`);
+  assert.ok(long > short, `long take ${long}ms should exceed short ${short}ms`);
+  assert.ok(long <= 90000, `long take timeout capped at 90s, got ${long}ms`);
+});
+
 test('live silence auto-stop holds through soft speech (does not count as trailing silence)', () => {
   assert.equal(app.SILENCE_RMS, 0.007);
   assert.equal(app.SILENCE_TRAIL_RMS, 0.0032);
