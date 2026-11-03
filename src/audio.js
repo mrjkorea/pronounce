@@ -8,6 +8,13 @@
 export const TARGET_SAMPLE_RATE = 16000;
 export const NEAR_FIELD_DROP_DB = 12;
 
+/** 20 ms window counts as voiced when RMS is at or above this (classroom laptop mics). */
+export const VAD_FRAME_RMS_MIN = 0.0035;
+/** prepareSpeechSamples / gradeTrialSamples silence gate (still rejects empty hum). */
+export const TOO_QUIET_RMS = 0.0035;
+export const TOO_QUIET_PEAK_WIN = 0.006;
+export const TOO_QUIET_VOICED_MS = 80;
+
 export const RAW_MIC_CONSTRAINTS = Object.freeze({
   echoCancellation: false,
   noiseSuppression: false,
@@ -274,7 +281,8 @@ export function trimSilence(samples, sampleRate = TARGET_SAMPLE_RATE, threshold 
     }
   }
   if (startWin < 0 || endWin < startWin) {
-    return samples.subarray(0, Math.min(n, win * 4)).slice();
+    // Soft mics may sit below adaptive threshold; keep the full take for downstream VAD/HuBERT.
+    return samples.slice();
   }
   const start = Math.max(0, startWin * win - pad);
   const end = Math.min(n, (endWin + 1) * win + pad);
@@ -456,7 +464,7 @@ export function audioStats(samples, sampleRate = TARGET_SAMPLE_RATE) {
     for (let j = i; j < i + win; j++) wsum += samples[j] * samples[j];
     const wrms = Math.sqrt(wsum / win);
     windows.push(wrms);
-    if (wrms >= 0.005) voicedWins++;
+    if (wrms >= VAD_FRAME_RMS_MIN) voicedWins++;
   }
   const voicedDurationMs = voicedWins * 20;
   windows.sort((a, b) => a - b);
@@ -464,7 +472,8 @@ export function audioStats(samples, sampleRate = TARGET_SAMPLE_RATE) {
   const peakWin = windows.length ? windows[windows.length - 1] : rms;
   const snrEst = 20 * Math.log10((peakWin + 1e-6) / (noise + 1e-6));
 
-  const tooQuiet = rms < 0.005 || peakWin < 0.012 || voicedDurationMs < 100;
+  const tooQuiet =
+    rms < TOO_QUIET_RMS || peakWin < TOO_QUIET_PEAK_WIN || voicedDurationMs < TOO_QUIET_VOICED_MS;
   // Clear speech has consonant/formant energy above 500 Hz (highBandRatio >= 0.014).
   // Mumbled/low-passed speech (< 450 Hz) has highBandRatio <= 0.013.
   const mumbled = !tooQuiet && highBandRatio < 0.014;
@@ -503,8 +512,20 @@ export function prepareSpeechSamples(samples, sampleRate = TARGET_SAMPLE_RATE, o
     : resampleTo16k(samples, sampleRate, TARGET_SAMPLE_RATE);
 
   const initialTrim = trimSilence(rs, TARGET_SAMPLE_RATE, 0.004, 80);
+  const preGateStats = audioStats(initialTrim, TARGET_SAMPLE_RATE);
   const nearField = applyNearFieldGate(initialTrim, TARGET_SAMPLE_RATE, opts);
-  const reTrimmed = trimSilence(nearField.samples, TARGET_SAMPLE_RATE, 0.004, 80);
+  let gatedSamples = nearField.samples;
+  const postGateStats = audioStats(gatedSamples, TARGET_SAMPLE_RATE);
+  // Single soft speaker can look like "background" vs a loud ambient island — do not zero the take.
+  if (
+    !preGateStats.tooQuiet &&
+    postGateStats.tooQuiet &&
+    nearField.droppedFrames > 0 &&
+    nearField.droppedFrames >= nearField.keptFrames
+  ) {
+    gatedSamples = initialTrim;
+  }
+  const reTrimmed = trimSilence(gatedSamples, TARGET_SAMPLE_RATE, 0.004, 80);
   const capped = capSpeechWindow(reTrimmed, TARGET_SAMPLE_RATE, opts.maxMs || 6500);
   const stats = audioStats(capped, TARGET_SAMPLE_RATE);
   const normalized = normalizeForModel(capped);
