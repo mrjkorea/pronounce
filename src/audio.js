@@ -9,11 +9,18 @@ export const TARGET_SAMPLE_RATE = 16000;
 export const NEAR_FIELD_DROP_DB = 12;
 
 /** 20 ms window counts as voiced when RMS is at or above this (classroom laptop mics). */
-export const VAD_FRAME_RMS_MIN = 0.0035;
+export const VAD_FRAME_RMS_MIN = 0.0028;
 /** prepareSpeechSamples / gradeTrialSamples silence gate (still rejects empty hum). */
-export const TOO_QUIET_RMS = 0.0035;
-export const TOO_QUIET_PEAK_WIN = 0.006;
-export const TOO_QUIET_VOICED_MS = 80;
+export const TOO_QUIET_RMS = 0.0028;
+export const TOO_QUIET_PEAK_WIN = 0.0042;
+export const TOO_QUIET_VOICED_MS = 60;
+/** Spectral mumble gate: loud but dull (not quiet laptop band-limit). */
+export const MUMBLE_HIGH_BAND_MAX = 0.011;
+export const MUMBLE_MIN_PEAK_WIN = 0.007;
+export const MUMBLE_MIN_VOICED_MS = 160;
+/** Target peak after gain when raw take peak is below this (48 kHz → 16 kHz soft mics). */
+export const QUIET_MIC_BOOST_TARGET_PEAK = 0.024;
+export const QUIET_MIC_BOOST_MAX = 4;
 
 export const RAW_MIC_CONSTRAINTS = Object.freeze({
   echoCancellation: false,
@@ -474,9 +481,12 @@ export function audioStats(samples, sampleRate = TARGET_SAMPLE_RATE) {
 
   const tooQuiet =
     rms < TOO_QUIET_RMS || peakWin < TOO_QUIET_PEAK_WIN || voicedDurationMs < TOO_QUIET_VOICED_MS;
-  // Clear speech has consonant/formant energy above 500 Hz (highBandRatio >= 0.014).
-  // Mumbled/low-passed speech (< 450 Hz) has highBandRatio <= 0.013.
-  const mumbled = !tooQuiet && highBandRatio < 0.014;
+  // Mumbled = hand-over-mic / heavy low-pass at usable level — not quiet classroom speech.
+  const mumbled =
+    !tooQuiet &&
+    highBandRatio < MUMBLE_HIGH_BAND_MAX &&
+    peakWin >= MUMBLE_MIN_PEAK_WIN &&
+    voicedDurationMs >= MUMBLE_MIN_VOICED_MS;
   const clipping = maxAbs > 0.98;
 
   return {
@@ -489,6 +499,23 @@ export function audioStats(samples, sampleRate = TARGET_SAMPLE_RATE) {
     clipping,
     snrEst,
   };
+}
+
+/**
+ * Gentle gain for very quiet but non-empty takes (after resample). Hum stays below VAD.
+ */
+export function conditionQuietMicTake(samples) {
+  if (!samples || !samples.length) return new Float32Array(0);
+  let peak = 0;
+  for (let i = 0; i < samples.length; i++) {
+    const a = Math.abs(samples[i]);
+    if (a > peak) peak = a;
+  }
+  if (peak >= 0.008 || peak < 1e-6) return samples.slice();
+  const gain = Math.min(QUIET_MIC_BOOST_MAX, QUIET_MIC_BOOST_TARGET_PEAK / peak);
+  const out = new Float32Array(samples.length);
+  for (let i = 0; i < samples.length; i++) out[i] = samples[i] * gain;
+  return out;
 }
 
 /**
@@ -510,8 +537,9 @@ export function prepareSpeechSamples(samples, sampleRate = TARGET_SAMPLE_RATE, o
   const rs = sampleRate === TARGET_SAMPLE_RATE
     ? samples
     : resampleTo16k(samples, sampleRate, TARGET_SAMPLE_RATE);
+  const conditioned = conditionQuietMicTake(rs);
 
-  const initialTrim = trimSilence(rs, TARGET_SAMPLE_RATE, 0.004, 80);
+  const initialTrim = trimSilence(conditioned, TARGET_SAMPLE_RATE, 0.004, 80);
   const preGateStats = audioStats(initialTrim, TARGET_SAMPLE_RATE);
   const nearField = applyNearFieldGate(initialTrim, TARGET_SAMPLE_RATE, opts);
   let gatedSamples = nearField.samples;

@@ -17,8 +17,8 @@ import {
   trialRuntime,
   resetTrialBoot,
 } from './trial.js';
-import { APP_THRESHOLDS, PASS_PCT, getAppThresholds, bandForScore } from './engine.js?v=20261103-classroom-soft-mic';
-import * as audio from './audio.js?v=20261103-classroom-soft-mic';
+import { APP_THRESHOLDS, PASS_PCT, getAppThresholds, bandForScore } from './engine.js?v=20261103-classroom-mic-hold-v2';
+import * as audio from './audio.js?v=20261103-classroom-mic-hold-v2';
 
 export const PRONOUNCE_BASE = new URL('../', import.meta.url).href;
 export const HUBERT_MANIFEST_URL = PRONOUNCE_BASE + 'models/hubert/manifest.json';
