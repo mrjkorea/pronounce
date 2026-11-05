@@ -31,3 +31,13 @@ scoring, and the model are untouched.
 - Hook: `playFor('<item>::answer')` and the `mrj-hear` event both fetched the right mp3 (200).
 - `node --test` per file: all pass except `test/unpassable-25-words.mjs` (needs a browser fetch base;
   it fails on clean `main` too).
+
+## Re-checked on the later tip (2026-11-06, build 20261106-try-again, commit 917cdf3)
+
+Both commits are mine: `eb30a71` (Listen again) and `917cdf3` (Try again) come from this same
+workspace, one after the other — no other bot wrote into this repo.
+
+On the current tip, live `src/app.js` and `src/attempts.js` match the local tree by checksum. Try 1
+results: 10 Listen buttons, every sentence visible, tap → mp3 200. Try again → card → Yes → Part 1,
+line 1, chip "Try 2", no Listen while testing. Try 2 results: 10 Listen buttons again, sentences
+visible, "Try 2 · every try is kept", "Best 90% (try 1)", tap → mp3 200.
