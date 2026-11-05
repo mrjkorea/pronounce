@@ -17,9 +17,9 @@ import {
   getTrialBootState,
   trialRuntime,
   resetTrialBoot,
-} from './trial.js?v=20261103-day4-shared-grade-v3';
-import { APP_THRESHOLDS, PASS_PCT, getAppThresholds, bandForScore } from './engine.js?v=20261103-day4-shared-grade-v3';
-import * as audio from './audio.js?v=20261103-day4-shared-grade-v3';
+} from './trial.js?v=20261106-listen-again';
+import { APP_THRESHOLDS, PASS_PCT, getAppThresholds, bandForScore } from './engine.js?v=20261106-listen-again';
+import * as audio from './audio.js?v=20261106-listen-again';
 
 export const PRONOUNCE_BASE = new URL('../', import.meta.url).href;
 export const HUBERT_MANIFEST_URL = PRONOUNCE_BASE + 'models/hubert/manifest.json';

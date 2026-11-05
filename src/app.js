@@ -5,12 +5,12 @@ import {
   bandForScore,
   getAppThresholds,
   tokenizeWords,
-} from './engine.js?v=20261103-day4-shared-grade-v3';
+} from './engine.js?v=20261106-listen-again';
 import {
   RAW_MIC_CONSTRAINTS,
   decodeAudioToMono,
-} from './audio.js?v=20261103-day4-shared-grade-v3';
-import { sheetLines } from './sheet.js?v=20261103-day4-shared-grade-v3';
+} from './audio.js?v=20261106-listen-again';
+import { sheetLines } from './sheet.js?v=20261106-listen-again';
 import {
   FLOW_STORAGE_KEY,
   LOCK_TEXT,
@@ -31,20 +31,20 @@ import {
   sumWords,
   timerRunning as flowTimerRunning,
   timerSeconds,
-} from './flow.js?v=20261103-day4-shared-grade-v3';
-import { isMrjTeacher, installTeacherRefresh, configureTeacherPanel, onTeacherChrome, mountTeacherPanel } from './mrj-teacher.js?v=20261103-day4-shared-grade-v3';
+} from './flow.js?v=20261106-listen-again';
+import { isMrjTeacher, installTeacherRefresh, configureTeacherPanel, onTeacherChrome, mountTeacherPanel } from './mrj-teacher.js?v=20261106-listen-again';
 import {
   buildPathSteps,
   isBookPathOpen,
   isUnitPathOpen,
-} from './path-lock.js?v=20261103-day4-shared-grade-v3';
+} from './path-lock.js?v=20261106-listen-again';
 import {
   clearTeacherPathGrant,
   listTeacherPathGrants,
   readTeacherPathGrant,
   setTeacherOpenAllGrant,
   setTeacherStartGrant,
-} from './teacher-grants.js?v=20261103-day4-shared-grade-v3';
+} from './teacher-grants.js?v=20261106-listen-again';
 
 function lineOpenFor(flow, id) {
   if (isMrjTeacher()) return true;
@@ -73,8 +73,8 @@ import {
   gradeTrialSamples,
   MODEL_DOWNLOAD_STALL_MS,
   trialRuntime,
-} from './trial.js?v=20261103-day4-shared-grade-v3';
-import { bootShared, resetSharedBoot, ensureModel, gradeAudioForApp, doorFailResult } from './shared.js?v=20261103-day4-shared-grade-v3';
+} from './trial.js?v=20261106-listen-again';
+import { bootShared, resetSharedBoot, ensureModel, gradeAudioForApp, doorFailResult } from './shared.js?v=20261106-listen-again';
 
 import {
   PROGRAM,
@@ -90,9 +90,9 @@ import {
   shouldFlushPackOnPagehide,
   studentScoreStorageKey,
   idKey,
-} from './progress-merge.js?v=20261103-day4-shared-grade-v3';
-import { createPackSaveScheduler } from './pack-save-scheduler.js?v=20261103-day4-shared-grade-v3';
-import { reportScoredActivity } from './score-reporting.js?v=20261103-day4-shared-grade-v3';
+} from './progress-merge.js?v=20261106-listen-again';
+import { createPackSaveScheduler } from './pack-save-scheduler.js?v=20261106-listen-again';
+import { reportScoredActivity } from './score-reporting.js?v=20261106-listen-again';
 
 export const PASS_PCT = ENGINE_PASS_PCT; // pass = line average >= 60
 let activeStudentKey = '';
@@ -898,6 +898,14 @@ function micButtonHtml(skey, itemId, partKey, english, audioRel, allowed, ready,
   return `<button type="button" class="${cls}" data-score-key="${escapeHtml(skey)}"${itemAttr}${partAttr} data-grade-text="${escapeHtml(english)}" data-audio-rel="${escapeHtml(audioRel)}" ${enabled ? '' : 'disabled'}>${text}</button>${stop}`;
 }
 
+// "Listen again" — same clip the checker plays, available after scoring so the
+// student can keep practising once the results are on screen.
+function listenButtonHtml(audioRel, skey) {
+  if (!audioRel) return '';
+  const key = skey ? ` data-score-key="${escapeHtml(skey)}"` : '';
+  return `<button type="button" class="hear" data-audio="${escapeHtml(audioRel)}"${key} aria-label="Listen again" title="Listen again">Listen ▶</button>`;
+}
+
 function askHtml(show) {
   if (!show) return '';
   const text = LOCK_TEXT === 'Please ask your teacher for help.' ? LOCK_TEXT : 'Please ask your teacher for help.';
@@ -950,7 +958,8 @@ function renderSharedQuestion(bookId, unit, scores, ready, view) {
   const allowed = view.allow ? !!view.allow[sk] : !!ready;
   const shown = shownGrade(view, sk, saved);
   const revealed = englishRevealed(shown);
-  const prompt = revealed ? englishCueHtml(plan.question, 'en-prompt') : '';
+  const showText = revealed || !!view.listen;
+  const prompt = showText ? englishCueHtml(plan.question, 'en-prompt') : '';
   const rushMarks = view.rush && revealed ? rushFeedbackHtml(shown) : '';
   const meaning = questionCue(plan.question);
   const meaningHtml = meaning ? `<p class="l1-prompt">${escapeHtml(meaning)}</p>` : '';
@@ -958,7 +967,11 @@ function renderSharedQuestion(bookId, unit, scores, ready, view) {
   const gradingShared = gradingScoreKey === sk && !view.hideVerdict;
   const gradeBar = gradingShared ? `${checkingLineHtml(true)}<div class="grade-bar shared-grade show"><div class="grade-fill"></div></div>` : '';
   const doneCls = saved && saved.pass ? 'done' : '';
-  const mic = micButtonHtml(sk, '', '', plan.question, questionAudioRel(plan.question), allowed, ready, view.micLabel);
+  const sharedAudio = questionAudioRel(plan.question);
+  registerHearRel(sk, sharedAudio);
+  const mic = view.listen
+    ? listenButtonHtml(sharedAudio, sk)
+    : micButtonHtml(sk, '', '', plan.question, sharedAudio, allowed, ready, view.micLabel);
   return `<section class="shared-q ${doneCls}" data-shared="${escapeHtml(sk)}">
     <p class="shared-note">${escapeHtml(noteCue())}</p>
     ${meaningHtml}
@@ -1014,6 +1027,68 @@ function hearSrc(rel) {
   return rel || '';
 }
 
+// ---- listen again (on demand) -------------------------------------------
+// The sentence clip is a pre-baked mp3 in this repo (audio/<id>.mp3, with a
+// Miss Harper twin in audio_harper/), never a live TTS call. Each tap builds a
+// fresh Audio from that file, so nothing is torn down and the clip stays
+// playable after a score, on the Results screen, for every book and every unit.
+let replayAudioEl = null;
+const hearRelByKey = new Map();
+
+function registerHearRel(scoreKey, rel) {
+  if (scoreKey && rel) hearRelByKey.set(scoreKey, rel);
+}
+
+function stopReplayAudio() {
+  const audio = replayAudioEl;
+  replayAudioEl = null;
+  if (!audio) return;
+  try { audio.pause(); } catch (_) { /* ignore */ }
+  try { audio.currentTime = 0; } catch (_) { /* ignore */ }
+}
+
+// rel is the pack-relative clip, e.g. 'audio/basic_a__unit01__01__one.mp3'.
+function replaySentence(rel) {
+  const fallback = rel || '';
+  if (!fallback || typeof Audio === 'undefined') return null;
+  stopReplayAudio();
+  const src = hearSrc(fallback) || fallback;
+  const audio = new Audio(src);
+  replayAudioEl = audio;
+  const done = () => { if (replayAudioEl === audio) replayAudioEl = null; };
+  audio.addEventListener('ended', done, { once: true });
+  audio.addEventListener('error', () => {
+    done();
+    if (src !== fallback) {
+      try { new Audio(fallback).play().catch(() => {}); } catch (_) { /* ignore */ }
+    }
+  }, { once: true });
+  audio.play().catch(done);
+  return audio;
+}
+
+// Host-page hook (mrjkorea.github.io pages, day5-practice):
+//   window.MRJ_HEAR.play('audio/<id>.mp3')   // clip path from the content pack
+//   window.MRJ_HEAR.playFor('<score-key>')   // same key the mic button carries
+//   document.dispatchEvent(new CustomEvent('mrj-hear', { detail: { scoreKey } }))
+function installHearHook() {
+  if (typeof window === 'undefined') return;
+  window.MRJ_HEAR = {
+    play: (rel) => replaySentence(rel),
+    playFor: (scoreKey) => replaySentence(hearRelByKey.get(scoreKey) || ''),
+    rel: (scoreKey) => hearRelByKey.get(scoreKey) || '',
+    stop: stopReplayAudio,
+    voice: () => voice,
+  };
+  document.addEventListener('mrj-hear', (ev) => {
+    const detail = (ev && ev.detail) || {};
+    if (detail.scoreKey) replaySentence(hearRelByKey.get(detail.scoreKey) || '');
+    else replaySentence(detail.rel || detail.audio || '');
+  });
+}
+
+if (typeof document !== 'undefined') installHearHook();
+
 if (typeof document !== 'undefined') {
   document.querySelectorAll('.voice-btn').forEach((b) => {
     b.addEventListener('click', () => setVoice(b.dataset.voice));
@@ -1060,10 +1135,14 @@ function lineArticleHtml(line, unit, index, scores, ready, view) {
     const allowed = view.allow ? !!view.allow[skey] : !!ready;
     const shown = shownGrade(view, skey, saved);
     const revealed = englishRevealed(shown);
-    const cue = revealed ? englishCueHtml(p.english, 'part-text') : '';
+    const showText = revealed || !!view.listen;
+    const cue = showText ? englishCueHtml(p.english, 'part-text') : '';
     const rushMarks = view.rush && revealed ? rushFeedbackHtml(shown) : '';
     const audioRel = p.audio || questionAudioRel(p.english);
-    const micBtn = micButtonHtml(skey, item.id, p.key, p.english, audioRel, allowed, ready, view.micLabel);
+    registerHearRel(skey, audioRel);
+    const micBtn = view.listen
+      ? listenButtonHtml(audioRel, skey)
+      : micButtonHtml(skey, item.id, p.key, p.english, audioRel, allowed, ready, view.micLabel);
     const recorded = checkHtml(view.marks && view.marks[skey]);
     const ask = askHtml(view.locked && view.locked[skey]);
     const result = view.hideVerdict ? '' : partResultHtml(saved);
@@ -1075,7 +1154,7 @@ function lineArticleHtml(line, unit, index, scores, ready, view) {
         result,
       };
     }
-    const label = revealed ? `<div class="part-label">${escapeHtml(p.label)}</div>` : '';
+    const label = showText ? `<div class="part-label">${escapeHtml(p.label)}</div>` : '';
     return `<div class="part" data-part="${escapeHtml(p.key)}">
       <div>
         ${label}
@@ -1179,8 +1258,10 @@ function sheetView(flow, targets) {
     marks,
     rush,
     rushGrades: flow.rushGrades || {},
-    forceHideEnglish: flow.phase !== 'part1',
+    forceHideEnglish: flow.phase !== 'part1' && flow.phase !== 'results',
     hideVerdict: rush,
+    // Results keep the sentence on screen and give a Listen button for it.
+    listen: flow.phase === 'results',
     micLabel: flow.phase === 'teacher' ? 'Teacher mic' : 'Mic',
   };
 }
@@ -1292,6 +1373,7 @@ function renderSheet(bookId, unitId) {
   const unit = book && book.units.find((u) => u.id === unitId);
   if (!unit) {
     document.body.classList.remove('phase-part2');
+    document.body.classList.remove('phase-results');
     appEl.innerHTML = '<p class="lead">That unit is not here.</p>';
     return;
   }
@@ -1300,6 +1382,7 @@ function renderSheet(bookId, unitId) {
   const targets = prepared.targets;
   const ready = !!checkerReady;
   document.body.classList.toggle('phase-part2', flow.phase === 'part2');
+  document.body.classList.toggle('phase-results', flow.phase === 'results');
   const scores = flow.attempts || {};
   const wait = modelError
     ? `<p class="note">${escapeHtml(modelError)}</p>`
@@ -1353,17 +1436,20 @@ function render() {
   if (!appEl) return;
   if (!books.length) {
     document.body.classList.remove('phase-part2');
+    document.body.classList.remove('phase-results');
     appEl.innerHTML = '<p class="lead">Loading the sheets…</p>';
     return;
   }
   const r = route();
   if (r.name === 'units') {
     document.body.classList.remove('phase-part2');
+    document.body.classList.remove('phase-results');
     renderUnits(r.bookId);
   } else if (r.name === 'sheet') {
     const ctx = pathLockCtx();
     if (!isUnitPathOpen(r.bookId, r.unitId, ctx)) {
       document.body.classList.remove('phase-part2');
+      document.body.classList.remove('phase-results');
       const book = byId.get(r.bookId);
       const label = book ? book.label : 'Books';
       appEl.innerHTML = `<a class="back" href="#/book/${r.bookId}">← ${escapeHtml(label)}</a><p class="lead">This unit is locked. Finish your current unit first, or ask your teacher.</p>`;
@@ -1372,6 +1458,7 @@ function render() {
     renderSheet(r.bookId, r.unitId);
   } else {
     document.body.classList.remove('phase-part2');
+    document.body.classList.remove('phase-results');
     renderHome();
   }
 }
@@ -1644,7 +1731,7 @@ function encodeWavOffTap(floatChunks, sampleRate) {
   return new Promise((resolve, reject) => {
     let worker;
     try {
-      worker = new Worker(new URL('./wav-worker.js?v=20261103-day4-shared-grade-v3', import.meta.url));
+      worker = new Worker(new URL('./wav-worker.js?v=20261106-listen-again', import.meta.url));
     } catch (err) {
       reject(err);
       return;
@@ -1934,10 +2021,7 @@ function onHear(btn) {
   if (here.name === 'sheet' && loadUnitFlow(here.bookId, here.unitId).phase === 'part2') return;
   const rel = btn.getAttribute('data-audio');
   if (!rel) return;
-  const src = hearSrc(rel);
-  const audio = new Audio(src);
-  if (src !== rel) audio.addEventListener('error', () => { new Audio(rel).play().catch(() => {}); }, { once: true });
-  audio.play().catch((err) => console.error(err));
+  replaySentence(rel);
 }
 
 if (appEl) {
@@ -2033,7 +2117,7 @@ if (appEl) {
 
   loadContent().then(async () => {
     try {
-      const response = await fetch('content/l1.json?v=20261103-day4-shared-grade-v3');
+      const response = await fetch('content/l1.json?v=20261106-listen-again');
       if (response.ok) l1Pack = await response.json();
     } catch (err) {
       console.error(err);
