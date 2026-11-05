@@ -637,6 +637,104 @@ body.phase-part2 .rush-clock {
   color: var(--fail);
 }
 
+/* Try again (TRY_AGAIN_SPEC): chip, Done + Try again, and the one warning card */
+.trychip {
+  display: inline-block;
+  margin-left: 10px;
+  padding: 2px 10px;
+  border: 2px solid #e0752d;
+  border-radius: 999px;
+  background: #fff1e2;
+  color: #c25b12;
+  font-size: 0.9rem;
+  font-weight: 900;
+  vertical-align: middle;
+}
+
+.part-results .meta {
+  font-size: 1.05rem;
+  font-weight: 700;
+  color: var(--muted);
+}
+
+.part-results .meta.best {
+  color: var(--blue);
+  font-weight: 800;
+}
+
+.result-actions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 12px;
+  margin-top: 14px;
+}
+
+.done-btn,
+.try-again,
+.try-yes,
+.try-no {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  min-height: 64px;
+  padding: 0 22px;
+  border-radius: 16px;
+  font: inherit;
+  font-size: 22px;
+  font-weight: 800;
+  text-decoration: none;
+  cursor: pointer;
+}
+
+.done-btn {
+  border: 0;
+  background: var(--blue);
+  color: white;
+}
+
+.try-again {
+  border: 3px solid var(--blue);
+  background: #e8effc;
+  color: var(--blue);
+}
+
+.try-confirm {
+  margin-top: 14px;
+  padding: 16px 18px;
+  border: 3px solid #f0a500;
+  border-radius: 16px;
+  background: #fff8e6;
+}
+
+.try-confirm h3 {
+  margin: 0 0 6px;
+  font-size: 26px;
+}
+
+.try-confirm p {
+  margin: 0 0 12px;
+  font-size: 20px;
+  font-weight: 700;
+}
+
+.try-actions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 10px;
+}
+
+.try-yes {
+  border: 0;
+  background: var(--blue);
+  color: white;
+}
+
+.try-no {
+  border: 3px solid #c9c2b5;
+  background: #fff;
+  color: var(--muted);
+}
+
 /* Voice toggle (Coach Ray / Miss Harper) */
 .voice-toggle { display: flex; gap: 8px; justify-content: center; margin: 6px 0; }
 .voice-btn { font: inherit; font-size: 1rem; font-weight: 700; padding: 8px 14px; border-radius: 999px;

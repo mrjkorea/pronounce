@@ -1,4 +1,4 @@
-import { authStudentId } from './progress-merge.js?v=20261106-listen-again';
+import { authStudentId } from './progress-merge.js?v=20261106-try-again';
 
 export const PROGRAM = 'pronounce';
 
@@ -61,6 +61,50 @@ export function buildCmAttemptErrorPost(itemId, meta, student, reason) {
     bookTitle: meta?.bookId || '',
     unitTitle: meta?.unitId || '',
     metadata: { reason },
+  };
+}
+
+/**
+ * One finished Day 4 sheet (a whole unit) -> one ClassroomMetrics row.
+ * Append-only: every try posts its own item id, so the sheet can never
+ * overwrite an earlier try.
+ */
+export function buildSheetAttemptPost({
+  bookId,
+  unitId,
+  tryNo,
+  scorePct,
+  pass,
+  part1Passed,
+  part2Passed,
+  total,
+  source,
+  student,
+}) {
+  const n = Number(tryNo) > 0 ? Math.round(Number(tryNo)) : 1;
+  const pct = Math.round(Number(scorePct) || 0);
+  return {
+    student,
+    program: PROGRAM,
+    appName: 'MRJ Pronounce Day 4',
+    source: 'pronounce',
+    itemId: `${PROGRAM}:${bookId}:${unitId}:try${n}`,
+    itemType: 'pronunciation_sheet',
+    bookTitle: bookId || '',
+    unitTitle: unitId || '',
+    scoreValue: pct,
+    scoreMax: 100,
+    scorePct: pct,
+    correctness: pass ? 'correct' : 'incorrect',
+    metadata: {
+      page_id: `${PROGRAM}:${bookId}:${unitId}`,
+      attempt: n,
+      re_attempt: n > 1,
+      part1_passed: part1Passed,
+      part2_passed: part2Passed,
+      total,
+      source: source === 'teacher' ? 'teacher' : 'student',
+    },
   };
 }
 

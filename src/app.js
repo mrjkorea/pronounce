@@ -5,12 +5,12 @@ import {
   bandForScore,
   getAppThresholds,
   tokenizeWords,
-} from './engine.js?v=20261106-listen-again';
+} from './engine.js?v=20261106-try-again';
 import {
   RAW_MIC_CONSTRAINTS,
   decodeAudioToMono,
-} from './audio.js?v=20261106-listen-again';
-import { sheetLines } from './sheet.js?v=20261106-listen-again';
+} from './audio.js?v=20261106-try-again';
+import { sheetLines } from './sheet.js?v=20261106-try-again';
 import {
   FLOW_STORAGE_KEY,
   LOCK_TEXT,
@@ -31,20 +31,21 @@ import {
   sumWords,
   timerRunning as flowTimerRunning,
   timerSeconds,
-} from './flow.js?v=20261106-listen-again';
-import { isMrjTeacher, installTeacherRefresh, configureTeacherPanel, onTeacherChrome, mountTeacherPanel } from './mrj-teacher.js?v=20261106-listen-again';
+  retryFlow,
+} from './flow.js?v=20261106-try-again';
+import { isMrjTeacher, installTeacherRefresh, configureTeacherPanel, onTeacherChrome, mountTeacherPanel } from './mrj-teacher.js?v=20261106-try-again';
 import {
   buildPathSteps,
   isBookPathOpen,
   isUnitPathOpen,
-} from './path-lock.js?v=20261106-listen-again';
+} from './path-lock.js?v=20261106-try-again';
 import {
   clearTeacherPathGrant,
   listTeacherPathGrants,
   readTeacherPathGrant,
   setTeacherOpenAllGrant,
   setTeacherStartGrant,
-} from './teacher-grants.js?v=20261106-listen-again';
+} from './teacher-grants.js?v=20261106-try-again';
 
 function lineOpenFor(flow, id) {
   if (isMrjTeacher()) return true;
@@ -73,8 +74,8 @@ import {
   gradeTrialSamples,
   MODEL_DOWNLOAD_STALL_MS,
   trialRuntime,
-} from './trial.js?v=20261106-listen-again';
-import { bootShared, resetSharedBoot, ensureModel, gradeAudioForApp, doorFailResult } from './shared.js?v=20261106-listen-again';
+} from './trial.js?v=20261106-try-again';
+import { bootShared, resetSharedBoot, ensureModel, gradeAudioForApp, doorFailResult } from './shared.js?v=20261106-try-again';
 
 import {
   PROGRAM,
@@ -90,9 +91,19 @@ import {
   shouldFlushPackOnPagehide,
   studentScoreStorageKey,
   idKey,
-} from './progress-merge.js?v=20261106-listen-again';
-import { createPackSaveScheduler } from './pack-save-scheduler.js?v=20261106-listen-again';
-import { reportScoredActivity } from './score-reporting.js?v=20261106-listen-again';
+} from './progress-merge.js?v=20261106-try-again';
+import {
+  ATTEMPTS_STORAGE_KEY,
+  appendAttempt,
+  bestLabel,
+  hasAttempt,
+  pageIdFor,
+  readStore,
+  recordFor,
+  writeStore,
+} from './attempts.js?v=20261106-try-again';
+import { createPackSaveScheduler } from './pack-save-scheduler.js?v=20261106-try-again';
+import { reportScoredActivity, buildSheetAttemptPost } from './score-reporting.js?v=20261106-try-again';
 
 export const PASS_PCT = ENGINE_PASS_PCT; // pass = line average >= 60
 let activeStudentKey = '';
@@ -370,6 +381,118 @@ function saveScores(scores) {
   if (!activeStudentKey) return;
   localStorage.setItem(activeStudentKey, JSON.stringify(scores));
   packSaveScheduler().markDirty();
+}
+
+// ---- Try again (append-only tries) ---------------------------------------
+function attemptsStorageKey() {
+  return activeStudentKey ? `${ATTEMPTS_STORAGE_KEY}${activeStudentKey}` : ATTEMPTS_STORAGE_KEY;
+}
+
+function loadAttemptStore() {
+  try {
+    return readStore(localStorage.getItem(attemptsStorageKey()) || '{}');
+  } catch (_) {
+    return {};
+  }
+}
+
+function saveAttemptStore(store) {
+  try {
+    localStorage.setItem(attemptsStorageKey(), writeStore(store));
+  } catch (_) { /* full or private: results still stay on this screen */ }
+}
+
+/** Local time with the +09:00 style offset the spec shows. */
+function localIsoWithOffset(date) {
+  const d = date || new Date();
+  const pad = (n) => String(Math.abs(n)).padStart(2, '0');
+  const off = -d.getTimezoneOffset();
+  const sign = off >= 0 ? '+' : '-';
+  return `${d.getFullYear()}-${pad(d.getMonth() + 1)}-${pad(d.getDate())}T` +
+    `${pad(d.getHours())}:${pad(d.getMinutes())}:${pad(d.getSeconds())}` +
+    `${sign}${pad(Math.floor(Math.abs(off) / 60))}:${pad(Math.abs(off) % 60)}`;
+}
+
+function sheetTryNo(flow) {
+  return flow && flow.tryNo > 0 ? flow.tryNo : 1;
+}
+
+/**
+ * Reach the Results screen = one finished try. Append it once, then post it.
+ * Reloading the results screen finds the try already kept, so it never doubles.
+ */
+function recordFinishedTry(bookId, unit, flow, targets) {
+  const pageId = pageIdFor(bookId, unit.id);
+  const tryNo = sheetTryNo(flow);
+  const store = loadAttemptStore();
+  if (hasAttempt(store, pageId, tryNo)) return store;
+  const view = resultsView(flow, targets);
+  const total = view.total || 0;
+  const correct = view.passed + view.rushPassed;
+  const score = total ? Math.round((correct / (total * 2)) * 100) : 0;
+  const pass = total > 0 && score >= PASS_PCT;
+  const endedAt = localIsoWithOffset(new Date());
+  const missed = targets
+    .filter((target) => {
+      const studentOk = flow.student[target.id] && flow.student[target.id].pass;
+      const rushOk = flow.rushGrades[target.id] && flow.rushGrades[target.id].pass;
+      return !studentOk && !rushOk;
+    })
+    .map((target) => target.id);
+  const source = isMrjTeacher() ? 'teacher' : 'student';
+  const next = appendAttempt(store, pageId, {
+    n: tryNo,
+    startedAt: flow.tryStartedAt ? localIsoWithOffset(new Date(flow.tryStartedAt)) : '',
+    endedAt,
+    score,
+    pass,
+    correct,
+    total: total * 2,
+    missed,
+    source,
+  });
+  saveAttemptStore(next);
+
+  const mrjScores = window.MRJ_SCORES;
+  const auth = window.MRJ_AUTH;
+  const who = auth && typeof auth.student === 'function' ? authStudentId(auth.student()) : '';
+  if (mrjScores && typeof mrjScores.post === 'function' && who) {
+    try {
+      mrjScores.post(buildSheetAttemptPost({
+        bookId,
+        unitId: unit.id,
+        tryNo,
+        scorePct: score,
+        pass,
+        part1Passed: view.passed,
+        part2Passed: view.rushPassed,
+        total,
+        source,
+        student: who,
+      }));
+    } catch (err) {
+      console.error(err);
+    }
+  }
+  return next;
+}
+
+function tryChipHtml(flow) {
+  const n = sheetTryNo(flow);
+  if (n <= 1) return '';
+  if (flow.phase === 'results') return '';
+  return `<span class="trychip">Try ${n}</span>`;
+}
+
+function tryAgainCardHtml() {
+  return `<div class="try-confirm" id="tryConfirm" hidden>
+    <h3>Try again?</h3>
+    <p>Your result now is saved. Nothing is erased.</p>
+    <div class="try-actions">
+      <button type="button" id="tryYes" class="try-yes">Yes, try again</button>
+      <button type="button" id="tryNo" class="try-no">No, keep this</button>
+    </div>
+  </div>`;
 }
 
 function schedulePackSave(delayMs) {
@@ -1273,18 +1396,32 @@ function clockSeconds(flow, now) {
   return Math.max(0, Math.ceil(leftMs / 1000));
 }
 
-function resultsHtml(flow, targets) {
+function resultsHtml(flow, targets, bookId, unit) {
   const view = resultsView(flow, targets);
   const skips = view.skipped.map((line) => `<p class="skip-line">${escapeHtml(line.label)} <b>skipped</b></p>`).join('');
   const said = view.teacherSaid.map((line) => `<p class="teacher-line">${escapeHtml(line.label)} <b>teacher</b></p>`).join('');
+  const tryNo = sheetTryNo(flow);
+  const pageId = pageIdFor(bookId, unit.id);
+  const store = loadAttemptStore();
+  const kept = recordFor(store, pageId).attemptCount;
+  const best = kept > 1 ? bestLabel(store, pageId) : '';
+  const pct = view.total ? Math.round(((view.passed + view.rushPassed) / (view.total * 2)) * 100) : 0;
   return `<section class="part-results">
     <h2>Results</h2>
-    ${view.total ? `<p class="big-pct" style="font-size:2.4rem;font-weight:900;margin:.2em 0">Part 1: ${Math.round((view.passed / view.total) * 100)}% · Part 2: ${Math.round((view.rushPassed / view.total) * 100)}%</p>` : ''}
+    <p class="big-pct" style="font-size:2.4rem;font-weight:900;margin:.2em 0">Try ${tryNo} · ${pct}%</p>
+    ${tryNo > 1 ? `<p class="meta try-line">Try ${tryNo} · every try is kept</p>` : ''}
+    ${best ? `<p class="meta best">${escapeHtml(best)}</p>` : ''}
+    ${view.total ? `<p>Part 1: ${Math.round((view.passed / view.total) * 100)}% · Part 2: ${Math.round((view.rushPassed / view.total) * 100)}%</p>` : ''}
     <p>Seconds used: ${view.secondsUsed}. Limit ${view.limitSec}.</p>
     <p>Part 2 pronunciation: ${view.rushPassed} passed${view.total ? ` (${Math.round((view.rushPassed / view.total) * 100)}%)` : ''}</p>
     <p>Part 1 pronunciation: ${view.passed} passed${view.total ? ` (${Math.round((view.passed / view.total) * 100)}%)` : ''}</p>
     ${skips}
     ${said}
+    <div class="result-actions">
+      <a class="done-btn" href="#/book/${escapeHtml(bookId)}">Done</a>
+      <button type="button" class="try-again" id="tryAgain">🔁 Try again</button>
+    </div>
+    ${tryAgainCardHtml()}
   </section>`;
 }
 
@@ -1364,6 +1501,7 @@ function prepareUnitFlow(bookId, unit) {
       part2: Object.assign({}, flow.part2, { wordCount, limitSec: timerSeconds(wordCount) }),
     });
   }
+  if (!flow.tryStartedAt) flow = Object.assign({}, flow, { tryStartedAt: Date.now() });
   saveUnitFlow(bookId, unit.id, flow);
   return { targets, flow, wordCount };
 }
@@ -1389,7 +1527,7 @@ function renderSheet(bookId, unitId) {
     : (ready ? '' : '<p class="note">The sound checker is still loading. Mic turns on when the bar finishes.</p>');
   const beside = questionCue(unit.title);
   const besideHtml = beside && beside !== unit.title ? `<span class="l1-beside">${escapeHtml(beside)}</span>` : '';
-  const back = `<a class="back" href="#/book/${book.id}">← ${escapeHtml(book.label)}</a><h1>${escapeHtml(unit.title)}${besideHtml}</h1>${wait}`;
+  const back = `<a class="back" href="#/book/${book.id}">← ${escapeHtml(book.label)}</a><h1>${escapeHtml(unit.title)}${besideHtml}${tryChipHtml(flow)}</h1>${wait}`;
   if (flow.phase === 'teacher') {
     appEl.innerHTML = `${back}<div class="phase" data-phase="teacher">${teacherBlockHtml(targets, ready, flow)}</div>`;
     syncClock(null);
@@ -1400,7 +1538,8 @@ function renderSheet(bookId, unitId) {
   const lines = sheetLines(bookId, unit);
   const rows = lines.map((line, index) => lineArticleHtml(line, unit, index, scores, ready, view)).join('');
   const rush = flow.phase === 'part2' || flow.phase === 'results' ? rushBarHtml(flow) : '';
-  const results = flow.phase === 'results' ? resultsHtml(flow, targets) : '';
+  if (flow.phase === 'results') recordFinishedTry(bookId, unit, flow, targets);
+  const results = flow.phase === 'results' ? resultsHtml(flow, targets, bookId, unit) : '';
   appEl.innerHTML = `${back}${rush}${results}<div class="sheet phase" data-phase="${escapeHtml(flow.phase)}">${shared}${rows}</div>`;
   syncClock(flow.phase === 'part2' ? flow : null);
 }
@@ -1731,7 +1870,7 @@ function encodeWavOffTap(floatChunks, sampleRate) {
   return new Promise((resolve, reject) => {
     let worker;
     try {
-      worker = new Worker(new URL('./wav-worker.js?v=20261106-listen-again', import.meta.url));
+      worker = new Worker(new URL('./wav-worker.js?v=20261106-try-again', import.meta.url));
     } catch (err) {
       reject(err);
       return;
@@ -2008,6 +2147,27 @@ async function onMic(btn) {
   if (stillOnSheet(r.bookId, r.unitId)) paint();
 }
 
+function showTryConfirm(show) {
+  const card = document.getElementById('tryConfirm');
+  if (!card) return;
+  card.hidden = !show;
+  if (show) {
+    const yes = document.getElementById('tryYes');
+    if (yes) yes.focus();
+  }
+}
+
+/** Try again: same unit, first line, same voice and settings. Nothing is erased. */
+function onTryYes() {
+  const r = route();
+  if (r.name !== 'sheet') return;
+  const flow = loadUnitFlow(r.bookId, r.unitId);
+  stopReplayAudio();
+  saveUnitFlow(r.bookId, r.unitId, retryFlow(flow, Date.now()));
+  render();
+  try { window.scrollTo(0, 0); } catch (_) { /* ignore */ }
+}
+
 function onRushStart() {
   const r = route();
   if (r.name !== 'sheet' || !checkerReady || capture || part1Busy) return;
@@ -2038,6 +2198,9 @@ if (appEl) {
     }
     const hear = ev.target.closest('.hear');
     if (hear) { onHear(hear); return; }
+    if (ev.target.closest('#tryAgain')) { showTryConfirm(true); return; }
+    if (ev.target.closest('#tryNo')) { showTryConfirm(false); return; }
+    if (ev.target.closest('#tryYes')) { onTryYes(); return; }
     if (ev.target.closest('#rushStart')) { onRushStart(); return; }
     if (ev.target.closest('#rushStop')) {
       const r = route();
@@ -2117,7 +2280,7 @@ if (appEl) {
 
   loadContent().then(async () => {
     try {
-      const response = await fetch('content/l1.json?v=20261106-listen-again');
+      const response = await fetch('content/l1.json?v=20261106-try-again');
       if (response.ok) l1Pack = await response.json();
     } catch (err) {
       console.error(err);

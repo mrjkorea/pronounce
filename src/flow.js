@@ -16,6 +16,10 @@ export function emptyFlow() {
     teacher: {},
     rushRecorded: {},
     rushGrades: {},
+    // Try N: 1 for the first run. A Try again start bumps this and keeps every
+    // earlier attempt in the attempts store (never in this flow).
+    tryNo: 1,
+    tryStartedAt: 0,
     part2: {
       wordCount: 0,
       limitSec: PART2_LIMIT_SEC,
@@ -49,6 +53,8 @@ export function normalizeFlow(raw) {
     teacher: plainObject(raw.teacher),
     rushRecorded: plainObject(raw.rushRecorded),
     rushGrades: plainObject(raw.rushGrades),
+    tryNo: raw.tryNo && whole(raw.tryNo) > 0 ? whole(raw.tryNo) : 1,
+    tryStartedAt: whole(raw.tryStartedAt),
     part2: {
       wordCount: whole(raw.part2 && raw.part2.wordCount),
       limitSec: limit,
@@ -188,8 +194,8 @@ export function advanceFlow(flow, ids, wordCount) {
 }
 
 export function timerRunning(flow, now) {
-  const t = now || Date.now();
   if (flow.phase !== 'part2') return false;
+  const t = now || Date.now();
   const part = flow.part2;
   if (!part.startedAt || part.stoppedAt) return false;
   return (t - part.startedAt) < part.limitSec * 1000;
@@ -207,6 +213,21 @@ export function stopTimer(flow, now) {
   const used = Math.min(limit, Math.max(0, Math.round((now - flow.part2.startedAt) / 1000)));
   const part2 = Object.assign({}, flow.part2, { stoppedAt: now, secondsUsed: used });
   return Object.assign({}, flow, { phase: 'results', part2 });
+}
+
+/**
+ * Try again: the same unit from its first line, as a new numbered try.
+ * Every earlier result lives in the attempts store, so this flow carries only
+ * what must never be lost here: teacher passes and the try number.
+ */
+export function retryFlow(flow, now) {
+  const prev = flow || emptyFlow();
+  const teacher = Object.assign({}, prev.teacher);
+  return Object.assign({}, emptyFlow(), {
+    teacher,
+    tryNo: (whole(prev.tryNo) || 1) + 1,
+    tryStartedAt: now || Date.now(),
+  });
 }
 
 export function reconcileFlow(flow, now) {
