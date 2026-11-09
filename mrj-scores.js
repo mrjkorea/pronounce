@@ -95,8 +95,12 @@
           score_max: typeof opts.scoreMax === "number" ? opts.scoreMax : "",
           score_pct: pct,
           correctness: opts.correctness || "",
-          completed: opts.completed !== false,
-          duration_seconds: opts.durationSeconds || "",
+          /* Never invent a value the app did not set. A missing duration is
+             omitted; the receiver writes 0 for an absent duration too, so the
+             receiver must also learn to leave the cell empty. */
+          completed: typeof opts.completed === "boolean" ? opts.completed : undefined,
+          duration_seconds:
+            typeof opts.durationSeconds === "number" ? opts.durationSeconds : undefined,
           local_date: localDate(when),
           metadata_json: JSON.stringify(meta),
         },
