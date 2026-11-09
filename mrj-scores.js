@@ -29,6 +29,24 @@
     return (n < 10 ? "0" : "") + n;
   }
 
+  /* One identity for one student. The same normalisation the book uses. */
+  function idKey(s) {
+    return String(s == null ? "" : s)
+      .trim()
+      .toLowerCase()
+      .replace(/\s+/g, " ");
+  }
+
+  function signedIn() {
+    try {
+      return root.MRJ_AUTH && root.MRJ_AUTH.student
+        ? String(root.MRJ_AUTH.student() || "").trim()
+        : "";
+    } catch (e) {
+      return "";
+    }
+  }
+
   function localDate(d) {
     d = d || new Date();
     return d.getFullYear() + "-" + pad(d.getMonth() + 1) + "-" + pad(d.getDate());
@@ -47,11 +65,10 @@
   /* One finished item -> one row in ClassroomMetrics. */
   function post(opts) {
     opts = opts || {};
-    var authed = "";
-    try {
-      authed = root.MRJ_AUTH && root.MRJ_AUTH.student ? root.MRJ_AUTH.student() : "";
-    } catch (e) {}
-    var student = String(authed || opts.student || "").trim();
+    var student = signedIn() || String(opts.student || "").trim();
+    /* No student, no row: a score must never land as an orphan. */
+    if (!student) return Promise.resolve({ status: "skipped", error: "no student" });
+    var key = idKey(student);
     var itemId = String(opts.itemId || uid("item"));
     var when = opts.when ? new Date(opts.when) : new Date();
     var pct =
@@ -71,9 +88,9 @@
     var body = {
       /* The site identity is a bare id_key (no @). Receiver 5.1.0 stores it as is;
          "unknown" is only for a post with no student at all. */
-      student_email: (student || "unknown").slice(0, 320),
+      student_email: (student.indexOf("@") > 0 ? student : key).slice(0, 320),
       student_name: student,
-      session_id: [opts.program || "mrj", student || "anon", localDate(when)].join("-"),
+      session_id: [opts.program || "mrj", key, localDate(when)].join("-"),
       events: [
         {
           event_id: opts.eventId || uid(opts.program || "mrj"),
@@ -102,6 +119,9 @@
           duration_seconds:
             typeof opts.durationSeconds === "number" ? opts.durationSeconds : undefined,
           local_date: localDate(when),
+          /* Provenance for the book: how the student was identified. */
+          identity_method: "mrj_signin",
+          identity_confidence: "high",
           metadata_json: JSON.stringify(meta),
         },
       ],
@@ -126,6 +146,24 @@
           localStorage.setItem("mrj.score.queue", JSON.stringify(q.slice(-200)));
         } catch (e) {}
         return { status: "queued", error: String(err && err.message) };
+      })
+      .then(function (res) {
+        /* Day 5 and the other page apps keep a local progress copy for the
+           teacher view. Fire it only when the host app provides the hook, so
+           the shared client stays safe everywhere else. */
+        if (root.MRJ_AUTH && typeof root.MRJ_AUTH.noteScore === "function") {
+          try {
+            root.MRJ_AUTH.noteScore({
+              program: opts.program || "mrj",
+              itemId: itemId,
+              scoreValue: typeof opts.scoreValue === "number" ? opts.scoreValue : "",
+              scoreMax: typeof opts.scoreMax === "number" ? opts.scoreMax : "",
+              scorePct: pct,
+              localDate: localDate(when),
+            });
+          } catch (e) {}
+        }
+        return res;
       });
   }
 

@@ -1,0 +1,25 @@
+- generic [active] [ref=e1]:
+  - banner [ref=e2]:
+    - generic [ref=e3]:
+      - link "Pronounce · Day 4" [ref=e4] [cursor=pointer]:
+        - /url: "#/"
+      - combobox "Language" [ref=e6]:
+        - option "English"
+        - option "한국어" [selected]
+        - option "中文"
+        - option "日本語"
+        - option "Español"
+        - option "हिन्दी"
+        - option "Deutsch"
+        - option "Tiếng Việt"
+        - option "Português"
+        - option "Bahasa Indonesia"
+        - option "Français"
+        - option "العربية"
+        - option "Türkçe"
+        - option "Italiano"
+        - option "Polski"
+    - paragraph [ref=e7]: Loading the sound checker…
+  - generic [ref=e11]:
+    - button "I already have an ID" [ref=e12] [cursor=pointer]
+    - button "Make a new ID" [ref=e13] [cursor=pointer]
