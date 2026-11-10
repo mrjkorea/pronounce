@@ -72,7 +72,8 @@ test('one finished phrase posts one row on the canonical item id', () => {
   assert.equal(post.scoreMax, 100);
   assert.equal(post.scorePct, 82);
   assert.equal(post.correctness, 'correct');
-  assert.equal(post.completed, undefined);
+  assert.equal(post.completed, true);
+  assert.equal(post.attemptIndex, 1);
   assert.equal(post.durationSeconds, undefined);
   assert.equal(post.metadata.attempt, 1);
   assert.equal(post.metadata.re_attempt, false);
@@ -166,6 +167,7 @@ test('door fail posts an incorrect row with score 0', () => {
   assert.equal(post.scorePct, 0);
   assert.equal(post.correctness, 'incorrect');
   assert.equal(post.metadata.doorFail, true);
+  assert.equal(post.completed, false);
   assert.deepEqual(post.metadata.weak, ['how', 'you']);
 });
 

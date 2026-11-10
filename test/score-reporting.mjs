@@ -207,6 +207,8 @@ test('mrj-scores post uses signed-in student id_key, not unknown (mocked fetch)'
     },
     addEventListener: () => {},
   };
+  /* The client is an IIFE on window by design: give the vm context one. */
+  root.window = root;
   const code = readFileSync(join(dirname(fileURLToPath(import.meta.url)), '..', 'mrj-scores.js'), 'utf8');
   vm.runInNewContext(code, root, { filename: 'mrj-scores.js' });
 
@@ -239,6 +241,8 @@ test('mrj-scores post skips network when no student', async () => {
     localStorage: { getItem: () => '[]', setItem: () => {} },
     addEventListener: () => {},
   };
+  /* The client is an IIFE on window by design: give the vm context one. */
+  root.window = root;
   const code = readFileSync(join(dirname(fileURLToPath(import.meta.url)), '..', 'mrj-scores.js'), 'utf8');
   vm.runInNewContext(code, root, { filename: 'mrj-scores.js' });
 

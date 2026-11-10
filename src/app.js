@@ -5,12 +5,12 @@ import {
   bandForScore,
   getAppThresholds,
   tokenizeWords,
-} from './engine.js?v=20261106-try-again';
+} from './engine.js?v=20261111-scores-completed';
 import {
   RAW_MIC_CONSTRAINTS,
   decodeAudioToMono,
-} from './audio.js?v=20261106-try-again';
-import { sheetLines } from './sheet.js?v=20261106-try-again';
+} from './audio.js?v=20261111-scores-completed';
+import { sheetLines } from './sheet.js?v=20261111-scores-completed';
 import {
   FLOW_STORAGE_KEY,
   LOCK_TEXT,
@@ -32,20 +32,20 @@ import {
   timerRunning as flowTimerRunning,
   timerSeconds,
   retryFlow,
-} from './flow.js?v=20261106-try-again';
-import { isMrjTeacher, installTeacherRefresh, configureTeacherPanel, onTeacherChrome, mountTeacherPanel } from './mrj-teacher.js?v=20261106-try-again';
+} from './flow.js?v=20261111-scores-completed';
+import { isMrjTeacher, installTeacherRefresh, configureTeacherPanel, onTeacherChrome, mountTeacherPanel } from './mrj-teacher.js?v=20261111-scores-completed';
 import {
   buildPathSteps,
   isBookPathOpen,
   isUnitPathOpen,
-} from './path-lock.js?v=20261106-try-again';
+} from './path-lock.js?v=20261111-scores-completed';
 import {
   clearTeacherPathGrant,
   listTeacherPathGrants,
   readTeacherPathGrant,
   setTeacherOpenAllGrant,
   setTeacherStartGrant,
-} from './teacher-grants.js?v=20261106-try-again';
+} from './teacher-grants.js?v=20261111-scores-completed';
 
 function lineOpenFor(flow, id) {
   if (isMrjTeacher()) return true;
@@ -74,8 +74,8 @@ import {
   gradeTrialSamples,
   MODEL_DOWNLOAD_STALL_MS,
   trialRuntime,
-} from './trial.js?v=20261106-try-again';
-import { bootShared, resetSharedBoot, ensureModel, gradeAudioForApp, doorFailResult } from './shared.js?v=20261106-try-again';
+} from './trial.js?v=20261111-scores-completed';
+import { bootShared, resetSharedBoot, ensureModel, gradeAudioForApp, doorFailResult } from './shared.js?v=20261111-scores-completed';
 
 import {
   PROGRAM,
@@ -91,7 +91,7 @@ import {
   shouldFlushPackOnPagehide,
   studentScoreStorageKey,
   idKey,
-} from './progress-merge.js?v=20261106-try-again';
+} from './progress-merge.js?v=20261111-scores-completed';
 import {
   ATTEMPTS_STORAGE_KEY,
   appendAttempt,
@@ -101,9 +101,9 @@ import {
   readStore,
   recordFor,
   writeStore,
-} from './attempts.js?v=20261106-try-again';
-import { createPackSaveScheduler } from './pack-save-scheduler.js?v=20261106-try-again';
-import { reportScoredActivity, buildSheetAttemptPost } from './score-reporting.js?v=20261106-try-again';
+} from './attempts.js?v=20261111-scores-completed';
+import { createPackSaveScheduler } from './pack-save-scheduler.js?v=20261111-scores-completed';
+import { reportScoredActivity, buildSheetAttemptPost } from './score-reporting.js?v=20261111-scores-completed';
 
 export const PASS_PCT = ENGINE_PASS_PCT; // pass = line average >= 60
 let activeStudentKey = '';
@@ -1870,7 +1870,7 @@ function encodeWavOffTap(floatChunks, sampleRate) {
   return new Promise((resolve, reject) => {
     let worker;
     try {
-      worker = new Worker(new URL('./wav-worker.js?v=20261106-try-again', import.meta.url));
+      worker = new Worker(new URL('./wav-worker.js?v=20261111-scores-completed', import.meta.url));
     } catch (err) {
       reject(err);
       return;
@@ -2280,7 +2280,7 @@ if (appEl) {
 
   loadContent().then(async () => {
     try {
-      const response = await fetch('content/l1.json?v=20261106-try-again');
+      const response = await fetch('content/l1.json?v=20261111-scores-completed');
       if (response.ok) l1Pack = await response.json();
     } catch (err) {
       console.error(err);

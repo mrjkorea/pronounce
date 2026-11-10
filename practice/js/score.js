@@ -105,6 +105,10 @@ export function buildPracticePost({ text, graded, pack, attempt, student }) {
     scoreMax: 100,
     scorePct: pct,
     correctness: pass ? 'correct' : 'incorrect',
+    /* attempt_index column: the client reads opts.attemptIndex or metadata.attempt. */
+    attemptIndex: n,
+    /* A graded phrase is a finished item; a door fail (silence, mumble) is not. */
+    completed: graded?.doorFail ? false : true,
     metadata,
   };
 }

@@ -1,4 +1,4 @@
-import { authStudentId } from './progress-merge.js?v=20261106-try-again';
+import { authStudentId } from './progress-merge.js?v=20261111-scores-completed';
 
 export const PROGRAM = 'pronounce';
 
