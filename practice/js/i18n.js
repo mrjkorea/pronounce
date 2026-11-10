@@ -85,6 +85,7 @@ const S = {
   },
   retryChecker: { en: 'Retry sound checker', ko: '발음 확인기 다시 시도' },
   gradingWait: { en: 'Sound checker still loading… try Listen, or wait a moment.', ko: '발음 확인기 로딩 중… 듣기를 사용하거나 잠시 기다리세요.' },
+  scoreSaved: { en: '✓ Scores are saved for {name}', ko: '✓ {name} 학생의 점수가 저장됩니다', 'zh-Hans': '✓ 成绩已为 {name} 保存', ja: '✓ {name} さんの点数を保存します', es: '✓ Las puntuaciones se guardan para {name}', hi: '✓ {name} के अंक सहेजे जाते हैं', de: '✓ Punkte werden für {name} gespeichert', vi: '✓ Điểm được lưu cho {name}', 'pt-BR': '✓ As notas são salvas para {name}', id: '✓ Skor disimpan untuk {name}', fr: '✓ Les scores sont enregistrés pour {name}', ar: '✓ تُحفظ الدرجات لـ {name}', tr: '✓ Puanlar {name} için kaydedilir', it: '✓ I punteggi sono salvati per {name}', pl: '✓ Wyniki są zapisywane dla {name}' },
   historyStats: { en: '{n} attempts · {pass} passed', ko: '시도 {n} · 통과 {pass}', 'zh-Hans': '{n} 次 · 通过 {pass}', ja: '{n} 回 · 合格 {pass}', es: '{n} intentos · {pass} ok', hi: '{n} · {pass}', de: '{n} · {pass} bestanden', vi: '{n} · {pass} đạt', 'pt-BR': '{n} · {pass}', id: '{n} · {pass}', fr: '{n} · {pass}', ar: '{n} · {pass}', tr: '{n} · {pass}', it: '{n} · {pass}', pl: '{n} · {pass}' },
 };
 

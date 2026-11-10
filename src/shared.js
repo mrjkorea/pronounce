@@ -18,7 +18,7 @@ import {
   trialRuntime,
   resetTrialBoot,
 } from './trial.js?v=20261106-try-again';
-import { APP_THRESHOLDS, PASS_PCT, getAppThresholds, bandForScore } from './engine.js?v=20261106-try-again';
+import { APP_THRESHOLDS, PASS_PCT, getAppThresholds, bandForScore, tokenizeWords } from './engine.js?v=20261106-try-again';
 import * as audio from './audio.js?v=20261106-try-again';
 
 export const PRONOUNCE_BASE = new URL('../', import.meta.url).href;
@@ -27,7 +27,7 @@ export const HUBERT_MANIFEST_URL = PRONOUNCE_BASE + 'models/hubert/manifest.json
 export const SHARED_DOWNLOAD_STALL_MS = 20000;
 /** Max wait before UI must leave Loading (hear-only / basic mode; model continues in background). */
 export const SHARED_BOOT_UI_TIMEOUT_MS = 10000;
-export { APP_THRESHOLDS, PASS_PCT, getAppThresholds, bandForScore, gradeTrialSamples, gradeAudioForApp, checkModelCached, DOOR_FAIL_TEXT, doorFailResult, audio };
+export { APP_THRESHOLDS, PASS_PCT, getAppThresholds, bandForScore, tokenizeWords, gradeTrialSamples, gradeAudioForApp, checkModelCached, DOOR_FAIL_TEXT, doorFailResult, audio };
 
 let bootP = null;
 

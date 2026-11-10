@@ -12,6 +12,7 @@ import {
   t,
 } from './i18n.js';
 import { recordOnce } from './mic.js';
+import { countAttempts, phraseItemId, reportPhraseScore } from './score.js';
 import {
   downloadText,
   exportHistoryCsv,
@@ -45,12 +46,14 @@ const historySearch = $('#historySearch');
 const historyStats = $('#historyStats');
 const modelStatus = $('#modelStatus');
 const btnRetryChecker = $('#btnRetryChecker');
+const scoreNote = $('#scoreNote');
 
 let ui = getUiLang();
 let booksData = null;
 let recording = false;
 let engineReady = false;
 let uiBoot = null;
+let currentPack = null;
 
 function setModelStatus(msg, showRetry = false) {
   if (modelStatus) {
@@ -170,6 +173,41 @@ function showLineResult(graded) {
   lineResult.textContent = pass ? t('passLine', ui, { pct }) : t('failLine', ui, { pct });
 }
 
+function paintScoreNote() {
+  if (!scoreNote) return;
+  const who = window.MRJ_STUDENT || (window.MRJ_AUTH && window.MRJ_AUTH.student
+    ? window.MRJ_AUTH.student()
+    : '');
+  if (!who) {
+    scoreNote.hidden = true;
+    return;
+  }
+  scoreNote.textContent = t('scoreSaved', ui, { name: who });
+  scoreNote.hidden = false;
+}
+
+function reportFinishedPhrase(text, result, pack, attempt) {
+  try {
+    const out = reportPhraseScore({
+      text,
+      graded: result,
+      pack,
+      attempt,
+      history: loadHistory(),
+      auth: window.MRJ_AUTH,
+      scores: window.MRJ_SCORES,
+      localDateFn: () => (window.MRJ_SCORES && window.MRJ_SCORES.localDate
+        ? window.MRJ_SCORES.localDate()
+        : new Date().toISOString().slice(0, 10)),
+    });
+    if (!out.posted && out.reason !== 'no_student') console.warn('practice score not saved:', out.reason);
+    return out;
+  } catch (err) {
+    console.error('practice score failed', err);
+    return { posted: false, reason: 'error' };
+  }
+}
+
 async function runGrade(blob, source) {
   const text = currentLine();
   if (!text) {
@@ -192,15 +230,19 @@ async function runGrade(blob, source) {
     paintGradedChips(result);
     showLineResult({ scorePct, pass });
 
+    const attempt = countAttempts(loadHistory(), text) + 1;
     pushHistory({
       at: Date.now(),
       text,
       scorePct,
       pass,
       source: source || 'practice',
+      attempt,
+      itemId: phraseItemId(text),
       words: result.words || [],
     });
     renderHistory();
+    reportFinishedPhrase(text, result, currentPack, attempt);
   } catch (err) {
     console.error(err);
     showLineResult({ scorePct: 0, pass: false });
@@ -276,13 +318,14 @@ function openBook(pack) {
   bookDetail.appendChild(back);
   const ul = document.createElement('ul');
   ul.className = 'phrase-list';
-  pack.phrases.forEach((ph) => {
+  pack.phrases.forEach((ph, phraseIndex) => {
     const li = document.createElement('li');
     li.className = 'phrase-item';
     const l1 = ph[ui] || ph.ko || '';
     li.innerHTML = `<div class="phrase-en">${ph.en}</div>${l1 ? `<div class="phrase-l1">${l1}</div>` : ''}`;
     li.addEventListener('click', () => {
       practiceText.value = ph.en;
+      currentPack = { id: pack.id, title: pack.title?.en || pack.title?.[ui] || '', phraseIndex };
       paintPendingChips(ph.en);
       showTab('practice');
     });
@@ -356,7 +399,7 @@ function renderHistory() {
 }
 
 async function loadBooks() {
-  const url = new URL('content/books.json', import.meta.url);
+  const url = new URL('../content/books.json', import.meta.url);
   const res = await fetch(url);
   booksData = await res.json();
   renderBooksList();
@@ -384,9 +427,15 @@ async function boot() {
   btnListen?.addEventListener('click', () => speak(currentLine()));
   btnRecord?.addEventListener('click', () => onRecord());
   practiceText?.addEventListener('input', () => {
+    currentPack = null;
     paintPendingChips(currentLine());
     lineResult.hidden = true;
   });
+
+  document.addEventListener('mrj-auth-ready', () => {
+    paintScoreNote();
+  });
+  paintScoreNote();
 
   $('#btnNewGuide')?.addEventListener('click', () => {
     const guides = loadGuides();
