@@ -21,12 +21,12 @@ import {
   loadG2P,
   scoreUtteranceFromLogits,
   tokenizeWords,
-} from './engine.js?v=20261111-scores-completed';
+} from './engine.js?v=20261111-identity';
 import {
   TARGET_SAMPLE_RATE,
    decodeAudioToMono,
   prepareSpeechSamples,
-} from './audio.js?v=20261111-scores-completed';
+} from './audio.js?v=20261111-identity';
 
 export const DOOR_FAIL_TEXT = 'Say the sentence again, please. Say each word clearly.';
 export const DOOR_CHECKING_TEXT = 'Now checking pronunciation.';
@@ -50,7 +50,7 @@ export function workerForwardTimeoutMs(sampleCount, sampleRate = TARGET_SAMPLE_R
 
 /** @deprecated use WORKER_INIT_TIMEOUT_MS */
 export const WORKER_CALL_TIMEOUT_MS = WORKER_INIT_TIMEOUT_MS;
-export const DAY4_MODULE_V = '20261111-scores-completed';
+export const DAY4_MODULE_V = '20261111-identity';
 export const DOWNLOAD_STALL_USER_MESSAGE =
   'Download stopped too long. Check Wi‑Fi, tap Retry or refresh the page, or ask your teacher for help.';
 
